@@ -57,6 +57,7 @@ The self-update stage should consider as many of these as are available:
 
 5. **Validate guardrails**
    - ensure the changes still preserve the core invariants listed above
+   - ensure the published content remains generic and does not expose personal, machine-specific, employer, or case identifiers
 
 6. **Apply and document**
    - update the relevant agents or docs
@@ -95,3 +96,5 @@ Every accepted self-update should leave behind a concise note of:
 - what source or lesson justified it
 - which guardrails were checked
 - how the next run should be better
+
+If the update is intended for public publication, also note what privacy or redaction checks were performed.
