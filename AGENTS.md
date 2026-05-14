@@ -21,6 +21,14 @@ All agents, prompts, instructions, and supporting documents in this repository m
 - If a tool requires Windows, a license, a container, or manual download, document that clearly.
 - Record selected tools, versions, install paths, and blockers in Markdown.
 
+## Privacy and redaction rules
+
+- Keep repository contents generic when they are published.
+- Do not commit real names, usernames, email addresses, hostnames, absolute local paths, employer names, client names, agency names, internal ticket IDs, or other personal or organizational identifiers.
+- Do not commit case-derived evidence, screenshots, exported artifacts, investigator notes, or hashes unless they were intentionally sanitized for public release.
+- When examples are needed, use placeholders such as `CASE-001`, `ANALYST`, `HOST-A`, `/evidence/image.E01`, and `ORG-NAME`.
+- Perform a privacy sweep before pushing changes.
+
 ## Required documentation updates
 
 When changing agent behavior or tool choices, also update the relevant docs:
@@ -53,6 +61,7 @@ That review must:
 5. preserve a looping structure so future runs can continue to improve instead of converging on a brittle one-shot procedure
 
 Self-update never authorizes unsafe evidence handling, scope creep, unsupported claims, or report shortcuts.
+It also never authorizes publishing identifying details that should have been redacted.
 
 ## Reporting expectations
 
@@ -71,3 +80,4 @@ The final or interim report must remain in Markdown and should include, when app
 This repo is the canonical source for these agent definitions.
 
 After future edits, push the changes to the public GitHub repo rather than letting local copies drift.
+Before each push, verify that the content is generic and passes the privacy rules above.

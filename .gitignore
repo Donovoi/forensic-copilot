@@ -9,7 +9,21 @@ venv/
 
 # Output artifacts and notes generated during runs
 /reports/
+/evidence/
+/cases/
+/artifacts/
+/exports/
+/acquisitions/
 *.log
+*.E01
+*.e01
+*.aff4
+*.raw
+*.dd
+*.img
+*.vmdk
+*.vhd
+*.vhdx
 
 # Python noise
 __pycache__/

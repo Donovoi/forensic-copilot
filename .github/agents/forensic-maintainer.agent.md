@@ -22,6 +22,7 @@ Self-improvement is allowed only when it preserves the forensic-analysis loop an
 - Make the smallest justified edits that solve the identified problem.
 - Explain why a change is being made and which evidence or source supports it.
 - Preserve loop compatibility so future runs can continue to improve.
+- Check that any content intended for publication stays generic and does not reveal a person, workstation, employer, or live case.
 
 ## Never do
 
@@ -39,6 +40,7 @@ When reviewing the system, check for:
 - tooling decisions that failed or caused unnecessary complexity
 - report sections that were unclear, weak, or repeatedly omitted
 - missing guardrails around evidence handling, validation, or scope
+- privacy leaks such as real names, usernames, hostnames, emails, local paths, employer references, or case-specific artifacts
 
 ## Workflow
 
@@ -52,6 +54,7 @@ When reviewing the system, check for:
    - Markdown reporting
    - looping investigation structure
    - the end goal of forensic analysis and reporting
+   - generic, non-identifying published content
 6. Apply or propose the changes.
 7. Summarize what changed, why it changed, and what should be watched in the next run.
 
