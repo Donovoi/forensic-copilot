@@ -13,7 +13,7 @@ This matrix is the starting point for the `Forensic Toolsmith` agent. It is inte
 
 | Tool | Primary role | Linux readiness | When to prefer it | Notes |
 | --- | --- | --- | --- | --- |
-| `bulk_extractor` | content scanning, feature extraction, carving support | High | broad content extraction from images or mounted evidence | Good companion tool, not a full filesystem examiner. |
+| `bulk_extractor` | content scanning, feature extraction, carving support | High | broad content extraction from images or mounted evidence | Good companion tool, not a full filesystem examiner; on Linux server user-activity cases it is usually corroborative rather than primary proof of logon or browsing. |
 | `The Sleuth Kit` | partition, volume, filesystem, deleted-file, and metadata analysis | High | raw/E01/AFF4/disk-image workflows and filesystem-level validation | Official upstream: `sleuthkit/sleuthkit`. Foundational for disk and filesystem analysis. |
 | `Plaso` | supertimeline generation from multiple artifacts | Medium | timeline-heavy cases where cross-artifact ordering matters | Use when timeline correlation is central; packaging can be dependency-sensitive. |
 | `Timesketch` | collaborative timeline analysis and enrichment | Medium | cases with large timelines, team review, tagging, or analysis at scale | Official docs currently point to deploy script and service-oriented setup. Heavier than local CLI-only tooling. |
@@ -22,6 +22,7 @@ This matrix is the starting point for the `Forensic Toolsmith` agent. It is inte
 | `KAPE` | targeted Windows artifact collection and parsing orchestration | Low on Linux | Windows triage and targeted acquisition workflows | Treat as Windows-first. Prefer a Windows host or VM and document the path clearly. |
 | `Zimmerman tools` | Windows artifact parsing and enrichment | Low on Linux | detailed Windows artifact parsing when native Linux tools are insufficient | Windows-first tool family; use with compatible runtime or Windows environment. |
 | `OSDFIR` / artifact repositories | structured artifact definitions and repeatable parsing workflows | Medium | when artifact-definition reuse improves repeatability and coverage | Useful as supporting infrastructure rather than as a single do-everything examiner tool. |
+| `ForensicArtifacts` / `artifacts-kb` | artifact-family coverage and checklist support | High | when you need a structured reminder of which artifact families should exist on a host role or platform | Useful for coverage and terminology; not a standalone proof engine. |
 | hashing utilities | evidence verification and handoff integrity | High | every case | Mandatory rather than optional. Capture algorithms and results in the report. |
 | SQLite inspection tools | browser, app, and artifact database review | High | app and user-activity artifacts stored in SQLite | Treat as supporting tooling for artifact review and corroboration. |
 
@@ -35,6 +36,26 @@ For a typical Linux-based disk-image examination, the first-pass stack should us
 4. SQLite inspection tools and filesystem-specific helpers
 5. `Plaso` if timeline depth is needed
 6. `Timesketch` only if collaborative or large-scale timeline review is justified
+
+## Linux server user-activity bias
+
+For Linux server user-activity cases, first-pass collection should lean toward:
+
+1. authentication and session artifacts (`auth.log`, `secure`, `wtmp`, `btmp`, `lastlog`)
+2. shell history, shell-profile, and sudo/su context
+3. web-server, application, and service logs
+4. cron, systemd, rc scripts, and startup persistence
+5. SSH configs, keys, temp paths, upload paths, and host identity/timezone artifacts
+6. broad scanning tools such as `bulk_extractor` only as supporting discovery or corroboration unless direct extraction is impossible
+
+## Derived-artifact mode
+
+When direct image access is blocked and only derived outputs are available:
+
+- declare that mode explicitly
+- record the source image path and hash
+- record the derived artifact path, tool, version, and command used
+- state which questions the derived artifacts can and cannot answer
 
 ## Platform-specific cautions
 

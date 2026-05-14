@@ -22,6 +22,12 @@ During a case, the examiner may adapt:
 
 That kind of adaptation is normal casework.
 
+### Case peer review
+
+Before final handoff on a substantial report, the examiner should use the case peer-review path described in `docs/peer-review-process.md`.
+
+Peer review challenges the current case conclusions. Repository maintenance uses those peer-review notes only when they reveal a reusable workflow issue.
+
 ### Repository maintenance
 
 Edits to agent files, instructions, docs, or agent boundaries are maintenance actions. They should be justified, recorded, and pushed to the canonical repository so the method remains reviewable.
@@ -57,6 +63,7 @@ Run a self-update review when any of the following occurs:
 Use as many of these as are available:
 
 - the latest Markdown report
+- peer-review notes and release recommendations
 - tooling preparation notes
 - task lists or execution notes
 - observed blockers, delays, or validation failures
@@ -69,7 +76,7 @@ Use as many of these as are available:
    - record what happened and why a review is being opened
 
 2. **Separate case-specific friction from reusable workflow issues**
-   - not every awkward case justifies a prompt rewrite
+   - not every awkward case or peer-review comment justifies a prompt rewrite
 
 3. **Compare the current instructions with the work that was actually performed**
    - identify where the current docs helped, failed, or stayed silent

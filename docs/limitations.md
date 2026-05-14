@@ -9,6 +9,12 @@ This repository is easier to trust if its limits are stated plainly. The agent i
 - Encryption, detached key material, and credential-protected containers may block examination until live context or valid keys are available.
 - Cloud-backed placeholders, remote mounts, and synchronized folders can make it unclear whether the visible files represent the full logical evidence set.
 
+## Derived-artifact limits
+
+- If direct image access is blocked and the examination depends on previously generated outputs, the report should declare that explicitly.
+- Derived artifacts can still be useful, but they require a provenance ledger: source image, source hash, derived artifact path, tool, version, and command path.
+- Derived artifacts narrow the questions that can be answered confidently. They are especially weak for claims about absent artifacts, complete host state, or subtle timestamp interpretation.
+
 ## Platform and tooling limits
 
 - The current workflow is Linux-first. That is a design choice, not a claim that all useful forensic tools run natively on Linux.
@@ -22,6 +28,13 @@ This repository is easier to trust if its limits are stated plainly. The agent i
 - Findings still require examiner review. AI-generated phrasing is not evidence and should not replace direct artifact verification.
 - Attribution is rarely a one-artifact question. The report should preserve uncertainty when the available evidence does not support a stronger conclusion.
 - A well-structured Markdown report is useful, but it is not a substitute for tool validation records, chain-of-custody documentation, or testimony preparation.
+
+## Server interpretation limits
+
+- On servers, recovered URLs, domains, admin endpoints, crawler strings, and server IP references may reflect hosted content, preserved logs, brute-force noise, or automation rather than a user's local browsing history.
+- `.bashrc`, `.bash_profile`, or similar shell files suggest account context, not necessarily recent shell use.
+- Backup or staging paths under `root` or service-owned directories may be manual administration, scheduled automation, or deployment tooling; they should not be presented as interactive user activity without corroboration.
+- Stronger human-activity claims on servers usually need corroboration from auth/session logs, shell history, sudo/su records, direct file modification context, service logs, cron/systemd evidence, or similar host artifacts.
 
 ## Self-update limits
 

@@ -33,6 +33,7 @@ All agents, prompts, instructions, and supporting documents in this repository m
 
 When changing agent behavior or tool choices, also update the relevant docs:
 
+- `docs/peer-review-process.md` when the case-review process or peer-review triggers change
 - `docs/self-update-loop.md` when the improvement process or loop guardrails change
 - `docs/tooling-matrix.md` for tool-selection changes
 - `docs/sources.md` for new guidance or upstream references
@@ -44,11 +45,15 @@ When changing agent behavior or tool choices, also update the relevant docs:
 - Minimize tools to what the role actually needs.
 - Make descriptions rich in trigger terms so delegation works.
 - Keep only `Forensic Examiner` user-invocable; helper agents such as `Forensic Toolsmith` and `Forensic Maintainer` should remain internal subagents.
+- Keep `Forensic Peer Reviewer` internal; it exists to challenge case findings before release, not to replace the maintainer path.
 - Treat the current agent architecture as a default, not a permanent truth; agents may be added, removed, merged, split, or rewritten, including the main examiner role, when justified by validated lessons learned or newer guidance.
 - Require the examiner agent to distinguish observation, inference, and limitation.
 - Require the examiner agent to assist the non-technical investigator by asking high-value, non-blocking clarification questions when scope, interpretation, or prioritization would benefit.
+- Require the examiner agent to invoke case peer review before final handoff on substantial reports.
 - Require the toolsmith agent to justify why each tool is selected, skipped, or deferred.
+- Require the peer reviewer to distinguish supported findings, challenged findings, missing corroboration, alternative explanations, and release readiness.
 - Require the maintainer path to justify every self-update with either observed workflow friction, validated lessons learned, or newer authoritative guidance.
+- Require the maintainer path to use peer-review feedback as an input to reusable workflow changes, not as a substitute for case review.
 - Require any self-modifying behavior to preserve preservation-first handling, scope discipline, Markdown reporting, and loop compatibility.
 
 ## Self-update policy

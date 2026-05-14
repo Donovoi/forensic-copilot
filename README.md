@@ -26,7 +26,8 @@ On each run the examiner is expected to:
 
 - translate a broad request into concrete forensic questions
 - ask only the clarification questions that are likely to change scope, interpretation, or priority
-- invoke internal helper paths for tool readiness and workflow review
+- classify the host role early enough to avoid treating servers like desktop endpoints
+- invoke internal helper paths for tool readiness, case peer review, and workflow review
 - keep evidence handling preservation-first and read-only where possible
 - separate observation, inference, and limitation
 - maintain a Markdown report as the work progresses
@@ -34,6 +35,7 @@ On each run the examiner is expected to:
 The helper roles are internal:
 
 - `Forensic Toolsmith` handles tool selection, readiness, and platform caveats
+- `Forensic Peer Reviewer` challenges case findings, missing corroboration, and overconfident wording before release
 - `Forensic Maintainer` reviews lessons learned and bounded updates to the workflow
 
 Only `Forensic Examiner` should be selected directly by the user.
@@ -76,9 +78,12 @@ The current workflow is iterative rather than one-pass:
 4. examine the evidence with preservation-first handling
 5. analyze and correlate the resulting artifacts
 6. write or update the Markdown report
-7. review what should change before the next loop
+7. run case peer review before release
+8. review what should change before the next loop
 
 This is where the project borrows from systems such as OpenEvolve and autoresearch: not in the details of their implementation, but in the idea that a run can critique itself and improve the next run. The difference is the optimization target. Here the goal is not novelty or benchmark performance; it is defensible examination and a better report.
+
+The important separation is this: **peer review challenges the current case report; maintenance review changes the reusable method only when a repeatable problem has been found.**
 
 ## Known limits
 
@@ -88,6 +93,7 @@ The most important limits are easy to miss if they are not stated plainly:
 - deleted, unallocated, slack-space, and some filesystem-internal questions may require full-image access
 - encryption, cloud placeholders, remote mounts, and hybrid storage layers can change what is observable
 - some commonly used forensic tools remain Windows-first or license-constrained
+- on servers, recovered URLs, domains, admin endpoints, and crawler strings may reflect hosted-service activity rather than local user browsing or successful authentication
 - this repo documents a workflow, not a formal validation package
 
 See `docs/limitations.md` for the fuller list.
@@ -95,7 +101,7 @@ See `docs/limitations.md` for the fuller list.
 ## Quick start in VS Code
 
 1. Clone this repo or copy the `.github/agents/` directory into the target workspace.
-2. Ensure all three agent files are present in the workspace `.github/agents/` directory, even though only `Forensic Examiner` is user-facing.
+2. Ensure all four agent files are present in the workspace `.github/agents/` directory, even though only `Forensic Examiner` is user-facing.
 3. Keep the repo docs available if you want the maintainer path to update the same canonical source rather than a drifting local copy.
 4. Reload the VS Code window if the agent picker does not refresh automatically.
 5. Select **`Forensic Examiner`** in Copilot Chat.
@@ -113,6 +119,7 @@ For a worked example, see `docs/example-investigation.md`.
 | `.github/agents/` | custom agent definitions |
 | `docs/limitations.md` | current scope limits, cautions, and validation boundaries |
 | `docs/example-investigation.md` | example prompt, clarification exchange, and report excerpt |
+| `docs/peer-review-process.md` | case peer-review rules and release criteria |
 | `docs/self-update-loop.md` | rules for post-run workflow improvement |
 | `docs/tooling-matrix.md` | current tool-selection starting point |
 | `docs/sources.md` | source basis and review anchors |
