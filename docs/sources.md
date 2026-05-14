@@ -2,7 +2,7 @@
 
 This file records the external material that currently informs the repo. It is not meant to be exhaustive. It is meant to show what was actually checked, why it matters, and where that guidance enters the workflow.
 
-Last reviewed: `2026-05-14`
+Last reviewed: `2026-05-15`
 
 ## Process guidance checked directly
 
@@ -34,12 +34,22 @@ That is deliberate. This file should not imply a document was checked if it was 
 | `Timesketch` | collaborative timeline review and enrichment | heavier than local CLI workflows; justified mainly for larger or team-based timeline work | <https://github.com/google/timesketch> |
 | `Binwalk` | firmware and blob analysis | appropriate for firmware and opaque binary work, not general host forensics | <https://github.com/ReFirmLabs/binwalk> |
 
+## Secondary workflow references
+
+| Project or reference | How it informs the repo | Note |
+| --- | --- | --- |
+| `ForensicArtifacts/artifacts` | artifact-family coverage and structured thinking about supported operating systems and source types | Used as a checklist and coverage reference, not as a standalone proof engine. |
+| `ForensicArtifacts/artifacts-kb` | supporting context for artifact families and collection terminology | Useful for coverage and naming consistency. |
+| Bruce Nikkel, *Practical Linux Forensics* | high-level Linux-forensics themes such as service-aware interpretation, auth/session priority, timezone discipline, and conservative attribution | Used only at the level of practitioner themes in this environment; no copyrighted text is quoted or treated as direct authority here. |
+
 ## Current working observations
 
 - `Timesketch` remains more service-oriented than lightweight local tooling.
 - `The Sleuth Kit` remains a sensible default for Linux-based image and filesystem work.
 - `Binwalk` is treated as a specialist tool, not a general-purpose substitute for host forensics.
 - Windows-first tools such as `FTK Imager`, `KAPE`, and many `Zimmerman` utilities are tracked as platform-specific dependencies rather than presumed native on Linux.
+- Artifact-definition ecosystems can improve coverage and gap detection even when they are not the primary extraction mechanism.
+- High-level Linux-forensics practitioner guidance reinforces role-aware interpretation: a Linux web server should not be read as if every recovered URL or admin endpoint represents local browsing by a human user.
 
 ## How to use this file
 

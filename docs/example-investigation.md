@@ -53,9 +53,34 @@ Once the first clarification pass is complete, the examiner should be able to st
 **Confidence and limitations.** Moderate confidence that staging activity occurred. The current artifact set does not, on its own, prove external transfer. Review of removable-media traces, cloud-sync activity, mail artifacts, or outbound transfer logs would strengthen or weaken that conclusion.
 ```
 
+## Example peer review note
+
+```md
+# Forensic Peer Review Note
+
+## Supported findings
+- The archive creation event is well supported by multiple artifacts.
+
+## Challenged findings
+- Do not state that exfiltration occurred unless a transfer artifact, outbound log, removable-media trace, or equivalent corroboration exists.
+
+## Missing corroboration
+- network transfer evidence
+- removable-media activity
+- mail or cloud-sync confirmation
+
+## Alternative explanations
+- temporary staging for backup or handoff that did not lead to external transfer
+
+## Release recommendation
+- Ready with caveats after wording is limited to staging activity rather than confirmed exfiltration.
+```
+
 ## What this example is meant to show
 
 - the examiner narrows the task before diving into artifacts
 - clarification questions are useful, but not treated as a hard blocker
 - the report distinguishes observation from inference
 - the report states what the evidence supports and what it does not yet support
+- peer review challenges overstatement before the report is released
+- on server cases, recovered URLs and admin endpoints should not be equated with local browsing or successful authentication without corroboration

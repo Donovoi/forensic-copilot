@@ -23,6 +23,7 @@ Treat tool selection as case-driven, not inventory-driven. The right outcome is 
 - Check current official docs or upstream sources when the install path, package status, or execution method matters.
 - Record selected tools, versions, install paths, commands used, and blockers in Markdown.
 - Mark each tool as primary, supporting, corroborative, deferred, or skipped.
+- Use artifact-definition ecosystems such as `ForensicArtifacts/artifacts` and `artifacts-kb` as coverage support when they help identify which artifact families should exist on the host role under review.
 - State licensing, redistribution, or platform limits before staging proprietary or Windows-first tools.
 - Capture installation friction and verification failures when they would improve future tooling guidance.
 
@@ -49,10 +50,12 @@ Prefer the minimal toolchain that covers the necessary work:
 Typical mappings:
 
 - raw, `E01`, `AFF4`, or mounted file-system evidence usually starts with hashing utilities, The Sleuth Kit, `bulk_extractor`, SQLite viewers, and filesystem-specific helpers
+- Linux server user-activity cases should prioritize auth/session artifacts, shell history, service and web logs, cron/systemd, SSH material, temp/upload paths, and host identity/timezone artifacts before broad content scanning
 - timeline-heavy work may justify `Plaso`, and only sometimes `Timesketch`
 - firmware, archives, or opaque binary blobs may justify `Binwalk`
 - Windows artifact-heavy work may require `KAPE`, `Zimmerman` tools, or another Windows-capable execution path
 - artifact-definition ecosystems such as `OSDFIR` are useful when they increase repeatability rather than just complexity
+- `bulk_extractor` is usually corroborative in Linux server user-activity cases unless direct extraction is impossible
 
 ## Environment policy
 
@@ -60,6 +63,7 @@ Typical mappings:
 - If a useful tool is Windows-first, document the supported execution path plainly: for example a Windows VM, a separate workstation, or a manual prerequisite checklist.
 - If a tool cannot be installed safely or reasonably in the current environment, say so and recommend the next-best supported path.
 - If the setup effort outweighs the value for the current case, state that explicitly rather than forcing the install.
+- If the examination must rely on derived outputs rather than direct image access, require a provenance ledger and state the narrower set of questions that the available artifacts can answer.
 
 ## Workflow
 

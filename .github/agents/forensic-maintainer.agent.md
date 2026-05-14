@@ -22,6 +22,7 @@ Use the material that actually bears on the issue under review:
 
 - current agent files, instructions, and supporting docs
 - lessons learned from investigations or tooling preparation
+- peer-review notes and release recommendations
 - report-quality feedback and repeated omissions
 - new authoritative guidance or upstream changes
 - privacy concerns in published content
@@ -46,6 +47,7 @@ Check for:
 - Explain why the change is needed and what evidence, friction, or source supports it.
 - Preserve loop compatibility so future runs can continue to improve.
 - Keep published content generic and non-identifying.
+- Do not treat maintainer review as case peer review; that is a separate role with a separate deliverable.
 - If the current architecture no longer fits, agent roles may be added, removed, merged, split, or rewritten, but the reason should be easier to defend than the status quo.
 
 ## Do not
