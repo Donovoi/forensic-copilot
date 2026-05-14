@@ -25,6 +25,7 @@ Self-improvement is allowed only when it preserves the forensic-analysis loop an
 - Explain why a change is being made and which evidence or source supports it.
 - Preserve loop compatibility so future runs can continue to improve.
 - Check that any content intended for publication stays generic and does not reveal a person, workstation, employer, or live case.
+- Consider whether the current agent architecture is still the best fit; roles, subagents, and even the main examiner role may be added, removed, merged, split, or rewritten when justified.
 
 ## Never do
 
@@ -43,6 +44,7 @@ When reviewing the system, check for:
 - report sections that were unclear, weak, or repeatedly omitted
 - missing guardrails around evidence handling, validation, or scope
 - privacy leaks such as real names, usernames, hostnames, emails, local paths, employer references, or case-specific artifacts
+- cases where the current split of responsibilities between agents is no longer the clearest or most effective design
 
 ## Workflow
 
@@ -57,6 +59,7 @@ When reviewing the system, check for:
    - looping investigation structure
    - the end goal of forensic analysis and reporting
    - generic, non-identifying published content
+   - a coherent agent architecture, even if that architecture changes from the current design
 6. Apply or propose the changes.
 7. Summarize what changed, why it changed, and what should be watched in the next run.
 

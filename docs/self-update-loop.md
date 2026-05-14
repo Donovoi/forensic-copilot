@@ -54,6 +54,7 @@ The self-update stage should consider as many of these as are available:
 
 4. **Design minimal edits**
    - prefer small, justified changes over sweeping rewrites
+   - agent responsibilities and agent boundaries may change if that is the clearest justified improvement
 
 5. **Validate guardrails**
    - ensure the changes still preserve the core invariants listed above
@@ -76,6 +77,8 @@ Good self-updates usually look like:
 - tightening tool-selection logic after repeated setup pain
 - adding a missing best-practice citation or upstream source
 - splitting a vague responsibility into a dedicated subagent
+- merging or simplifying agents when the existing split adds friction without improving outcomes
+- revising the main examiner role when it improves investigator support, clarification quality, or report usefulness
 
 ## Unsafe optimization patterns
 

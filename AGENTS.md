@@ -44,7 +44,9 @@ When changing agent behavior or tool choices, also update the relevant docs:
 - Minimize tools to what the role actually needs.
 - Make descriptions rich in trigger terms so delegation works.
 - Keep only `Forensic Examiner` user-invocable; helper agents such as `Forensic Toolsmith` and `Forensic Maintainer` should remain internal subagents.
+- Treat the current agent architecture as a default, not a permanent truth; agents may be added, removed, merged, split, or rewritten, including the main examiner role, when justified by validated lessons learned or newer guidance.
 - Require the examiner agent to distinguish observation, inference, and limitation.
+- Require the examiner agent to assist the non-technical investigator by asking high-value, non-blocking clarification questions when scope, interpretation, or prioritization would benefit.
 - Require the toolsmith agent to justify why each tool is selected, skipped, or deferred.
 - Require the maintainer path to justify every self-update with either observed workflow friction, validated lessons learned, or newer authoritative guidance.
 - Require any self-modifying behavior to preserve preservation-first handling, scope discipline, Markdown reporting, and loop compatibility.
