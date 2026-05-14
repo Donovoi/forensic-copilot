@@ -1,0 +1,16 @@
+# Local tool staging and caches
+/toolcache/
+/tooling/downloads/
+/tooling/cache/
+
+# Virtual environments
+/.venv/
+venv/
+
+# Output artifacts and notes generated during runs
+/reports/
+*.log
+
+# Python noise
+__pycache__/
+*.pyc
