@@ -1,200 +1,130 @@
 # Forensic Copilot
 
 <p align="center">
-  <img src="docs/assets/forensic-copilot-hero.svg" alt="Forensic Copilot hero illustration" width="100%" />
+	<img src="docs/assets/forensic-copilot-hero.svg" alt="Forensic Copilot hero illustration" width="100%" />
 </p>
 
-<p align="center">
-  <strong>A self-improving forensic examiner agent for investigator-facing, evidence-safe analysis and Markdown reporting.</strong>
-</p>
+`Forensic Copilot` defines a Copilot custom agent for investigator-facing host and disk examinations. The current emphasis is Linux-based review of mounted file systems and common disk-image formats where the analyst needs a traceable workflow, explicit limitations, and a Markdown report.
 
-<p align="center">
-  Inspired by the feel of systems like <strong>OpenEvolve</strong> and <strong>Andrej Karpathy's autoresearch</strong>—but adapted for digital forensics, where preservation, scope discipline, and defensibility matter as much as iteration speed.
-</p>
+The repo is meant to help a human examiner, incident responder, or non-technical investigator work through a case more systematically. It is not presented as a replacement for evidentiary judgment, lab SOPs, or formal tool validation.
 
-## What this repo is
+## Current scope
 
-`Forensic Copilot` is a repository of custom agents, instructions, and supporting docs for a **digital forensic examiner agent** that:
-
-- supports a **non-technical investigator**
-- narrows and clarifies investigative scope
-- examines mounted file systems and disk images defensibly
-- explains findings in plain language
-- produces a **Markdown forensic report**
-- improves itself through a guarded, evidence-safe review loop
-
-This is not a generic autonomous coding agent with a forensic sticker on it.
-
-It is a forensic workflow system designed to behave more like a real digital forensic examiner working alongside an investigator, incident responder, or case officer.
-
-## What the agent actually is
-
-At the top level, the system exposes **one user-facing agent**:
-
-- `Forensic Examiner`
-
-Behind the scenes, the examiner orchestrates two internal helper subagents:
-
-- `Forensic Toolsmith` — validates tooling, readiness, install strategy, and platform caveats
-- `Forensic Maintainer` — critiques the workflow, captures lessons learned, and updates the system safely
-
-So from the user's perspective, this feels like **one examiner**.
-
-From the system's perspective, it is a **looped forensic research-and-analysis pipeline** with internal specialization.
-
-## Why it feels like OpenEvolve / autoresearch
-
-The inspiration is structural, not literal.
-
-The system borrows the *shape* of self-improving research loops:
-
-- clarify the objective
-- run a focused attempt
-- inspect the results
-- critique what happened
-- keep the good changes
-- repeat when needed
-
-But the optimization target is very different.
-
-Instead of optimizing for novelty, benchmark wins, or open-ended exploration, `Forensic Copilot` optimizes for:
-
-- evidence preservation
-- scope correctness
-- investigator usefulness
-- report quality
-- reproducibility
-- defensibility
-
-In short:
-
-| Self-improving research systems | Forensic Copilot adaptation |
-| --- | --- |
-| Iterate aggressively | Iterate defensibly |
-| Improve based on outcomes | Improve based on outcomes **and** forensic guardrails |
-| Seek better experiments | Seek better examinations and clearer reports |
-| Keep what works | Keep only what preserves evidence, scope, and rigor |
-
-## The loop ✨
-
-<p align="center">
-  <img src="docs/assets/forensic-copilot-loop.svg" alt="Forensic Copilot loop diagram" width="100%" />
-</p>
-
-The examiner does not simply run once and stop.
-
-It works in a controlled loop:
-
-1. **Receive the case request**
-2. **Ask high-value clarification questions** when context would materially improve scope or interpretation
-3. **Validate tools and environment** through the internal toolsmith
-4. **Examine the evidence** using preservation-first handling
-5. **Analyze and interpret findings** in relation to the case
-6. **Write or update the Markdown report**
-7. **Review and improve the workflow** through the internal maintainer
-8. **Loop again** if meaningful questions remain
-
-Crucially, clarification is helpful—but not a permanent blocker.
-
-If the user cannot answer every question, the examiner should proceed with conservative assumptions, state them clearly, and continue useful work.
-
-## The user experience
-
-The agent is meant to feel like a capable forensic examiner assisting an investigator.
-
-That means it should:
-
-- help translate a vague request into a workable forensic objective
-- ask smart questions about scope, timeframe, accounts, hosts, and authority limits
-- explain technical evidence in ordinary language
-- point out limitations and uncertainty
-- keep the report useful for decision-making, not just artifact dumping
-
-Example interactions:
-
-- “Investigate `/evidence/drive.E01` for evidence of data theft.”
-- “Review `/mnt/image` and tell me whether there is evidence of persistence or lateral movement.”
-- “Examine this image for user activity during the last 72 hours and write a Markdown report.”
-
-## Design principles
-
-The repo is built around a few non-negotiables:
-
-- **Preservation first** — originals stay preserved, working copies get analyzed
-- **Scope discipline** — stay within the stated authority and case boundaries
-- **Plain-language usefulness** — findings must help a non-technical stakeholder
-- **Markdown output** — reports should be readable, diffable, and portable
-- **Guarded self-improvement** — the system may evolve, but never by weakening forensic rigor
-
-## One visible agent, hidden helpers
-
-| Role | Visibility | Responsibility |
+| Evidence or task type | Current status | Notes |
 | --- | --- | --- |
-| `Forensic Examiner` | User-facing | investigator support, scope clarification, examination, analysis, reporting |
-| `Forensic Toolsmith` | Internal | tool selection, staging, readiness, install and platform logic |
-| `Forensic Maintainer` | Internal | self-update, workflow critique, architecture review, safe optimization |
+| Mounted file-system paths | Primary | Useful for scoped review and artifact extraction. Not equivalent to full-image analysis. |
+| `raw/dd`, `E01`, `AFF4`, `VMDK/VHD` | Primary | Intended inputs for filesystem, artifact, and timeline work. |
+| Live-host decision support | Limited | Used to frame preservation and acquisition decisions, not to replace live-response SOPs. |
+| Firmware or opaque blobs | Secondary | Supported when the evidence requires it, usually through tool selection by the internal toolsmith. |
+| Memory, mobile, cloud-native, or packet-only work | Outside primary scope | May require separate workflows, additional agents, or external SOPs. |
+
+## What the examiner does
+
+The user interacts with a single visible agent: `Forensic Examiner`.
+
+On each run the examiner is expected to:
+
+- translate a broad request into concrete forensic questions
+- ask only the clarification questions that are likely to change scope, interpretation, or priority
+- invoke internal helper paths for tool readiness and workflow review
+- keep evidence handling preservation-first and read-only where possible
+- separate observation, inference, and limitation
+- maintain a Markdown report as the work progresses
+
+The helper roles are internal:
+
+- `Forensic Toolsmith` handles tool selection, readiness, and platform caveats
+- `Forensic Maintainer` reviews lessons learned and bounded updates to the workflow
 
 Only `Forensic Examiner` should be selected directly by the user.
 
-## The architecture is allowed to evolve
+## What to provide
 
-The current design is intentional, but it is not sacred.
+At minimum, the examiner works best when given:
 
-Through the self-update process, the system may:
+- an evidence path or image path
+- the question to answer, even if it is still broad
+- known scope or authority limits
+- timezone or locale assumptions if they matter
+- whether the source is live, mounted, or a preserved image
+- the desired report path if one is already chosen
 
-- add agents
-- remove agents
-- merge or split roles
-- change internal boundaries
-- revise the main examiner role itself
+If some of this is missing, the examiner should ask concise follow-up questions and then proceed with conservative assumptions when the answers are unavailable.
 
-That flexibility is allowed **only** when it improves the forensic-analysis and reporting outcome without violating the core guardrails.
+## What you get back
 
-## Repository layout
+The expected output is a Markdown report that records:
+
+- the request and scope assumptions
+- evidence handling and verification notes
+- the examination method and tool versions
+- findings and timeline correlations
+- explicit limitations and unresolved questions
+- conclusions stated in language a non-technical stakeholder can follow
+
+## Operational flow
+
+<p align="center">
+	<img src="docs/assets/forensic-copilot-loop.svg" alt="Forensic Copilot loop diagram" width="100%" />
+</p>
+
+The current workflow is iterative rather than one-pass:
+
+1. receive the case request
+2. narrow the task with high-value clarification questions
+3. check tool readiness and platform constraints
+4. examine the evidence with preservation-first handling
+5. analyze and correlate the resulting artifacts
+6. write or update the Markdown report
+7. review what should change before the next loop
+
+This is where the project borrows from systems such as OpenEvolve and autoresearch: not in the details of their implementation, but in the idea that a run can critique itself and improve the next run. The difference is the optimization target. Here the goal is not novelty or benchmark performance; it is defensible examination and a better report.
+
+## Known limits
+
+The most important limits are easy to miss if they are not stated plainly:
+
+- mounted file-system views do not answer every question that a full image can answer
+- deleted, unallocated, slack-space, and some filesystem-internal questions may require full-image access
+- encryption, cloud placeholders, remote mounts, and hybrid storage layers can change what is observable
+- some commonly used forensic tools remain Windows-first or license-constrained
+- this repo documents a workflow, not a formal validation package
+
+See `docs/limitations.md` for the fuller list.
+
+## Quick start in VS Code
+
+1. Clone this repo or copy the `.github/agents/` directory into the target workspace.
+2. Ensure all three agent files are present in the workspace `.github/agents/` directory, even though only `Forensic Examiner` is user-facing.
+3. Keep the repo docs available if you want the maintainer path to update the same canonical source rather than a drifting local copy.
+4. Reload the VS Code window if the agent picker does not refresh automatically.
+5. Select **`Forensic Examiner`** in Copilot Chat.
+
+Example first prompt:
+
+> Investigate `/evidence/image.E01` for suspicious user activity and produce a Markdown report. If context is missing, ask only the clarification questions that materially affect scope or interpretation.
+
+For a worked example, see `docs/example-investigation.md`.
+
+## Documentation set
 
 | Path | Purpose |
 | --- | --- |
 | `.github/agents/` | custom agent definitions |
-| `docs/self-update-loop.md` | self-improvement process and hard guardrails |
-| `docs/tooling-matrix.md` | opinionated tool-selection guidance |
+| `docs/limitations.md` | current scope limits, cautions, and validation boundaries |
+| `docs/example-investigation.md` | example prompt, clarification exchange, and report excerpt |
+| `docs/self-update-loop.md` | rules for post-run workflow improvement |
+| `docs/tooling-matrix.md` | current tool-selection starting point |
+| `docs/sources.md` | source basis and review anchors |
 | `docs/privacy-and-redaction.md` | public-repo sanitization checklist |
-| `docs/sources.md` | authoritative references and upstream anchors |
-| `AGENTS.md` | repository-wide rules for future modifications |
+| `AGENTS.md` | repository-wide rules for future changes |
 
-## Quick start in VS Code
+## Source basis
 
-1. Add the agent files into your workspace `.github/agents/` directory.
-2. Reload VS Code if the agent picker does not update immediately.
-3. Select **`Forensic Examiner`** in Copilot Chat.
-4. Give it an evidence path, image path, or investigative question.
-
-Example prompt:
-
-> Investigate `/evidence/image.E01` for suspicious user activity and produce a Markdown report. If important context is missing, ask the minimum high-value clarification questions first.
+The repo is intentionally tied to current process guidance rather than to a single person's preferences. The current source basis is summarized in `docs/sources.md`, including what each source is used for and when it was last reviewed.
 
 ## Privacy note
 
-This repository is intended to stay generic when published.
+This repository is meant to stay generic when published. Do not commit real names, user names, hostnames, employer names, client names, live case outputs, or machine-specific paths. Use placeholders such as `CASE-001`, `ANALYST`, `HOST-A`, and `/evidence/image.E01`.
 
-Do not commit:
-
-- real names
-- usernames
-- hostnames
-- employer or client names
-- raw evidence outputs
-- screenshots from live investigations
-- absolute local paths tied to a real environment
-
-Use placeholders such as:
-
-- `CASE-001`
-- `ANALYST`
-- `HOST-A`
-- `/evidence/image.E01`
-
-See `docs/privacy-and-redaction.md` for the full checklist.
-
-## In one sentence
-
-`Forensic Copilot` is a self-improving forensic examiner agent that behaves like a real investigator-facing digital forensic examiner: it clarifies scope, preserves rigor, examines evidence, explains findings, writes Markdown reports, and improves its own workflow without compromising defensibility.
+The practical checklist is in `docs/privacy-and-redaction.md`.
