@@ -1,93 +1,200 @@
-# Forensic Analysis Agents
+# Forensic Copilot
 
-Git-tracked custom agents, instructions, and supporting documentation for **forensically analyzing evidence items** and producing **defensible Markdown reports**.
+<p align="center">
+  <img src="docs/assets/forensic-copilot-hero.svg" alt="Forensic Copilot hero illustration" width="100%" />
+</p>
 
-## Purpose
+<p align="center">
+  <strong>A self-improving forensic examiner agent for investigator-facing, evidence-safe analysis and Markdown reporting.</strong>
+</p>
 
-This repository is the canonical home for:
+<p align="center">
+  Inspired by the feel of systems like <strong>OpenEvolve</strong> and <strong>Andrej Karpathy's autoresearch</strong>—but adapted for digital forensics, where preservation, scope discipline, and defensibility matter as much as iteration speed.
+</p>
 
-- forensic examiner agent definitions
-- tooling-selection and environment-preparation subagents
-- report and methodology instructions
-- research notes that justify workflow or toolchain choices
+## What this repo is
 
-Every change in this repo must support the same end goal:
+`Forensic Copilot` is a repository of custom agents, instructions, and supporting docs for a **digital forensic examiner agent** that:
 
-> examine a mounted file system or forensic image in a defensible way and produce a clear Markdown report.
+- supports a **non-technical investigator**
+- narrows and clarifies investigative scope
+- examines mounted file systems and disk images defensibly
+- explains findings in plain language
+- produces a **Markdown forensic report**
+- improves itself through a guarded, evidence-safe review loop
 
-## Included agents
+This is not a generic autonomous coding agent with a forensic sticker on it.
 
-- `Forensic Examiner` — the only user-facing agent; it leads collection, examination, analysis, reporting, and the orchestration of internal helper subagents.
-- `Forensic Toolsmith` — internal subagent called by the examiner to validate tooling, environment readiness, and installation strategy.
-- `Forensic Maintainer` — internal subagent called by the examiner during the loop to review lessons learned, instruction quality, and safe self-improvement.
+It is a forensic workflow system designed to behave more like a real digital forensic examiner working alongside an investigator, incident responder, or case officer.
 
-Only `Forensic Examiner` should be selected directly by the user. The other two agents are support roles inside the examiner's workflow.
+## What the agent actually is
 
-That said, the current architecture is not sacred. Through the self-update process, the system may add, remove, merge, split, or revise agents, including the main examiner role, if doing so clearly improves the forensic-analysis and reporting outcome without violating the core guardrails.
+At the top level, the system exposes **one user-facing agent**:
 
-## Operating principles
+- `Forensic Examiner`
 
-- Preserve originals; analyze verified working copies.
-- Prefer read-only workflows and document any deviation.
-- Treat mounted file-system views as partial evidence views, not full-image truth.
-- Prefer current authoritative guidance such as NIST, SWGDE, NIJ, and tool-specific official docs.
-- Prefer reproducible, Linux-friendly, open tooling when possible.
-- Document platform-specific constraints for tools that are Windows-first, proprietary, or both.
-- Separate observed artifacts from interpretation.
-- Keep the report in Markdown and update it as the analysis progresses.
-- Close the loop after significant work by reviewing what succeeded, what failed, and what authoritative guidance changed, then applying only minimal justified improvements.
+Behind the scenes, the examiner orchestrates two internal helper subagents:
+
+- `Forensic Toolsmith` — validates tooling, readiness, install strategy, and platform caveats
+- `Forensic Maintainer` — critiques the workflow, captures lessons learned, and updates the system safely
+
+So from the user's perspective, this feels like **one examiner**.
+
+From the system's perspective, it is a **looped forensic research-and-analysis pipeline** with internal specialization.
+
+## Why it feels like OpenEvolve / autoresearch
+
+The inspiration is structural, not literal.
+
+The system borrows the *shape* of self-improving research loops:
+
+- clarify the objective
+- run a focused attempt
+- inspect the results
+- critique what happened
+- keep the good changes
+- repeat when needed
+
+But the optimization target is very different.
+
+Instead of optimizing for novelty, benchmark wins, or open-ended exploration, `Forensic Copilot` optimizes for:
+
+- evidence preservation
+- scope correctness
+- investigator usefulness
+- report quality
+- reproducibility
+- defensibility
+
+In short:
+
+| Self-improving research systems | Forensic Copilot adaptation |
+| --- | --- |
+| Iterate aggressively | Iterate defensibly |
+| Improve based on outcomes | Improve based on outcomes **and** forensic guardrails |
+| Seek better experiments | Seek better examinations and clearer reports |
+| Keep what works | Keep only what preserves evidence, scope, and rigor |
+
+## The loop ✨
+
+<p align="center">
+  <img src="docs/assets/forensic-copilot-loop.svg" alt="Forensic Copilot loop diagram" width="100%" />
+</p>
+
+The examiner does not simply run once and stop.
+
+It works in a controlled loop:
+
+1. **Receive the case request**
+2. **Ask high-value clarification questions** when context would materially improve scope or interpretation
+3. **Validate tools and environment** through the internal toolsmith
+4. **Examine the evidence** using preservation-first handling
+5. **Analyze and interpret findings** in relation to the case
+6. **Write or update the Markdown report**
+7. **Review and improve the workflow** through the internal maintainer
+8. **Loop again** if meaningful questions remain
+
+Crucially, clarification is helpful—but not a permanent blocker.
+
+If the user cannot answer every question, the examiner should proceed with conservative assumptions, state them clearly, and continue useful work.
+
+## The user experience
+
+The agent is meant to feel like a capable forensic examiner assisting an investigator.
+
+That means it should:
+
+- help translate a vague request into a workable forensic objective
+- ask smart questions about scope, timeframe, accounts, hosts, and authority limits
+- explain technical evidence in ordinary language
+- point out limitations and uncertainty
+- keep the report useful for decision-making, not just artifact dumping
+
+Example interactions:
+
+- “Investigate `/evidence/drive.E01` for evidence of data theft.”
+- “Review `/mnt/image` and tell me whether there is evidence of persistence or lateral movement.”
+- “Examine this image for user activity during the last 72 hours and write a Markdown report.”
+
+## Design principles
+
+The repo is built around a few non-negotiables:
+
+- **Preservation first** — originals stay preserved, working copies get analyzed
+- **Scope discipline** — stay within the stated authority and case boundaries
+- **Plain-language usefulness** — findings must help a non-technical stakeholder
+- **Markdown output** — reports should be readable, diffable, and portable
+- **Guarded self-improvement** — the system may evolve, but never by weakening forensic rigor
+
+## One visible agent, hidden helpers
+
+| Role | Visibility | Responsibility |
+| --- | --- | --- |
+| `Forensic Examiner` | User-facing | investigator support, scope clarification, examination, analysis, reporting |
+| `Forensic Toolsmith` | Internal | tool selection, staging, readiness, install and platform logic |
+| `Forensic Maintainer` | Internal | self-update, workflow critique, architecture review, safe optimization |
+
+Only `Forensic Examiner` should be selected directly by the user.
+
+## The architecture is allowed to evolve
+
+The current design is intentional, but it is not sacred.
+
+Through the self-update process, the system may:
+
+- add agents
+- remove agents
+- merge or split roles
+- change internal boundaries
+- revise the main examiner role itself
+
+That flexibility is allowed **only** when it improves the forensic-analysis and reporting outcome without violating the core guardrails.
 
 ## Repository layout
 
-- `.github/agents/` — custom agent definitions
-- `docs/privacy-and-redaction.md` — what must be sanitized before anything is published
-- `docs/self-update-loop.md` — self-improvement process and guardrails
-- `docs/tooling-matrix.md` — current tool-selection guidance and platform notes
-- `docs/sources.md` — authoritative references and upstream projects
-- `AGENTS.md` — repository-level instructions for future changes
+| Path | Purpose |
+| --- | --- |
+| `.github/agents/` | custom agent definitions |
+| `docs/self-update-loop.md` | self-improvement process and hard guardrails |
+| `docs/tooling-matrix.md` | opinionated tool-selection guidance |
+| `docs/privacy-and-redaction.md` | public-repo sanitization checklist |
+| `docs/sources.md` | authoritative references and upstream anchors |
+| `AGENTS.md` | repository-wide rules for future modifications |
 
-## Privacy and genericity rules
+## Quick start in VS Code
 
-This repository is intended to stay **generic** when published.
+1. Add the agent files into your workspace `.github/agents/` directory.
+2. Reload VS Code if the agent picker does not update immediately.
+3. Select **`Forensic Examiner`** in Copilot Chat.
+4. Give it an evidence path, image path, or investigative question.
 
-Do not commit content that can identify:
+Example prompt:
 
-- a real person
-- a specific workstation or host
-- an employer, client, or agency
-- a live case, evidence item, or internal environment
+> Investigate `/evidence/image.E01` for suspicious user activity and produce a Markdown report. If important context is missing, ask the minimum high-value clarification questions first.
 
-Use neutral placeholders instead, for example:
+## Privacy note
+
+This repository is intended to stay generic when published.
+
+Do not commit:
+
+- real names
+- usernames
+- hostnames
+- employer or client names
+- raw evidence outputs
+- screenshots from live investigations
+- absolute local paths tied to a real environment
+
+Use placeholders such as:
 
 - `CASE-001`
-- `/evidence/image.E01`
 - `ANALYST`
 - `HOST-A`
-- `ORG-NAME`
+- `/evidence/image.E01`
 
-Before pushing, run a privacy sweep and sanitize any names, usernames, emails, hostnames, absolute local paths, employer references, ticket IDs, or case-derived artifacts.
+See `docs/privacy-and-redaction.md` for the full checklist.
 
-## Update policy
+## In one sentence
 
-This repository is intended to be the **canonical source** for the forensic agents and instructions.
-
-When we make future changes to these agents or decisions:
-
-1. update the relevant agent or doc in this repo
-2. run the self-update review when the change was driven by performance feedback, tooling drift, or new authoritative guidance
-3. update supporting docs if the workflow or toolchain changed
-4. push the change to the public GitHub repository so the canonical copy stays current
-
-## Notes on tool downloads
-
-This repository stores **definitions, instructions, and documentation**.
-
-Downloaded tools, virtual environments, containers, and large evidence-derived outputs should usually be kept **outside git history** or under ignored directories, with their versions and locations recorded in the Markdown report or provisioning notes.
-
-Evidence files, case outputs, screenshots, exported artifacts, and investigator notes should also remain outside git unless they have been deliberately sanitized for public release.
-
-## Next steps
-
-- keep the canonical repo in sync with accepted workflow and tooling changes
-- optionally mirror selected agents into a workspace-level `.github/agents/` folder when you want them active in another workspace
-- use the self-update loop after significant investigations, tool failures, or new best-practice findings
+`Forensic Copilot` is a self-improving forensic examiner agent that behaves like a real investigator-facing digital forensic examiner: it clarifies scope, preserves rigor, examines evidence, explains findings, writes Markdown reports, and improves its own workflow without compromising defensibility.
