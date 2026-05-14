@@ -17,9 +17,11 @@ Every change in this repo must support the same end goal:
 
 ## Included agents
 
-- `Forensic Examiner` — leads collection, examination, analysis, and reporting for mounted file systems and image formats such as `E01`, `AFF4`, `raw/dd`, `VMDK`, and `VHD`.
-- `Forensic Toolsmith` — researches, selects, stages, and verifies the minimal toolchain needed for the current evidence and platform.
-- `Forensic Maintainer` — reviews prior performance, new guidance, and workflow friction to safely update the agents and docs without breaking the forensic-analysis loop.
+- `Forensic Examiner` — the only user-facing agent; it leads collection, examination, analysis, reporting, and the orchestration of internal helper subagents.
+- `Forensic Toolsmith` — internal subagent called by the examiner to validate tooling, environment readiness, and installation strategy.
+- `Forensic Maintainer` — internal subagent called by the examiner during the loop to review lessons learned, instruction quality, and safe self-improvement.
+
+Only `Forensic Examiner` should be selected directly by the user. The other two agents are support roles inside the examiner's workflow.
 
 ## Operating principles
 
