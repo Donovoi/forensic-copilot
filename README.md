@@ -23,6 +23,8 @@ Every change in this repo must support the same end goal:
 
 Only `Forensic Examiner` should be selected directly by the user. The other two agents are support roles inside the examiner's workflow.
 
+That said, the current architecture is not sacred. Through the self-update process, the system may add, remove, merge, split, or revise agents, including the main examiner role, if doing so clearly improves the forensic-analysis and reporting outcome without violating the core guardrails.
+
 ## Operating principles
 
 - Preserve originals; analyze verified working copies.
