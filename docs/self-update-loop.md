@@ -1,14 +1,36 @@
 # Self-update loop
 
-This document defines how the forensic agent system improves itself without losing the plot.
+This document governs how the repository changes after real investigative use. It exists to keep the workflow improvable without allowing silent drift in evidence-handling practice.
 
-The goal never changes:
+The goal does not change:
 
 > forensically analyze the evidence item and produce a defensible Markdown report.
 
+## Two kinds of adaptation
+
+The repo distinguishes between runtime adaptation and repository maintenance.
+
+### Runtime adaptation
+
+During a case, the examiner may adapt:
+
+- clarification questions
+- investigative priorities
+- tool choice and order of operations
+- report emphasis
+- the next loop based on what the evidence actually shows
+
+That kind of adaptation is normal casework.
+
+### Repository maintenance
+
+Edits to agent files, instructions, docs, or agent boundaries are maintenance actions. They should be justified, recorded, and pushed to the canonical repository so the method remains reviewable.
+
+In short: the examiner may adapt the plan during a case, but the public method should not drift silently.
+
 ## Core invariants
 
-Any self-update, optimization, or instruction rewrite must preserve all of the following:
+Any accepted maintenance change must preserve all of the following:
 
 1. preservation-first evidence handling
 2. scope discipline and legal or policy boundaries
@@ -17,87 +39,87 @@ Any self-update, optimization, or instruction rewrite must preserve all of the f
 5. iterative looping so the workflow can improve over time
 6. the end goal of forensic analysis and reporting
 
-If a proposed change would weaken any invariant, reject or revise it.
+If a proposed change weakens any invariant, reject it or revise it.
 
-## When to run the self-update stage
+## Review triggers
 
 Run a self-update review when any of the following occurs:
 
-- a significant investigation loop is completed
+- a significant investigative loop is completed
 - a major report is delivered
-- tooling installation or verification repeatedly fails
-- a new authoritative best practice changes how work should be done
-- an agent instruction proves ambiguous, misleading, or incomplete
+- tooling installation or verification fails repeatedly
+- a new authoritative source changes the preferred method
+- an instruction proves ambiguous, misleading, or incomplete
 - repeated manual work suggests the workflow can be simplified safely
 
-## Inputs to review
+## Inputs worth checking
 
-The self-update stage should consider as many of these as are available:
+Use as many of these as are available:
 
 - the latest Markdown report
 - tooling preparation notes
-- task lists and execution notes
+- task lists or execution notes
 - observed blockers, delays, or validation failures
 - newly identified NIST, SWGDE, NIJ, CFTT, or official upstream guidance
-- feedback about report clarity or missing sections
+- feedback about report clarity, omissions, or weak sections
 
-## Loop process
+## Maintenance workflow
 
-1. **Capture lessons learned**
-   - record what worked, what failed, what was slow, and what was risky
+1. **Capture the trigger**
+   - record what happened and why a review is being opened
 
-2. **Compare with current instructions**
-   - identify where the existing agents or docs did not guide the work well enough
+2. **Separate case-specific friction from reusable workflow issues**
+   - not every awkward case justifies a prompt rewrite
 
-3. **Compare with current guidance**
+3. **Compare the current instructions with the work that was actually performed**
+   - identify where the current docs helped, failed, or stayed silent
+
+4. **Compare with current guidance**
    - check whether authoritative recommendations or upstream install paths changed
 
-4. **Design minimal edits**
-   - prefer small, justified changes over sweeping rewrites
-   - agent responsibilities and agent boundaries may change if that is the clearest justified improvement
+5. **Design the smallest justified edit**
+   - prefer a narrow correction over a wholesale rewrite
+   - agent boundaries may change, but only if the change is easier to explain and easier to defend than the current split
 
-5. **Validate guardrails**
-   - ensure the changes still preserve the core invariants listed above
-   - ensure the published content remains generic and does not expose personal, machine-specific, employer, or case identifiers
+6. **Validate the guardrails**
+   - confirm that preservation, scope, reporting, privacy, and loop compatibility remain intact
 
-6. **Apply and document**
-   - update the relevant agents or docs
-   - summarize why the change was made and what future improvement is expected
+7. **Record the maintenance note**
+   - leave a concise trace of why the change was made and what it is expected to improve
 
-7. **Push the canonical update**
-   - publish accepted changes to the canonical GitHub repository so the maintained version stays current
+8. **Push the canonical update**
+   - publish accepted changes to the maintained public repository so local copies do not drift
 
-## Safe optimization patterns
+## Good maintenance changes
 
-Good self-updates usually look like:
+Typical safe updates include:
 
-- clarifying intake questions
+- clarifying intake questions that repeatedly matter
 - adding missing evidence-handling warnings
-- improving report section requirements
-- tightening tool-selection logic after repeated setup pain
-- adding a missing best-practice citation or upstream source
-- splitting a vague responsibility into a dedicated subagent
-- merging or simplifying agents when the existing split adds friction without improving outcomes
-- revising the main examiner role when it improves investigator support, clarification quality, or report usefulness
+- tightening report section requirements
+- refining tool-selection logic after repeated setup friction
+- pinning a new source or upstream reference
+- merging or splitting agent responsibilities when the current design adds avoidable confusion
 
-## Unsafe optimization patterns
+## Changes to reject
 
 Reject changes that:
 
 - reduce hashing, chain-of-custody, or read-only requirements
 - remove limitation reporting to make reports look cleaner
-- collapse iterative review into a one-pass workflow with no reflection stage
-- add broad tool-installation behavior unrelated to the case
-- make attribution claims easier without requiring corroboration
+- hide uncertainty or make attribution easier without corroboration
+- broaden tool installation behavior without a case-driven need
+- collapse iterative review into a one-pass workflow
+- rewrite public instructions without leaving a reviewable justification
 
 ## Minimum maintenance note
 
-Every accepted self-update should leave behind a concise note of:
+Every accepted change should leave behind a short note that states:
 
 - what triggered the review
 - what changed
 - what source or lesson justified it
 - which guardrails were checked
-- how the next run should be better
+- what should improve on the next run
 
-If the update is intended for public publication, also note what privacy or redaction checks were performed.
+If the change is intended for public publication, also record what privacy and redaction checks were performed.
