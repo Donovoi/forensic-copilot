@@ -26,7 +26,7 @@
     <rect x="58" y="54" width="1084" height="532" rx="28" fill="#0B1528" fill-opacity="0.42" stroke="#5B7DBA" stroke-opacity="0.18"/>
   </g>
 
-  <g transform="translate(86 88)">
+  <g transform="translate(86 60)">
     <rect x="0" y="0" width="94" height="94" rx="22" fill="#0B1C35" stroke="#8CB5FF" stroke-opacity="0.25"/>
     <path d="M47 18L71 28V49C71 66 60 82 47 88C34 82 23 66 23 49V28L47 18Z" fill="url(#accent)" opacity="0.95"/>
     <circle cx="47" cy="48" r="11" fill="#0B1C35"/>
