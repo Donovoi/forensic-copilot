@@ -6,6 +6,7 @@ Suggested subdirectories:
 
 - `downloads/` — manually downloaded or fetched packages
 - `cache/` — package caches, container metadata, or temporary build state
+- `report/` — CSS, templates, or other local assets used by the formal report export pipeline
 
 The repository `.gitignore` is set up so large or transient tool assets do not pollute git history.
 

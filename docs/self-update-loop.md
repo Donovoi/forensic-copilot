@@ -41,9 +41,11 @@ Any accepted maintenance change must preserve all of the following:
 1. preservation-first evidence handling
 2. scope discipline and legal or policy boundaries
 3. explicit limitations and defensible reporting
-4. Markdown as the deliverable format
+4. Markdown as the canonical report format
 5. iterative looping so the workflow can improve over time
 6. the end goal of forensic analysis and reporting
+
+Formal exports may be added on top of the Markdown record. They do not replace the reviewed Markdown source.
 
 If a proposed change weakens any invariant, reject it or revise it.
 

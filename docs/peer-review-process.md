@@ -36,9 +36,12 @@ The peer reviewer should:
 - read the draft report and the artifacts it cites
 - identify which findings are well supported
 - identify where the report is leaning too hard on inference
+- identify artifacts or notes that fall outside the declared scope boundary
 - suggest alternative explanations that fit the same artifacts
 - identify missing corroboration that should be named before release
 - recommend wording downgrades where the evidence does not support the stronger claim
+- flag formulaic or over-polished wording when it makes the report sound more certain than the evidence supports
+- flag blocker language that is too vague to explain why the work stopped or what decision was needed next
 
 The peer reviewer is not responsible for editing prompts, docs, or repo architecture.
 
@@ -60,6 +63,12 @@ Release recommendations should be one of:
 - **ready**
 - **ready with caveats**
 - **not ready**
+
+## Release gating
+
+- `ready` means the examiner may hand off the Markdown report and, if requested, generate the formal export package described in `docs/formal-report-output.md`.
+- `ready with caveats` means the Markdown report may still circulate internally with the caveats attached, but the formal export should wait until the caveats are resolved or formally accepted.
+- `not ready` means do not release the report and do not generate the formal export.
 
 ## Relationship to maintenance review
 

@@ -5,6 +5,7 @@ This repository is easier to trust if its limits are stated plainly. The agent i
 ## Evidence access limits
 
 - A mounted file-system view is a partial representation of the evidence. It may be enough for scoped artifact review, but it does not answer every question that a full image can answer.
+- A neighboring output directory, cached export, or prior analyst product is not automatically part of the case scope, even when it appears to reference the same image.
 - Deleted entries, unallocated space, slack space, some filesystem-internal artifacts, prior volume states, and certain metadata questions may require full-image access.
 - Encryption, detached key material, and credential-protected containers may block examination until live context or valid keys are available.
 - Cloud-backed placeholders, remote mounts, and synchronized folders can make it unclear whether the visible files represent the full logical evidence set.
@@ -28,6 +29,8 @@ This repository is easier to trust if its limits are stated plainly. The agent i
 - Findings still require examiner review. AI-generated phrasing is not evidence and should not replace direct artifact verification.
 - Attribution is rarely a one-artifact question. The report should preserve uncertainty when the available evidence does not support a stronger conclusion.
 - A well-structured Markdown report is useful, but it is not a substitute for tool validation records, chain-of-custody documentation, or testimony preparation.
+- A polished PDF or DOCX can improve presentation. It does not strengthen weak findings, close corroboration gaps, or replace the Markdown case record.
+- Formal export depends on local rendering tools. If `pandoc` or a PDF backend is missing, document the blocker instead of faking a finished package.
 
 ## Server interpretation limits
 
