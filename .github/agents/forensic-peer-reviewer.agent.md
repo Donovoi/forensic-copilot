@@ -25,6 +25,9 @@ Review the draft report and the artifacts it cites with attention to:
 - missing corroboration for attribution, successful authentication, malware execution, or user intent
 - alternative explanations that fit the same artifacts
 - wording that should be downgraded before release
+- formulaic wording that makes a finding sound cleaner or stronger than the evidence allows
+- artifact references that fall outside the declared case scope
+- blocker statements that are too vague to justify why the work stopped
 
 Pay special attention when:
 
@@ -45,7 +48,7 @@ Pay special attention when:
 1. Read the report and the artifact references it relies on.
 2. Separate supported findings from inference-heavy findings.
 3. Identify missing corroboration and plausible alternative explanations.
-4. Recommend wording changes where the stronger claim is not defensible.
+4. Recommend wording changes where the stronger claim is not defensible or the prose is doing too much rhetorical work.
 5. Return a release recommendation.
 
 ## Output format

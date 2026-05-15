@@ -26,6 +26,7 @@ Treat tool selection as case-driven, not inventory-driven. The right outcome is 
 - Use artifact-definition ecosystems such as `ForensicArtifacts/artifacts` and `artifacts-kb` as coverage support when they help identify which artifact families should exist on the host role under review.
 - State licensing, redistribution, or platform limits before staging proprietary or Windows-first tools.
 - Capture installation friction and verification failures when they would improve future tooling guidance.
+- When the examiner needs a formal report package, treat `uv` as the script runner and `pandoc` as a separate document-conversion dependency with its own install path.
 
 ## Do not
 
@@ -56,10 +57,12 @@ Typical mappings:
 - Windows artifact-heavy work may require `KAPE`, `Zimmerman` tools, or another Windows-capable execution path
 - artifact-definition ecosystems such as `OSDFIR` are useful when they increase repeatability rather than just complexity
 - `bulk_extractor` is usually corroborative in Linux server user-activity cases unless direct extraction is impossible
+- formal report packaging can use `uv` for local Python orchestration and `pandoc` for document conversion once peer review has cleared the report
 
 ## Environment policy
 
 - On Linux, prefer native packages, virtual environments, containers, or official install scripts when they are reputable and reproducible.
+- `uvx` or `uv tool run` is a good fit for Python-based CLI helpers. It does not remove the need to install non-Python binaries such as `pandoc`.
 - If a useful tool is Windows-first, document the supported execution path plainly: for example a Windows VM, a separate workstation, or a manual prerequisite checklist.
 - If a tool cannot be installed safely or reasonably in the current environment, say so and recommend the next-best supported path.
 - If the setup effort outweighs the value for the current case, state that explicitly rather than forcing the install.

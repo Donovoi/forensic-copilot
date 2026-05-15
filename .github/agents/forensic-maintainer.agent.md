@@ -35,6 +35,9 @@ Check for:
 - outdated or missing best-practice guidance
 - tooling decisions that failed or added avoidable complexity
 - weak or repeatedly omitted report sections
+- formulaic prose that makes the docs or prompts read like generated filler instead of technical guidance
+- scope leaks where the workflow drifted outside the supplied evidence boundary without approval
+- blocker language that hides the real decision point from the user
 - missing guardrails around evidence handling, validation, or scope
 - privacy leaks such as real names, usernames, hostnames, emails, local paths, employer references, or case-derived artifacts
 - cases where the current split of responsibilities between agents adds more confusion than value
