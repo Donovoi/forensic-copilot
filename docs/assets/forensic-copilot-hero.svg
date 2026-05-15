@@ -38,9 +38,9 @@
   <text x="84" y="220" fill="#FFFFFF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="64" font-weight="800">Forensic Copilot</text>
   <text x="84" y="272" fill="#A9C2E8" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="28" font-weight="500">A forensic examiner agent for investigator-facing,</text>
   <text x="84" y="308" fill="#A9C2E8" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="28" font-weight="500">evidence-safe, loop-driven analysis and reporting.</text>
-  <text x="84" y="364" fill="#CFE1FF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20" font-weight="400">Inspired by self-improving systems like OpenEvolve and autoresearch,</text>
-  <text x="84" y="392" fill="#CFE1FF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20" font-weight="400">but adapted for defensible forensic work where scope, preservation,</text>
-  <text x="84" y="420" fill="#CFE1FF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20" font-weight="400">clarification, and Markdown reporting are first-class requirements.</text>
+  <text x="84" y="364" fill="#CFE1FF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20" font-weight="400">Built for casework that needs clear scope,</text>
+  <text x="84" y="392" fill="#CFE1FF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20" font-weight="400">evidence handling you can explain,</text>
+  <text x="84" y="420" fill="#CFE1FF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20" font-weight="400">and a report another examiner can follow.</text>
 
   <g transform="translate(90 472)">
     <rect x="0" y="0" width="186" height="52" rx="16" fill="#0D2340" stroke="#2B6EE8" stroke-opacity="0.45"/>
@@ -48,7 +48,7 @@
     <rect x="204" y="0" width="196" height="52" rx="16" fill="#0D2340" stroke="#34D399" stroke-opacity="0.45"/>
     <text x="228" y="33" fill="#DDEAFE" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="18" font-weight="700">3 internal helpers</text>
     <rect x="418" y="0" width="194" height="52" rx="16" fill="#0D2340" stroke="#60A5FA" stroke-opacity="0.45"/>
-    <text x="442" y="33" fill="#DDEAFE" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="18" font-weight="700">Markdown output</text>
+    <text x="442" y="33" fill="#DDEAFE" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="18" font-weight="700">Markdown + formal</text>
   </g>
 
   <g transform="translate(718 82)">
