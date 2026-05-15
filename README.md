@@ -6,7 +6,7 @@
 
 `Forensic Copilot` defines a Copilot custom agent for investigator-facing host and disk examinations. The current emphasis is Linux-based review of mounted file systems and common disk-image formats where the analyst needs a traceable workflow, explicit limitations, and a Markdown report.
 
-The repo is meant to help a human examiner, incident responder, or non-technical investigator work through a case more systematically. It is not presented as a replacement for evidentiary judgment, lab SOPs, or formal tool validation.
+The repo gives a human examiner, incident responder, or non-technical investigator a structured way to work through a case. Use it alongside evidentiary judgment, lab SOPs, and formal tool validation.
 
 ## Current scope
 
@@ -47,6 +47,7 @@ At minimum, the examiner works best when given:
 - an evidence path or image path
 - the question to answer, even if it is still broad
 - known scope or authority limits
+- whether adjacent derived outputs or prior exports outside the evidence path are in scope
 - timezone or locale assumptions if they matter
 - whether the source is live, mounted, or a preserved image
 - the desired report path if one is already chosen
@@ -55,7 +56,7 @@ If some of this is missing, the examiner should ask concise follow-up questions 
 
 ## What you get back
 
-The expected output is a Markdown report that records:
+The canonical output is a Markdown report that records:
 
 - the request and scope assumptions
 - evidence handling and verification notes
@@ -64,13 +65,15 @@ The expected output is a Markdown report that records:
 - explicit limitations and unresolved questions
 - conclusions stated in language a non-technical stakeholder can follow
 
+When peer review closes as `ready`, the same Markdown source can be rendered into a formal export package for circulation or filing. The current export path is documented in `docs/formal-report-output.md`.
+
 ## Operational flow
 
 <p align="center">
 	<img src="docs/assets/forensic-copilot-loop.svg" alt="Forensic Copilot loop diagram" width="100%" />
 </p>
 
-The current workflow is iterative rather than one-pass:
+The workflow runs in loops:
 
 1. receive the case request
 2. narrow the task with high-value clarification questions
@@ -81,9 +84,9 @@ The current workflow is iterative rather than one-pass:
 7. run case peer review before release
 8. review what should change before the next loop
 
-This is where the project borrows from systems such as OpenEvolve and autoresearch: not in the details of their implementation, but in the idea that a run can critique itself and improve the next run. The difference is the optimization target. Here the goal is not novelty or benchmark performance; it is defensible examination and a better report.
+The loop stays tied to casework: preserve the evidence, answer the case questions, challenge the draft, and revise the reusable method only when a repeatable issue shows up.
 
-The important separation is this: **peer review challenges the current case report; maintenance review changes the reusable method only when a repeatable problem has been found.**
+Peer review is case-specific. Maintenance review is where reusable method changes are considered.
 
 ## Known limits
 
@@ -94,6 +97,7 @@ The most important limits are easy to miss if they are not stated plainly:
 - encryption, cloud placeholders, remote mounts, and hybrid storage layers can change what is observable
 - some commonly used forensic tools remain Windows-first or license-constrained
 - on servers, recovered URLs, domains, admin endpoints, and crawler strings may reflect hosted-service activity rather than local user browsing or successful authentication
+- nearby case folders, cached outputs, or prior exports are not automatically in scope just because they reference the same image
 - this repo documents a workflow, not a formal validation package
 
 See `docs/limitations.md` for the fuller list.
@@ -102,7 +106,7 @@ See `docs/limitations.md` for the fuller list.
 
 1. Clone this repo or copy the `.github/agents/` directory into the target workspace.
 2. Ensure all four agent files are present in the workspace `.github/agents/` directory, even though only `Forensic Examiner` is user-facing.
-3. Keep the repo docs available if you want the maintainer path to update the same canonical source rather than a drifting local copy.
+3. Keep the repo docs available if you want the maintainer path to update the same canonical source instead of a drifting local copy.
 4. Reload the VS Code window if the agent picker does not refresh automatically.
 5. Select **`Forensic Examiner`** in Copilot Chat.
 
@@ -112,6 +116,8 @@ Example first prompt:
 
 For a worked example, see `docs/example-investigation.md`.
 
+If you want a formal export after peer review, see `docs/formal-report-output.md`.
+
 ## Documentation set
 
 | Path | Purpose |
@@ -119,6 +125,7 @@ For a worked example, see `docs/example-investigation.md`.
 | `.github/agents/` | custom agent definitions |
 | `docs/limitations.md` | current scope limits, cautions, and validation boundaries |
 | `docs/example-investigation.md` | example prompt, clarification exchange, and report excerpt |
+| `docs/formal-report-output.md` | formal report export rules, tooling, and release gating |
 | `docs/peer-review-process.md` | case peer-review rules and release criteria |
 | `docs/self-update-loop.md` | rules for post-run workflow improvement |
 | `docs/tooling-matrix.md` | current tool-selection starting point |
@@ -128,7 +135,7 @@ For a worked example, see `docs/example-investigation.md`.
 
 ## Source basis
 
-The repo is intentionally tied to current process guidance rather than to a single person's preferences. The current source basis is summarized in `docs/sources.md`, including what each source is used for and when it was last reviewed.
+The repo follows current process guidance and keeps its source basis in `docs/sources.md`, including what each source is used for and when it was last reviewed.
 
 ## Privacy note
 

@@ -24,6 +24,9 @@ venv/
 *.vmdk
 *.vhd
 *.vhdx
+*.formal.html
+*.formal.pdf
+*.formal.docx
 
 # Python noise
 __pycache__/

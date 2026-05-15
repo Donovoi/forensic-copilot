@@ -9,9 +9,17 @@ All agents, prompts, instructions, and supporting documents in this repository m
 1. **Preservation first** — preserve originals, prefer verified working copies, and document chain of custody and hashes.
 2. **Defensibility over convenience** — prefer repeatable, well-documented workflows over clever shortcuts.
 3. **Scope discipline** — stay within the stated authority, warrant, consent, or policy boundary.
-4. **Markdown deliverable** — all analysis must ultimately support a Markdown report that a human can read and defend.
+4. **Markdown record** — all analysis must ultimately support a Markdown report that a human can read and defend. Formal exports may be derived from that reviewed source, but they do not replace it.
 5. **Current guidance wins** — when authoritative guidance changes, update the workflow and cite the source.
 6. **Self-improvement must stay bounded** — any optimization or self-modification must preserve the forensic-analysis loop, not replace or weaken it.
+
+## Writing and report-style rules
+
+- Prefer plain technical writing over slogans, branding language, or motivational framing.
+- Avoid repetitive contrast constructions such as "not X but Y" unless the distinction genuinely matters to the reader.
+- Vary sentence openings and rhythm. Repeated sentence shapes make the docs sound machine-written.
+- State the fact, limit, or decision directly when a direct sentence will do.
+- Write like an experienced examiner or researcher leaving usable notes for the next reviewer.
 
 ## Tooling rules
 
@@ -20,6 +28,14 @@ All agents, prompts, instructions, and supporting documents in this repository m
 - Do not pretend Windows-only or proprietary tools are natively available on Linux.
 - If a tool requires Windows, a license, a container, or manual download, document that clearly.
 - Record selected tools, versions, install paths, and blockers in Markdown.
+
+## Scope-boundary and blocker rules
+
+- Treat the user-supplied evidence path, image path, or stated case boundary as the active scope unless the user explicitly expands it.
+- Do not rely on neighboring directories, prior exports, derived artifacts, analyst notes, or cached outputs outside that scope without explicit approval and report disclosure.
+- If a requested step is blocked, name the blocker precisely. Say what is missing, what was tried, what path was ruled out, and what decision is needed next.
+- Do not silently replace a blocked direct-examination step with a weaker or broader fallback.
+- When the blocker changes what can be answered, stop and bring that decision back to the user.
 
 ## Privacy and redaction rules
 
@@ -34,6 +50,7 @@ All agents, prompts, instructions, and supporting documents in this repository m
 When changing agent behavior or tool choices, also update the relevant docs:
 
 - `docs/peer-review-process.md` when the case-review process or peer-review triggers change
+- `docs/formal-report-output.md` when the formal export path or release gating changes
 - `docs/self-update-loop.md` when the improvement process or loop guardrails change
 - `docs/tooling-matrix.md` for tool-selection changes
 - `docs/sources.md` for new guidance or upstream references
@@ -73,7 +90,7 @@ It also never authorizes publishing identifying details that should have been re
 
 ## Reporting expectations
 
-The final or interim report must remain in Markdown and should include, when applicable:
+The working report must remain in Markdown and should include, when applicable:
 
 - case metadata and scope
 - evidence inventory and acquisition or preservation summary
@@ -82,6 +99,9 @@ The final or interim report must remain in Markdown and should include, when app
 - findings and timeline correlations
 - limitations, deviations, and contamination risks
 - conclusions and answers to tasking
+- concrete blocker statements and the next decision required when work could not continue inside scope
+
+If a formal export is required, generate it from the reviewed Markdown only after peer review returns `ready`.
 
 ## Sync policy
 

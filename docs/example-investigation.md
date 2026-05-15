@@ -15,13 +15,14 @@ This example is intentionally generic. It is meant to show how the examiner shou
 
 ## Example clarification questions
 
-The examiner should not stop on every missing detail, but it should ask the questions that could materially change scope or interpretation. A reasonable first response would ask:
+The examiner should keep moving when context is incomplete. The first questions should focus on the details that could materially change scope or interpretation. A reasonable first response would ask:
 
 1. Which user account or employee is in scope, if known?
 2. What date range matters most?
 3. What timezone should be used for reporting if the source timestamps are ambiguous?
 4. Is the task triage only, or do you want a fuller examination that includes deleted and timeline work if supported by the image?
 5. Are there any authority limits or excluded data categories that should be honored from the start?
+6. If pre-existing exports, timelines, or other derived outputs already exist outside `/evidence/CASE-001-laptop.E01`, should they be treated as in scope or ignored unless I come back for approval?
 
 If the answers are not yet available, the examiner should proceed with conservative assumptions and record them.
 

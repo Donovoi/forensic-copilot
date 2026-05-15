@@ -33,6 +33,7 @@ That is deliberate. This file should not imply a document was checked if it was 
 | `Plaso` | timeline generation from multiple artifacts | useful when timeline depth justifies the setup cost | <https://github.com/log2timeline/plaso> |
 | `Timesketch` | collaborative timeline review and enrichment | heavier than local CLI workflows; justified mainly for larger or team-based timeline work | <https://github.com/google/timesketch> |
 | `Binwalk` | firmware and blob analysis | appropriate for firmware and opaque binary work, not general host forensics | <https://github.com/ReFirmLabs/binwalk> |
+| `uv` | local automation for repo scripts and Python-based CLI helpers | useful for running report-packaging helpers and ephemeral Python tools without adding more bespoke environment glue | <https://docs.astral.sh/uv/> |
 
 ## Secondary workflow references
 
@@ -47,6 +48,7 @@ That is deliberate. This file should not imply a document was checked if it was 
 - `Timesketch` remains more service-oriented than lightweight local tooling.
 - `The Sleuth Kit` remains a sensible default for Linux-based image and filesystem work.
 - `Binwalk` is treated as a specialist tool, not a general-purpose substitute for host forensics.
+- `uv run` fits local script orchestration well, and `uvx` / `uv tool run` fits Python-based CLI helpers. Non-Python binaries such as `pandoc` still need their own install path.
 - Windows-first tools such as `FTK Imager`, `KAPE`, and many `Zimmerman` utilities are tracked as platform-specific dependencies rather than presumed native on Linux.
 - Artifact-definition ecosystems can improve coverage and gap detection even when they are not the primary extraction mechanism.
 - High-level Linux-forensics practitioner guidance reinforces role-aware interpretation: a Linux web server should not be read as if every recovered URL or admin endpoint represents local browsing by a human user.

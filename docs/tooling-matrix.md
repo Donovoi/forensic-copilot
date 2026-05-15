@@ -25,6 +25,8 @@ This matrix is the starting point for the `Forensic Toolsmith` agent. It is inte
 | `ForensicArtifacts` / `artifacts-kb` | artifact-family coverage and checklist support | High | when you need a structured reminder of which artifact families should exist on a host role or platform | Useful for coverage and terminology; not a standalone proof engine. |
 | hashing utilities | evidence verification and handoff integrity | High | every case | Mandatory rather than optional. Capture algorithms and results in the report. |
 | SQLite inspection tools | browser, app, and artifact database review | High | app and user-activity artifacts stored in SQLite | Treat as supporting tooling for artifact review and corroboration. |
+| `uv` | run local Python helper scripts and Python-based CLI tools | High | when the workflow includes local automation such as report packaging | Good wrapper for repo scripts and Python CLIs; do not treat it as the installer for non-Python binaries such as `pandoc`. |
+| `Pandoc` | render reviewed Markdown into formal HTML, DOCX, or PDF-ready outputs | Medium | when peer review has cleared the report and a formal package is needed | Keep Markdown as the source of truth. PDF output still depends on an available renderer or PDF backend. |
 
 ## Practical defaults on Linux
 
@@ -36,6 +38,18 @@ For a typical Linux-based disk-image examination, the first-pass stack should us
 4. SQLite inspection tools and filesystem-specific helpers
 5. `Plaso` if timeline depth is needed
 6. `Timesketch` only if collaborative or large-scale timeline review is justified
+
+## Report-production defaults
+
+For formal report output:
+
+1. keep the working report in Markdown
+2. wait for peer review to return `ready`
+3. use `uv run` to invoke local export scripts when the repo ships them
+4. use `Pandoc` to render standalone HTML or DOCX from the reviewed Markdown
+5. render PDF with a supported local backend such as `weasyprint` or `wkhtmltopdf` when available
+
+`uvx` or `uv tool run` is a good fit for Python-based CLI helpers. It is not a substitute for installing system binaries such as `pandoc`.
 
 ## Linux server user-activity bias
 
