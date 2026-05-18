@@ -73,7 +73,7 @@ When peer review closes as `ready`, the same Markdown source can be rendered int
 	<img src="docs/assets/forensic-copilot-loop.svg" alt="Forensic Copilot loop diagram" width="100%" />
 </p>
 
-The workflow runs in loops:
+The workflow starts with the case request and then loops back through clarification as needed:
 
 1. receive the case request
 2. narrow the task with high-value clarification questions
@@ -85,6 +85,8 @@ The workflow runs in loops:
 8. review what should change before the next loop
 
 The loop stays tied to casework: preserve the evidence, answer the case questions, challenge the draft, and revise the reusable method only when a repeatable issue shows up.
+
+The original investigator brief is a one-time intake step. If peer review, new questions, or maintenance review send the case around again, the next pass resumes at clarification rather than waiting for a new brief.
 
 Peer review is case-specific. Maintenance review is where reusable method changes are considered.
 
