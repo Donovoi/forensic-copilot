@@ -22,7 +22,7 @@ A Linux web-server image was analyzed primarily through derived artifacts becaus
 
 - real-world Linux server image analysis with derived-artifact constraints
 - public `ForensicArtifacts` project signals as coverage/checklist support
-- high-level Linux-forensics practitioner themes associated with Bruce Nikkel's work
+- high-level Linux-forensics practitioner themes from public literature
 
 ## Guardrail checks
 
