@@ -4,19 +4,74 @@
 	<img src="docs/assets/forensic-copilot-hero.svg" alt="Forensic Copilot hero illustration" width="100%" />
 </p>
 
-`Forensic Copilot` defines a Copilot custom agent for investigator-facing host and disk examinations. The current emphasis is Linux-based review of mounted file systems and common disk-image formats where the analyst needs a traceable workflow, explicit limitations, and a Markdown report.
+`Forensic Copilot` provides a GitHub Copilot custom agent plus a portable Markdown instruction set for investigator-facing host and disk examinations. The current emphasis is Linux-based review of mounted file systems and common disk-image formats where the analyst needs a traceable workflow, explicit limitations, and a Markdown report.
 
 The repo gives a human examiner, incident responder, or non-technical investigator a structured way to work through a case. Use it alongside evidentiary judgment, lab SOPs, and formal tool validation.
 
+## Setup and use
+
+This repo is designed to work in two modes:
+
+1. as a native custom-agent bundle in tools that understand `.github/agents/`
+2. as a portable Markdown instruction pack in other repo-aware coding agents and local model wrappers
+
+### Core files to keep available
+
+For the best results, keep these files in the active workspace or prompt context:
+
+- `AGENTS.md` for repository-wide rules and guardrails
+- `.github/agents/forensic-examiner.agent.md` as the main user-facing workflow
+- `.github/agents/forensic-toolsmith.agent.md` for tool-readiness logic
+- `.github/agents/forensic-peer-reviewer.agent.md` for case-review logic
+- `.github/agents/forensic-maintainer.agent.md` for workflow-maintenance logic
+- `docs/limitations.md`, `docs/tooling-matrix.md`, and `docs/peer-review-process.md` for supporting policy and execution detail
+
+### GitHub Copilot in VS Code
+
+1. Clone this repo or copy the `.github/agents/` directory into the target workspace.
+2. Ensure all four agent files are present in the workspace `.github/agents/` directory, even though only `Forensic Examiner` is user-facing.
+3. Keep the repo docs available if you want the maintainer path to update the same canonical source instead of a drifting local copy.
+4. Reload the VS Code window if the agent picker does not refresh automatically.
+5. Select **`Forensic Examiner`** in Copilot Chat.
+
+### Other agentic tools and local model setups
+
+If your tool does not support named custom agents, use the same workflow in a portable way:
+
+1. Open the repository so the tool can read `AGENTS.md` and the files under `.github/agents/`.
+2. Treat `AGENTS.md` as the repository-wide policy layer.
+3. Load or paste `.github/agents/forensic-examiner.agent.md` as the main system, developer, or role prompt for the active coding agent.
+4. Keep the helper-agent files in context as internal reference material, even if the tool cannot route true subagents.
+5. Keep the supporting docs available so the agent can apply the same limits, tool-selection rules, and peer-review gating.
+
+### Compatibility note
+
+This structure is intended to stay usable across GitHub Copilot, OpenCode, Codex, Claude Code, GitHub CLI-based workflows, and Ollama-backed local agent shells, provided the runner can do the basics:
+
+- read repository files or accept pasted Markdown instructions
+- keep a reasonably long system or developer prompt
+- maintain or edit a Markdown report in the workspace
+- optionally run commands or tools when the environment allows it
+
+For Ollama specifically, the compatibility lives in the instruction files and the repo-aware wrapper or coding agent that sits in front of the model. Ollama by itself is the serving layer, not the workflow layer.
+
+### First prompt
+
+Start with a prompt like:
+
+> Investigate `/evidence/image.E01` for suspicious user activity.
+
+From that prompt alone, the examiner should infer preservation-first handling, keep the scope limited to that image, start a Markdown case record, assume triage unless deeper work is justified, and use the internal toolsmith to prepare the minimal Linux image-analysis stack automatically when needed.
+
 ## Current scope
 
-| Evidence or task type | Current status | Notes |
-| --- | --- | --- |
-| Mounted file-system paths | Primary | Useful for scoped review and artifact extraction. Not equivalent to full-image analysis. |
-| `raw/dd`, `E01`, `AFF4`, `VMDK/VHD` | Primary | Intended inputs for filesystem, artifact, and timeline work. |
-| Live-host decision support | Limited | Used to frame preservation and acquisition decisions, not to replace live-response SOPs. |
-| Firmware or opaque blobs | Secondary | Supported when the evidence requires it, usually through tool selection by the internal toolsmith. |
-| Memory, mobile, cloud-native, or packet-only work | Outside primary scope | May require separate workflows, additional agents, or external SOPs. |
+| Evidence or task type                             | Current status        | Notes                                                                                              |
+| ------------------------------------------------- | --------------------- | -------------------------------------------------------------------------------------------------- |
+| Mounted file-system paths                         | Primary               | Useful for scoped review and artifact extraction. Not equivalent to full-image analysis.           |
+| `raw/dd`, `E01`, `AFF4`, `VMDK/VHD`               | Primary               | Intended inputs for filesystem, artifact, and timeline work.                                       |
+| Live-host decision support                        | Limited               | Used to frame preservation and acquisition decisions, not to replace live-response SOPs.           |
+| Firmware or opaque blobs                          | Secondary             | Supported when the evidence requires it, usually through tool selection by the internal toolsmith. |
+| Memory, mobile, cloud-native, or packet-only work | Outside primary scope | May require separate workflows, additional agents, or external SOPs.                               |
 
 ## What the examiner does
 
@@ -26,8 +81,10 @@ On each run the examiner is expected to:
 
 - translate a broad request into concrete forensic questions
 - ask only the clarification questions that are likely to change scope, interpretation, or priority
+- infer preservation-first, scope-limited triage from a bare evidence path instead of asking the user to restate those defaults
 - classify the host role early enough to avoid treating servers like desktop endpoints
 - invoke internal helper paths for tool readiness, case peer review, and workflow review
+- have the internal toolsmith verify or stage the minimal Linux image-analysis toolchain automatically when the evidence type already implies it
 - keep evidence handling preservation-first and read-only where possible
 - separate observation, inference, and limitation
 - maintain a Markdown report as the work progresses
@@ -42,6 +99,8 @@ Only `Forensic Examiner` should be selected directly by the user.
 
 ## What to provide
 
+An evidence path alone is enough to begin. When the rest is missing, the examiner should still start with preservation-first, scope-limited triage and a Markdown case record.
+
 At minimum, the examiner works best when given:
 
 - an evidence path or image path
@@ -52,7 +111,7 @@ At minimum, the examiner works best when given:
 - whether the source is live, mounted, or a preserved image
 - the desired report path if one is already chosen
 
-If some of this is missing, the examiner should ask concise follow-up questions and then proceed with conservative assumptions when the answers are unavailable.
+If some of this is missing, the examiner should ask concise follow-up questions only where the answers materially change scope or interpretation, proceed with conservative inferred defaults when the answers are unavailable, and create a sensible default Markdown case record when no report path has been supplied.
 
 ## What you get back
 
@@ -104,17 +163,15 @@ The most important limits are easy to miss if they are not stated plainly:
 
 See `docs/limitations.md` for the fuller list.
 
-## Quick start in VS Code
+## GitHub Copilot quick start in VS Code
 
-1. Clone this repo or copy the `.github/agents/` directory into the target workspace.
-2. Ensure all four agent files are present in the workspace `.github/agents/` directory, even though only `Forensic Examiner` is user-facing.
-3. Keep the repo docs available if you want the maintainer path to update the same canonical source instead of a drifting local copy.
-4. Reload the VS Code window if the agent picker does not refresh automatically.
-5. Select **`Forensic Examiner`** in Copilot Chat.
+If you want the native custom-agent experience in VS Code, use the **GitHub Copilot in VS Code** steps in the setup section above.
 
 Example first prompt:
 
-> Investigate `/evidence/image.E01` for suspicious user activity and produce a Markdown report. If context is missing, ask only the clarification questions that materially affect scope or interpretation.
+> Investigate `/evidence/image.E01` for suspicious user activity.
+
+From that prompt alone, the examiner should infer preservation-first handling, keep the scope limited to that image, start a Markdown case record, assume triage unless deeper work is justified, and use the internal toolsmith to prepare the minimal Linux image-analysis stack automatically when needed.
 
 For a worked example, see `docs/example-investigation.md`.
 
@@ -122,18 +179,18 @@ If you want a formal export after peer review, see `docs/formal-report-output.md
 
 ## Documentation set
 
-| Path | Purpose |
-| --- | --- |
-| `.github/agents/` | custom agent definitions |
-| `docs/limitations.md` | current scope limits, cautions, and validation boundaries |
+| Path                            | Purpose                                                    |
+| ------------------------------- | ---------------------------------------------------------- |
+| `.github/agents/`               | custom agent definitions                                   |
+| `docs/limitations.md`           | current scope limits, cautions, and validation boundaries  |
 | `docs/example-investigation.md` | example prompt, clarification exchange, and report excerpt |
-| `docs/formal-report-output.md` | formal report export rules, tooling, and release gating |
-| `docs/peer-review-process.md` | case peer-review rules and release criteria |
-| `docs/self-update-loop.md` | rules for post-run workflow improvement |
-| `docs/tooling-matrix.md` | current tool-selection starting point |
-| `docs/sources.md` | source basis and review anchors |
-| `docs/privacy-and-redaction.md` | public-repo sanitization checklist |
-| `AGENTS.md` | repository-wide rules for future changes |
+| `docs/formal-report-output.md`  | formal report export rules, tooling, and release gating    |
+| `docs/peer-review-process.md`   | case peer-review rules and release criteria                |
+| `docs/self-update-loop.md`      | rules for post-run workflow improvement                    |
+| `docs/tooling-matrix.md`        | current tool-selection starting point                      |
+| `docs/sources.md`               | source basis and review anchors                            |
+| `docs/privacy-and-redaction.md` | public-repo sanitization checklist                         |
+| `AGENTS.md`                     | repository-wide rules for future changes                   |
 
 ## Source basis
 

@@ -25,13 +25,14 @@ Preferred placeholder patterns:
 - `/evidence/image.E01`
 - `/analysis/report.md`
 
-## Quick pre-push checklist
+## Quick pre-commit and pre-push checklist
 
-1. Search for names, usernames, emails, hostnames, and absolute paths.
+1. Search the repository for names, usernames, emails, hostnames, and absolute paths.
 2. Search for employer, client, organization, or agency references.
 3. Confirm no evidence files, screenshots, notes, or raw case outputs are being committed.
 4. Confirm examples use placeholders rather than live values.
-5. Confirm the remaining content still supports the forensic-analysis and Markdown-report goal.
+5. Review the staged diff and confirm every changed file still passes this checklist.
+6. Confirm the remaining content still supports the forensic-analysis and Markdown-report goal.
 
 ## Important limitation
 
@@ -40,7 +41,9 @@ This checklist only covers repository **content**.
 Public GitHub metadata can still identify you, including:
 
 - the repository owner or organization name
+- the commit author name and email from your Git configuration
+- the remote URL or hosting account used for publication
 - your public GitHub profile
 - repository stars, followers, or activity patterns
 
-If stronger anonymity is required, publish from a neutral organization or pseudonymous account rather than a personally identifying GitHub identity.
+If stronger anonymity is required, publish from a neutral organization or pseudonymous account and use a neutral Git author identity before committing.

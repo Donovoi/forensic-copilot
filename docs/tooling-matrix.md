@@ -5,14 +5,16 @@ This matrix is the starting point for the `Forensic Toolsmith` agent. It is inte
 ## Selection heuristics
 
 1. choose the smallest toolchain that answers the case questions
-2. prefer tools with strong upstream reputation and reproducible setup paths
-3. avoid platform drama unless the evidence actually requires it
-4. record why each tool was selected, skipped, or deferred
+2. when Linux image work clearly implies a baseline stack, stage or verify that minimal stack first instead of pushing setup back to the user
+3. prefer tools with strong upstream reputation and reproducible setup paths
+4. avoid platform drama unless the evidence actually requires it
+5. record why each tool was selected, skipped, or deferred
 
 ## Current matrix
 
 | Tool | Primary role | Linux readiness | When to prefer it | Notes |
 | --- | --- | --- | --- | --- |
+| `libewf` / EWF tools | EWF/E01 verification, metadata review, and read-only access | High | `E01` and segmented EWF inputs that need verification or a Linux-side access path | Foundational for Linux E01 readiness. Pair it with hashing and The Sleuth Kit rather than treating it as a full examiner on its own. |
 | `bulk_extractor` | content scanning, feature extraction, carving support | High | broad content extraction from images or mounted evidence | Good companion tool, not a full filesystem examiner; on Linux server user-activity cases it is usually corroborative rather than primary proof of logon or browsing. |
 | `The Sleuth Kit` | partition, volume, filesystem, deleted-file, and metadata analysis | High | raw/E01/AFF4/disk-image workflows and filesystem-level validation | Official upstream: `sleuthkit/sleuthkit`. Foundational for disk and filesystem analysis. |
 | `Plaso` | supertimeline generation from multiple artifacts | Medium | timeline-heavy cases where cross-artifact ordering matters | Use when timeline correlation is central; packaging can be dependency-sensitive. |
@@ -30,14 +32,17 @@ This matrix is the starting point for the `Forensic Toolsmith` agent. It is inte
 
 ## Practical defaults on Linux
 
+For `E01`, `AFF4`, and other directly inspectable image work on Linux, the toolsmith should try to verify or stage this baseline automatically before declaring the case blocked.
+
 For a typical Linux-based disk-image examination, the first-pass stack should usually be:
 
 1. hashing utilities
-2. The Sleuth Kit
-3. `bulk_extractor`
+2. `libewf` / EWF tools when the image format requires them
+3. The Sleuth Kit
 4. SQLite inspection tools and filesystem-specific helpers
-5. `Plaso` if timeline depth is needed
-6. `Timesketch` only if collaborative or large-scale timeline review is justified
+5. `bulk_extractor`
+6. `Plaso` if timeline depth is needed
+7. `Timesketch` only if collaborative or large-scale timeline review is justified
 
 ## Report-production defaults
 
