@@ -21,7 +21,8 @@ The current Linux-first export path is:
 1. keep the report in Markdown
 2. use `uv run` to execute the local export helper script
 3. use `pandoc` to render standalone HTML and DOCX from the reviewed Markdown
-4. render PDF from the generated HTML when a supported local backend is available
+4. have the helper embed the bundled stylesheet into the generated HTML so the export does not depend on a workstation-specific CSS path
+5. render PDF from the generated HTML when a supported local backend is available, or use `--skip-pdf` when only HTML and DOCX are required
 
 The bundled helper script is `scripts/render_formal_report.py`.
 
@@ -30,6 +31,8 @@ Default outputs are written beside the source report:
 - `report.formal.html`
 - `report.formal.docx`
 - `report.formal.pdf`
+
+The HTML output is self-styled. It should not point at an absolute local path for `tooling/report/formal-report.css`.
 
 ## Tool split
 
@@ -41,6 +44,13 @@ Use each tool for the part it actually handles:
 - `weasyprint` or `wkhtmltopdf` — turn the generated HTML into PDF when available
 
 `uv` should not be treated as the installer for non-Python binaries such as `pandoc`.
+
+## Preflight and degraded mode
+
+The helper script supports two practical modes that make export failures easier to explain:
+
+- `--check-deps` — report whether `pandoc` and a supported PDF backend are available before case export time
+- `--skip-pdf` — generate HTML and DOCX only when no PDF backend is installed or a PDF is not required for the handoff
 
 ## Why this is the baseline
 
@@ -55,11 +65,20 @@ If export fails:
 - keep the Markdown report as the source of truth
 - keep the peer-review note with the case record
 - record which binary or backend was missing
+- use `--check-deps` early when you need to confirm the local export toolchain
+- use `--skip-pdf` rather than presenting an HTML or DOCX-only result as a full formal package
 - do not claim that a formal package was produced when only an HTML draft exists
 
 ## Example
 
 ```text
+uv run scripts/render_formal_report.py --check-deps
+
+uv run scripts/render_formal_report.py \
+  --report /analysis/forensic-report.md \
+  --peer-review /analysis/forensic-peer-review.md \
+  --skip-pdf
+
 uv run scripts/render_formal_report.py \
   --report /analysis/forensic-report.md \
   --peer-review /analysis/forensic-peer-review.md

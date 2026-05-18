@@ -31,8 +31,15 @@ Preferred placeholder patterns:
 2. Search for employer, client, organization, or agency references.
 3. Confirm no evidence files, screenshots, notes, or raw case outputs are being committed.
 4. Confirm examples use placeholders rather than live values.
-5. Review the staged diff and confirm every changed file still passes this checklist.
-6. Confirm the remaining content still supports the forensic-analysis and Markdown-report goal.
+5. Run `scripts/validate_repo_hygiene.py` or an equivalent automated sweep to catch obvious local paths and scratch files.
+6. Review the staged diff and confirm every changed file still passes this checklist.
+7. Confirm the remaining content still supports the forensic-analysis and Markdown-report goal.
+
+## Automation helper
+
+The repo includes `scripts/validate_repo_hygiene.py` for a baseline automated sweep.
+
+Use it to catch obvious workstation-specific paths and scratch files before you commit. It does not replace manual review for privacy, case scope, or publication risk.
 
 ## Important limitation
 
