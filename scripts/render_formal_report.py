@@ -19,14 +19,28 @@ def parse_args() -> argparse.Namespace:
             "Export is gated on a peer-review recommendation of 'ready'."
         )
     )
-    parser.add_argument("--report", required=True, help="Path to the Markdown report")
-    parser.add_argument("--peer-review", required=True, help="Path to the peer-review note")
+    parser.add_argument("--report", help="Path to the Markdown report")
+    parser.add_argument("--peer-review", help="Path to the peer-review note")
     parser.add_argument(
         "--output-prefix",
         help="Optional output prefix. Defaults to <report-stem>.formal beside the report.",
     )
     parser.add_argument("--title", help="Optional document title for HTML and DOCX output")
-    return parser.parse_args()
+    parser.add_argument(
+        "--check-deps",
+        action="store_true",
+        help="Report whether pandoc and a supported PDF backend are available, then exit.",
+    )
+    parser.add_argument(
+        "--skip-pdf",
+        action="store_true",
+        help="Render HTML and DOCX only. Useful when no PDF backend is installed.",
+    )
+
+    args = parser.parse_args()
+    if not args.check_deps and (not args.report or not args.peer_review):
+        parser.error("--report and --peer-review are required unless --check-deps is used")
+    return args
 
 
 def read_release_recommendation(peer_review_path: Path) -> str:
@@ -52,6 +66,14 @@ def ensure_binary(name: str) -> str:
     return resolved
 
 
+def find_pdf_backend() -> tuple[str, str] | None:
+    for name in ("weasyprint", "wkhtmltopdf"):
+        resolved = shutil.which(name)
+        if resolved:
+            return name, resolved
+    return None
+
+
 def build_output_paths(report_path: Path, output_prefix: str | None) -> tuple[Path, Path, Path]:
     if output_prefix:
         prefix = Path(output_prefix)
@@ -66,6 +88,31 @@ def build_output_paths(report_path: Path, output_prefix: str | None) -> tuple[Pa
 
 def run_command(command: list[str]) -> None:
     subprocess.run(command, check=True)
+
+
+def inline_css(html_path: Path, css_path: Path) -> None:
+    html = html_path.read_text(encoding="utf-8")
+    css = css_path.read_text(encoding="utf-8")
+    marker = "</head>"
+    if marker not in html:
+        raise ValueError(f"Generated HTML does not contain a </head> element: {html_path}")
+
+    style_block = f"<style>\n{css}\n</style>\n"
+    html_path.write_text(html.replace(marker, f"{style_block}{marker}", 1), encoding="utf-8")
+
+
+def print_dependency_status() -> int:
+    pandoc = shutil.which("pandoc")
+    pdf_backend = find_pdf_backend()
+
+    print(f"pandoc:         {pandoc or 'missing'}")
+    if pdf_backend:
+        backend_name, backend_path = pdf_backend
+        print(f"PDF backend:    {backend_name} ({backend_path})")
+    else:
+        print("PDF backend:    missing (install weasyprint or wkhtmltopdf, or use --skip-pdf)")
+
+    return 0 if pandoc else 1
 
 
 def render_html_and_docx(
@@ -85,8 +132,6 @@ def render_html_and_docx(
         "--to",
         "html5",
         "--standalone",
-        "--css",
-        str(css_path),
         "--metadata",
         f"title={title}",
         "--output",
@@ -106,16 +151,18 @@ def render_html_and_docx(
     ]
 
     run_command(html_command)
+    inline_css(html_path, css_path)
     run_command(docx_command)
 
 
 def render_pdf_from_html(html_path: Path, pdf_path: Path) -> str:
-    if shutil.which("weasyprint"):
-        run_command(["weasyprint", str(html_path), str(pdf_path)])
-        return "weasyprint"
-    if shutil.which("wkhtmltopdf"):
-        run_command(["wkhtmltopdf", "--enable-local-file-access", str(html_path), str(pdf_path)])
-        return "wkhtmltopdf"
+    pdf_backend = find_pdf_backend()
+    if pdf_backend and pdf_backend[0] == "weasyprint":
+        run_command([pdf_backend[1], str(html_path), str(pdf_path)])
+        return pdf_backend[0]
+    if pdf_backend and pdf_backend[0] == "wkhtmltopdf":
+        run_command([pdf_backend[1], "--enable-local-file-access", str(html_path), str(pdf_path)])
+        return pdf_backend[0]
     raise FileNotFoundError(
         "No supported PDF backend found. Install 'weasyprint' or 'wkhtmltopdf', then re-run the export."
     )
@@ -123,6 +170,9 @@ def render_pdf_from_html(html_path: Path, pdf_path: Path) -> str:
 
 def main() -> int:
     args = parse_args()
+    if args.check_deps:
+        return print_dependency_status()
+
     report_path = Path(args.report).expanduser().resolve()
     peer_review_path = Path(args.peer_review).expanduser().resolve()
     repo_root = Path(__file__).resolve().parent.parent
@@ -148,6 +198,12 @@ def main() -> int:
     title = args.title or report_path.stem.replace("-", " ").replace("_", " ").title()
 
     render_html_and_docx(report_path, html_path, docx_path, css_path, title)
+    if args.skip_pdf:
+        print(f"HTML written to: {html_path}")
+        print(f"DOCX written to: {docx_path}")
+        print("PDF written to:  skipped (--skip-pdf)")
+        return 0
+
     pdf_backend = render_pdf_from_html(html_path, pdf_path)
 
     print(f"HTML written to: {html_path}")
@@ -162,4 +218,4 @@ if __name__ == "__main__":
         raise SystemExit(main())
     except Exception as exc:  # pragma: no cover - CLI error path
         print(f"render_formal_report.py: {exc}", file=sys.stderr)
-        raise SystemExit(1)
+        raise SystemExit(1) from exc
