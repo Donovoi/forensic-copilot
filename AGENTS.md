@@ -44,6 +44,7 @@ All agents, prompts, instructions, and supporting documents in this repository m
 - Do not commit case-derived evidence, screenshots, exported artifacts, investigator notes, or hashes unless they were intentionally sanitized for public release.
 - When examples are needed, use placeholders such as `CASE-001`, `ANALYST`, `HOST-A`, `/evidence/image.E01`, and `ORG-NAME`.
 - Perform a repo-wide privacy sweep before every commit and push.
+- Run `scripts/validate_repo_hygiene.py` or an equivalent automated sweep when available, then review the results manually.
 - Confirm that staged content is generic and that no file change introduces case-specific or personal material.
 - Remember that Git metadata can still identify the publisher even when repository content is sanitized.
 
@@ -53,7 +54,9 @@ When changing agent behavior or tool choices, also update the relevant docs:
 
 - `docs/peer-review-process.md` when the case-review process or peer-review triggers change
 - `docs/formal-report-output.md` when the formal export path or release gating changes
+- `docs/privacy-and-redaction.md` when privacy sweeps, publication checks, or redaction rules change
 - `docs/self-update-loop.md` when the improvement process or loop guardrails change
+- `docs/limitations.md` when scope boundaries, evidence limits, or reporting cautions change
 - `docs/tooling-matrix.md` for tool-selection changes
 - `docs/sources.md` for new guidance or upstream references
 - `README.md` when the repo purpose or workflow changes materially

@@ -28,6 +28,10 @@ venv/
 *.formal.pdf
 *.formal.docx
 
+# Local editor state and scratch files
+/.vscode/
+/.tmp_*
+
 # Python noise
 __pycache__/
 *.pyc

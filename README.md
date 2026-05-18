@@ -1,8 +1,6 @@
 # Forensic Copilot
 
-<p align="center">
-	<img src="docs/assets/forensic-copilot-hero.svg" alt="Forensic Copilot hero illustration" width="100%" />
-</p>
+![Forensic Copilot hero illustration](docs/assets/forensic-copilot-hero.svg)
 
 `Forensic Copilot` provides a GitHub Copilot custom agent plus a portable Markdown instruction set for investigator-facing host and disk examinations. The current emphasis is Linux-based review of mounted file systems and common disk-image formats where the analyst needs a traceable workflow, explicit limitations, and a Markdown report.
 
@@ -41,8 +39,9 @@ If your tool does not support named custom agents, use the same workflow in a po
 1. Open the repository so the tool can read `AGENTS.md` and the files under `.github/agents/`.
 2. Treat `AGENTS.md` as the repository-wide policy layer.
 3. Load or paste `.github/agents/forensic-examiner.agent.md` as the main system, developer, or role prompt for the active coding agent.
-4. Keep the helper-agent files in context as internal reference material, even if the tool cannot route true subagents.
-5. Keep the supporting docs available so the agent can apply the same limits, tool-selection rules, and peer-review gating.
+4. If the runner does not understand the YAML frontmatter in `.agent.md` files, strip the frontmatter and use the Markdown body as the portable instruction text.
+5. Keep the helper-agent files in context as internal reference material, even if the tool cannot route true subagents.
+6. Keep the supporting docs available so the agent can apply the same limits, tool-selection rules, and peer-review gating.
 
 ### Compatibility note
 
@@ -62,6 +61,8 @@ Start with a prompt like:
 > Investigate `/evidence/image.E01` for suspicious user activity.
 
 From that prompt alone, the examiner should infer preservation-first handling, keep the scope limited to that image, start a Markdown case record, assume triage unless deeper work is justified, and use the internal toolsmith to prepare the minimal Linux image-analysis stack automatically when needed.
+
+For a worked example, see `docs/example-investigation.md`. If you need a formal package after peer review, see `docs/formal-report-output.md`.
 
 ## Current scope
 
@@ -128,9 +129,7 @@ When peer review closes as `ready`, the same Markdown source can be rendered int
 
 ## Operational flow
 
-<p align="center">
-	<img src="docs/assets/forensic-copilot-loop.svg" alt="Forensic Copilot loop diagram" width="100%" />
-</p>
+![Forensic Copilot loop diagram](docs/assets/forensic-copilot-loop.svg)
 
 The workflow starts with the case request and then loops back through clarification as needed:
 
@@ -163,34 +162,20 @@ The most important limits are easy to miss if they are not stated plainly:
 
 See `docs/limitations.md` for the fuller list.
 
-## GitHub Copilot quick start in VS Code
-
-If you want the native custom-agent experience in VS Code, use the **GitHub Copilot in VS Code** steps in the setup section above.
-
-Example first prompt:
-
-> Investigate `/evidence/image.E01` for suspicious user activity.
-
-From that prompt alone, the examiner should infer preservation-first handling, keep the scope limited to that image, start a Markdown case record, assume triage unless deeper work is justified, and use the internal toolsmith to prepare the minimal Linux image-analysis stack automatically when needed.
-
-For a worked example, see `docs/example-investigation.md`.
-
-If you want a formal export after peer review, see `docs/formal-report-output.md`.
-
 ## Documentation set
 
-| Path                            | Purpose                                                    |
-| ------------------------------- | ---------------------------------------------------------- |
-| `.github/agents/`               | custom agent definitions                                   |
-| `docs/limitations.md`           | current scope limits, cautions, and validation boundaries  |
-| `docs/example-investigation.md` | example prompt, clarification exchange, and report excerpt |
-| `docs/formal-report-output.md`  | formal report export rules, tooling, and release gating    |
-| `docs/peer-review-process.md`   | case peer-review rules and release criteria                |
-| `docs/self-update-loop.md`      | rules for post-run workflow improvement                    |
-| `docs/tooling-matrix.md`        | current tool-selection starting point                      |
-| `docs/sources.md`               | source basis and review anchors                            |
-| `docs/privacy-and-redaction.md` | public-repo sanitization checklist                         |
-| `AGENTS.md`                     | repository-wide rules for future changes                   |
+- `.github/agents/` — custom agent definitions
+- `docs/maintenance-notes/` — reviewable notes for workflow changes and cleanup rationale
+- `docs/limitations.md` — current scope limits, cautions, and validation boundaries
+- `docs/example-investigation.md` — example prompt, clarification exchange, and report excerpt
+- `docs/formal-report-output.md` — formal report export rules, tooling, and release gating
+- `docs/peer-review-process.md` — case peer-review rules and release criteria
+- `docs/self-update-loop.md` — rules for post-run workflow improvement
+- `docs/tooling-matrix.md` — current tool-selection starting point
+- `docs/sources.md` — source basis and review anchors
+- `docs/privacy-and-redaction.md` — public-repo sanitization checklist
+- `scripts/` — formal export and repo-hygiene validation helpers
+- `AGENTS.md` — repository-wide rules for future changes
 
 ## Source basis
 
