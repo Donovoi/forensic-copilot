@@ -31,6 +31,7 @@ venv/
 # Local editor state and scratch files
 /.vscode/
 /.tmp_*
+/.scratch/
 
 # Python noise
 __pycache__/
