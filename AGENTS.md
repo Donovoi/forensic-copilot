@@ -63,6 +63,8 @@ When changing agent behavior or tool choices, also update the relevant docs:
 - Keep agents single-purpose and explicit.
 - Minimize tools to what the role actually needs.
 - Make descriptions rich in trigger terms so delegation works.
+- Keep the core workflow portable across tools that can consume repository instructions or pasted prompts; `.github/agents/` is a preferred integration path, not the only supported way to use the method.
+- Do not make the published workflow depend entirely on one vendor-specific agent format when the same behavior can be preserved in Markdown instructions.
 - Keep only `Forensic Examiner` user-invocable; helper agents such as `Forensic Toolsmith` and `Forensic Maintainer` should remain internal subagents.
 - Keep `Forensic Peer Reviewer` internal; it exists to challenge case findings before release, not to replace the maintainer path.
 - Treat the current agent architecture as a default, not a permanent truth; agents may be added, removed, merged, split, or rewritten, including the main examiner role, when justified by validated lessons learned or newer guidance.
