@@ -43,7 +43,9 @@ All agents, prompts, instructions, and supporting documents in this repository m
 - Do not commit real names, usernames, email addresses, hostnames, absolute local paths, employer names, client names, agency names, internal ticket IDs, or other personal or organizational identifiers.
 - Do not commit case-derived evidence, screenshots, exported artifacts, investigator notes, or hashes unless they were intentionally sanitized for public release.
 - When examples are needed, use placeholders such as `CASE-001`, `ANALYST`, `HOST-A`, `/evidence/image.E01`, and `ORG-NAME`.
-- Perform a privacy sweep before pushing changes.
+- Perform a repo-wide privacy sweep before every commit and push.
+- Confirm that staged content is generic and that no file change introduces case-specific or personal material.
+- Remember that Git metadata can still identify the publisher even when repository content is sanitized.
 
 ## Required documentation updates
 
@@ -108,4 +110,5 @@ If a formal export is required, generate it from the reviewed Markdown only afte
 This repo is the canonical source for these agent definitions.
 
 After future edits, push the changes to the public GitHub repo rather than letting local copies drift.
-Before each push, verify that the content is generic and passes the privacy rules above.
+Before each commit and push, verify that the content is generic and passes the privacy rules above.
+If anonymity matters, check the Git author identity and hosting account or organization as well as the repository content.

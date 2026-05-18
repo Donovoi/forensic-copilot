@@ -26,8 +26,10 @@ On each run the examiner is expected to:
 
 - translate a broad request into concrete forensic questions
 - ask only the clarification questions that are likely to change scope, interpretation, or priority
+- infer preservation-first, scope-limited triage from a bare evidence path instead of asking the user to restate those defaults
 - classify the host role early enough to avoid treating servers like desktop endpoints
 - invoke internal helper paths for tool readiness, case peer review, and workflow review
+- have the internal toolsmith verify or stage the minimal Linux image-analysis toolchain automatically when the evidence type already implies it
 - keep evidence handling preservation-first and read-only where possible
 - separate observation, inference, and limitation
 - maintain a Markdown report as the work progresses
@@ -42,6 +44,8 @@ Only `Forensic Examiner` should be selected directly by the user.
 
 ## What to provide
 
+An evidence path alone is enough to begin. When the rest is missing, the examiner should still start with preservation-first, scope-limited triage and a Markdown case record.
+
 At minimum, the examiner works best when given:
 
 - an evidence path or image path
@@ -52,7 +56,7 @@ At minimum, the examiner works best when given:
 - whether the source is live, mounted, or a preserved image
 - the desired report path if one is already chosen
 
-If some of this is missing, the examiner should ask concise follow-up questions and then proceed with conservative assumptions when the answers are unavailable.
+If some of this is missing, the examiner should ask concise follow-up questions only where the answers materially change scope or interpretation, proceed with conservative inferred defaults when the answers are unavailable, and create a sensible default Markdown case record when no report path has been supplied.
 
 ## What you get back
 
@@ -114,7 +118,9 @@ See `docs/limitations.md` for the fuller list.
 
 Example first prompt:
 
-> Investigate `/evidence/image.E01` for suspicious user activity and produce a Markdown report. If context is missing, ask only the clarification questions that materially affect scope or interpretation.
+> Investigate `/evidence/image.E01` for suspicious user activity.
+
+From that prompt alone, the examiner should infer preservation-first handling, keep the scope limited to that image, start a Markdown case record, assume triage unless deeper work is justified, and use the internal toolsmith to prepare the minimal Linux image-analysis stack automatically when needed.
 
 For a worked example, see `docs/example-investigation.md`.
 

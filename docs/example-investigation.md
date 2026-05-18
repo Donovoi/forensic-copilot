@@ -11,7 +11,9 @@ This example is intentionally generic. It is meant to show how the examiner shou
 
 ## Example first prompt
 
-> Investigate `/evidence/CASE-001-laptop.E01` for evidence of data theft and produce a Markdown report.
+> Investigate `/evidence/CASE-001-laptop.E01` for evidence of data theft.
+
+From that prompt alone, the examiner should infer preservation-first handling, keep the scope limited to the supplied image, start the Markdown case record immediately, and assume triage unless the user asks for deeper work or the evidence justifies escalation.
 
 ## Example clarification questions
 
@@ -20,9 +22,8 @@ The examiner should keep moving when context is incomplete. The first questions 
 1. Which user account or employee is in scope, if known?
 2. What date range matters most?
 3. What timezone should be used for reporting if the source timestamps are ambiguous?
-4. Is the task triage only, or do you want a fuller examination that includes deleted and timeline work if supported by the image?
-5. Are there any authority limits or excluded data categories that should be honored from the start?
-6. If pre-existing exports, timelines, or other derived outputs already exist outside `/evidence/CASE-001-laptop.E01`, should they be treated as in scope or ignored unless I come back for approval?
+4. Are there any authority limits or excluded data categories that should be honored from the start?
+5. If pre-existing exports, timelines, or other derived outputs already exist outside `/evidence/CASE-001-laptop.E01`, should they be treated as in scope or ignored unless I come back for approval?
 
 If the answers are not yet available, the examiner should proceed with conservative assumptions and record them.
 
@@ -30,6 +31,7 @@ If the answers are not yet available, the examiner should proceed with conservat
 
 Once the first clarification pass is complete, the examiner should be able to state a short plan such as:
 
+- confirm or stage the minimal Linux-friendly image-access toolchain and verify that the E01 is readable before deeper examination
 - verify the image and record hashes if not already present
 - identify the filesystem layout and relevant user profiles
 - review browser, document, removable-media, cloud-sync, and archive artifacts for the final working week
