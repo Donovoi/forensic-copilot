@@ -8,6 +8,8 @@ This repository is easier to trust if its limits are stated plainly. The agent i
 - A neighboring output directory, cached export, or prior analyst product is not automatically part of the case scope, even when it appears to reference the same image.
 - Deleted entries, unallocated space, slack space, some filesystem-internal artifacts, prior volume states, and certain metadata questions may require full-image access.
 - Encryption, detached key material, and credential-protected containers may block examination until live context or valid keys are available.
+- A locked encrypted volume may block volume-internal filesystem review, deleted-entry review, volume-internal unallocated-space review, slack-space review, snapshot review, and plaintext carving until a supported unlock path exists.
+- That limit does not, by itself, mean that separate whole-disk free-space review or carving from other accessible plaintext regions was attempted. Reports should state those decisions separately.
 - Cloud-backed placeholders, remote mounts, and synchronized folders can make it unclear whether the visible files represent the full logical evidence set.
 
 ## Derived-artifact limits
@@ -31,6 +33,7 @@ This repository is easier to trust if its limits are stated plainly. The agent i
 - A well-structured Markdown report is useful, but it is not a substitute for tool validation records, chain-of-custody documentation, or testimony preparation.
 - A polished PDF or DOCX can improve presentation. It does not strengthen weak findings, close corroboration gaps, or replace the Markdown case record.
 - Formal export depends on local rendering tools. If `pandoc` or a PDF backend is missing, document the blocker instead of faking a finished package.
+- Blocked-access handoffs should name what was attempted, what was not attempted, what was impossible without additional access material, and what decision remains open.
 
 ## Server interpretation limits
 

@@ -32,6 +32,7 @@ If the answers are not yet available, the examiner should proceed with conservat
 Once the first clarification pass is complete, the examiner should be able to state a short plan such as:
 
 - confirm or stage the minimal Linux-friendly image-access toolchain and verify that the E01 is readable before deeper examination
+- if the primary volume is encrypted or otherwise blocked, branch into supported access-recovery work before blocker-only handoff: confirm the barrier, test read-only metadata and unlock paths within scope, and decide whether any whole-disk free-space or carving pass remains possible and worth doing
 - verify the image and record hashes if not already present
 - identify the filesystem layout and relevant user profiles
 - review browser, document, removable-media, cloud-sync, and archive artifacts for the final working week
@@ -56,26 +57,42 @@ Once the first clarification pass is complete, the examiner should be able to st
 **Confidence and limitations.** Moderate confidence that staging activity occurred. The current artifact set does not, on its own, prove external transfer. Review of removable-media traces, cloud-sync activity, mail artifacts, or outbound transfer logs would strengthen or weaken that conclusion.
 ```
 
+## Example blocked-access wording
+
+```md
+## Limitations, deviations, and contamination risks
+
+- The primary Windows data volume remained locked in this run, so no volume-internal deleted-entry, filesystem-unallocated, slack-space, snapshot, or plaintext-carving review of that volume was possible without a supported unlock path.
+- A separate whole-disk free-space or carving pass outside the locked volume was not completed in this run, so those avenues are not treated as exhausted.
+- Recovery work in this run was limited to confirming the access barrier, testing supported read-only metadata or unlock paths with in-scope material, and documenting the remaining decision point.
+```
+
 ## Example peer review note
 
 ```md
 # Forensic Peer Review Note
 
 ## Supported findings
+
 - The archive creation event is well supported by multiple artifacts.
 
 ## Challenged findings
+
 - Do not state that exfiltration occurred unless a transfer artifact, outbound log, removable-media trace, or equivalent corroboration exists.
+- Require the report to distinguish blocked encrypted-volume work from unattempted disk-level free-space or carving work.
 
 ## Missing corroboration
+
 - network transfer evidence
 - removable-media activity
 - mail or cloud-sync confirmation
 
 ## Alternative explanations
+
 - temporary staging for backup or handoff that did not lead to external transfer
 
 ## Release recommendation
+
 - Ready with caveats after wording is limited to staging activity rather than confirmed exfiltration.
 ```
 
@@ -85,5 +102,6 @@ Once the first clarification pass is complete, the examiner should be able to st
 - clarification questions are useful, but not treated as a hard blocker
 - the report distinguishes observation from inference
 - the report states what the evidence supports and what it does not yet support
+- blocked-access wording should distinguish impossible work from unattempted work
 - peer review challenges overstatement before the report is released
 - on server cases, recovered URLs and admin endpoints should not be equated with local browsing or successful authentication without corroboration

@@ -24,6 +24,7 @@ The peer-review step exists to challenge those conclusions before release.
 Run peer review before final handoff on any substantial report, and especially when one or more of these conditions are present:
 
 - direct raw-image access was blocked or incomplete
+- the draft ends in a blocker-only handoff after encryption or another access barrier
 - server-side web artifacts dominate the analysis
 - user attribution depends on the absence of direct auth/session artifacts
 - malware execution or successful-login inference is being considered
@@ -42,6 +43,9 @@ The peer reviewer should:
 - recommend wording downgrades where the evidence does not support the stronger claim
 - flag formulaic or over-polished wording when it makes the report sound more certain than the evidence supports
 - flag blocker language that is too vague to explain why the work stopped or what decision was needed next
+- verify that blocked-access reports distinguish `attempted but unsuccessful`, `not attempted in this run`, and `not possible without additional access`
+- verify that supported access-recovery paths were attempted, deliberately deferred, or ruled out with a stated reason
+- flag reports that imply whole-disk deleted, unallocated, slack, snapshot, or carving coverage when only the locked volume was blocked
 
 The peer reviewer is not responsible for editing prompts, docs, or repo architecture.
 
@@ -49,14 +53,14 @@ The peer reviewer is not responsible for editing prompts, docs, or repo architec
 
 Return or create a Markdown note containing:
 
-# Forensic Peer Review Note
-## Report reviewed
-## Supported findings
-## Challenged findings
-## Missing corroboration
-## Alternative explanations
-## Required wording changes
-## Release recommendation
+- `# Forensic Peer Review Note`
+- `## Report reviewed`
+- `## Supported findings`
+- `## Challenged findings`
+- `## Missing corroboration`
+- `## Alternative explanations`
+- `## Required wording changes`
+- `## Release recommendation`
 
 Release recommendations should be one of:
 
