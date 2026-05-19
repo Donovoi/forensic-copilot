@@ -86,6 +86,7 @@ On each run the examiner is expected to:
 - classify the host role early enough to avoid treating servers like desktop endpoints
 - invoke internal helper paths for tool readiness, case peer review, and workflow review
 - have the internal toolsmith verify or stage the minimal Linux image-analysis toolchain automatically when the evidence type already implies it
+- if direct access is blocked, pursue supported recovery and narrower corroborative paths before a blocker-only handoff, and state whether deleted-entry, unallocated-space, slack, snapshot, and carving work was attempted, deferred, or impossible
 - keep evidence handling preservation-first and read-only where possible
 - separate observation, inference, and limitation
 - maintain a Markdown report as the work progresses
