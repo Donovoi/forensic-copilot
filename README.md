@@ -2,7 +2,7 @@
 
 ![Forensic Copilot hero illustration](docs/assets/forensic-copilot-hero.svg)
 
-`Forensic Copilot` provides a GitHub Copilot custom agent plus a portable Markdown instruction set for investigator-facing host and disk examinations. The current emphasis is preservation-first review of mounted file systems, common disk-image formats, and authorized host triage where the analyst needs a traceable workflow, explicit limitations, current tool selection, and a Markdown report.
+`Forensic Copilot` provides a GitHub Copilot custom agent plus a portable Markdown instruction set for investigator-facing host and disk examinations. The current emphasis is preservation-first review of mounted file systems, common disk-image formats, and authorized host triage where the analyst needs a traceable workflow, comprehensive in-scope collection, explicit limitations, current tool selection, and a Markdown report.
 
 The repo gives a human examiner, incident responder, or non-technical investigator a structured way to work through a case. Use it alongside evidentiary judgment, lab SOPs, and formal tool validation.
 
@@ -118,6 +118,8 @@ On each run the examiner is expected to:
 - have the internal senior tooling specialist verify or stage the minimal toolchain automatically when the evidence type or case question already implies it
 - if direct access is blocked, pursue supported recovery and narrower corroborative paths before a blocker-only handoff, and state whether deleted-entry, unallocated-space, slack, snapshot, and carving work was attempted, deferred, or impossible
 - keep evidence handling preservation-first and read-only where possible
+- preserve or inventory sensitive in-scope artifacts such as credentials, cookies, tokens, browser login databases, keys, password-manager stores, and `.env` files when they may answer the case question
+- separate evidence preservation from disclosure, so secret values are not printed into prompts, terminal output, reports, or public repository content unless the case specifically requires that value
 - separate observation, inference, and limitation
 - maintain a Markdown report as the work progresses
 
@@ -140,7 +142,7 @@ At minimum, the examiner works best when given:
 
 - an evidence path or image path
 - the question to answer, even if it is still broad
-- known scope or authority limits
+- known scope, authority limits, and any categories that require special handling
 - whether adjacent derived outputs or prior exports outside the evidence path are in scope
 - timezone or locale assumptions if they matter
 - whether the source is live, mounted, or a preserved image

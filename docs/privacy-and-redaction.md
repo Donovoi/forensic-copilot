@@ -2,6 +2,8 @@
 
 This repository is public-facing and should remain generic.
 
+Redaction is a publication control, not an evidence-collection rule. During authorized casework, sensitive artifacts can still be preserved, hashed, parsed, and cited as evidence when they are in scope. The restriction here is on what enters the public repository, prompts, terminal transcripts, and report prose without a specific case need.
+
 Before publishing changes, verify that the content does **not** reveal:
 
 - your real name or another person's real name

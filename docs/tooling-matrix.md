@@ -11,6 +11,7 @@ This matrix is the starting point for the `Forensic Senior Tooling Specialist` a
 5. record why each tool was selected, skipped, or deferred
 6. when direct access is blocked, verify the smallest supported recovery branch before blocker-only handoff and make a separate layer-specific decision about any remaining disk-level scanning or carving
 7. for substantive tool decisions, run the specialist loop: current tool research first, provisioning and execution-flow design second
+8. treat sensitivity as a handling issue, not a collection veto; in-scope credential, cookie, token, key, browser, and environment-file artifacts should be preserved or inventoried when they may answer the case question
 
 ## Advanced tooling specialist flow
 
@@ -77,8 +78,11 @@ For authorized Windows endpoint or live-host user-activity questions, especially
 4. `Chainsaw` as a fast independent cross-check for EVTX, Shimcache, Amcache, SRUM, MFT, and Sigma-style hunting where the artifact set supports it
 5. `KAPE` / `KapeFiles`, `Velociraptor` offline collection, or `DFIR-ORC` only when authorized collection depth, operational model, and output handling are clear
 6. selected Zimmerman parsers for deep parsing of specific Windows artifacts after collection
+7. controlled acquisition or parsing of browser profiles, cookies, login databases, tokens, keys, password-manager stores, environment files, and other secret-bearing artifacts when those artifacts are in scope and could corroborate user activity
 
 The specialist should decide whether to stage external tools only after the research subagent confirms current upstream choices and the provisioner can prepare a bounded execution flow.
+
+Secret-bearing artifacts should be copied, hashed, and parsed through controlled case outputs instead of printed into terminal transcripts or report prose. The report should normally cite their existence, path, hash, timestamp, parser result, and relevance while redacting the actual secret value unless disclosure is essential to the case.
 
 ## Report-production defaults
 

@@ -36,6 +36,7 @@ The only exception is a truly immediate live-off-the-land safety decision, such 
 - Prefer official project pages, GitHub or GitLab repositories, release pages, maintainer docs, and established standards bodies over blog-only recommendations.
 - Use live-off-the-land commands when they are safer, faster, more defensible, or less disruptive than adding external tooling.
 - Select the smallest toolchain that answers the question and validates important findings.
+- Do not reject an artifact class merely because it may contain credentials, cookies, tokens, keys, or other sensitive material. Decide how to preserve, hash, parse, and disclose it safely.
 - Do not install every tool that looks relevant.
 - Treat Windows-first tools, commercial tools, and license-gated tools as platform or licensing decisions, not automatic dependencies.
 - Prefer release archives or package managers for operational use; clone source when the workflow needs source, rules, definitions, or a patchable local copy.
@@ -69,7 +70,7 @@ For authorized live Windows triage in OpenCode:
 
 - start with short, bounded, read-only native commands unless the examiner has documented why a broader collection is authorized
 - avoid install steps and long-running watchers during the first pass
-- do not access `.env`, `.env.*`, credential stores, tokens, cookies, browser saved-password tables, or password-manager data
+- treat `.env`, `.env.*`, credential stores, tokens, cookies, browser saved-password tables, password-manager data, and other secret-bearing stores as potential evidence when they are in scope. Recommend controlled acquisition, hashing, metadata capture, or specialist parsing without dumping secret values into prompts, terminal output, or reports.
 - when external tooling is justified, prefer staging under ignored local tool paths such as `toolcache/`, `tooling/downloads/`, or `tooling/cache/`
 - use the provisioner to prepare the exact commands and output paths before the examiner runs collection
 

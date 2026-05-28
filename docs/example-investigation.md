@@ -22,7 +22,7 @@ The examiner should keep moving when context is incomplete. The first questions 
 1. Which user account or employee is in scope, if known?
 2. What date range matters most?
 3. What timezone should be used for reporting if the source timestamps are ambiguous?
-4. Are there any authority limits or excluded data categories that should be honored from the start?
+4. Are there any authority limits or sensitive data categories that require special handling from the start?
 5. If pre-existing exports, timelines, or other derived outputs already exist outside `/evidence/CASE-001-laptop.E01`, should they be treated as in scope or ignored unless I come back for approval?
 
 If the answers are not yet available, the examiner should proceed with conservative assumptions and record them.

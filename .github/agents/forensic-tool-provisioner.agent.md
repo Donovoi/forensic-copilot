@@ -24,7 +24,8 @@ Provision only the tools the senior specialist selected. Do not expand the tool 
 - Use `Get-FileHash`, package-manager metadata, release checksums, signatures, or commit IDs where practical.
 - If a tool must be modified, keep the patch in the staging path, document the exact reason, and never imply the modified tool is upstream stock.
 - Do not write to evidence or broaden scope while testing tools.
-- Do not read `.env`, `.env.*`, credential stores, tokens, cookies, browser saved-password tables, password-manager data, or unrelated local case outputs.
+- Do not skip `.env`, `.env.*`, credential stores, tokens, cookies, browser saved-password tables, password-manager data, keys, or other secret-bearing stores when the senior specialist has identified them as in scope. Prepare controlled acquisition or parsing steps that preserve provenance and avoid printing plaintext secrets into prompts, terminal output, reports, or public repo files.
+- Do not access unrelated local case outputs.
 - Stop and report a blocker when download policy, license terms, admin rights, antivirus, missing runtimes, or platform constraints prevent safe staging.
 
 ## Execution-flow rules

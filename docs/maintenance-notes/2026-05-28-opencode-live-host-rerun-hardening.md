@@ -9,7 +9,7 @@ The advanced tooling rerun showed that the subagent loop could complete, but sev
 - Report creation under `reports/` was rejected when `edit` and `write` were configured with path globs. OpenCode 1.15.11 evaluated the fallback ask rule for report paths, so noninteractive runs stalled.
 - Some full prompts passed as long command-line arguments left an `opencode` process running before normal logging. Passing the detailed test brief as an attached file avoided the startup hang.
 - The examiner used avoidable live-host command shapes: `cmd /c ver`, `Get-Process -IncludeUserName` without elevation, full-process `StartTime` sorting, DMTF timestamp conversion, and broad directory listings.
-- Browser profile directory enumeration surfaced credential-store filenames even though credential stores were out of scope.
+- Browser profile directory enumeration surfaced credential-store filenames even though the prompt at that time treated credential stores as outside the narrow metadata pass. The later sensitive-artifact collection update supersedes that default exclusion.
 
 ## Decision
 

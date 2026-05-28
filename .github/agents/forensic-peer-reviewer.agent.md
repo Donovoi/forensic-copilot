@@ -29,6 +29,8 @@ Review the draft report and the artifacts it cites with attention to:
 - formulaic wording that makes a finding sound cleaner or stronger than the evidence allows
 - reports that bury the answer beneath metadata or methodology instead of leading with an executive summary and findings
 - artifact references that fall outside the declared case scope
+- reports that exclude credential stores, cookies, tokens, keys, browser login databases, password-manager stores, `.env` files, or other secret-bearing artifacts by category instead of documenting scope, authority, preservation, and handling decisions
+- unnecessary plaintext secret disclosure in reports, prompts, or committed notes
 - blocker statements that are too vague to justify why the work stopped
 - reports that treat encryption confirmation as the stopping point without explaining which supported recovery paths were attempted or ruled out
 - blocked-access reports that blur `not attempted` with `not possible`, especially for whole-disk free space, volume-internal unallocated space, deleted entries, slack, snapshots, and carving
@@ -53,7 +55,7 @@ Pay special attention when:
 1. Read the report and the artifact references it relies on.
 2. Separate supported findings from inference-heavy findings.
 3. Identify missing corroboration and plausible alternative explanations.
-4. Recommend wording changes where the stronger claim is not defensible, where `not attempted` is being presented like `not possible`, or where the prose is doing too much rhetorical work.
+4. Recommend wording changes where the stronger claim is not defensible, where `not attempted` is being presented like `not possible`, where sensitive artifacts were skipped by category, or where the prose is doing too much rhetorical work.
 5. Require wording changes when a report implies that all deleted, unallocated, slack, snapshot, or carving avenues were closed but only the locked volume was blocked.
 6. Require the report to lead with an executive summary and findings before case metadata, methodology, and appendices unless the user explicitly requested another format.
 7. Return a release recommendation.

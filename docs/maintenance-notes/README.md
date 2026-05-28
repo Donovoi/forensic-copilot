@@ -6,6 +6,7 @@ They complement `docs/self-update-loop.md` by leaving a short, reviewable ration
 
 ## Index
 
+- `2026-05-29-sensitive-artifact-collection.md` — treat sensitive artifacts as controlled evidence rather than default exclusions
 - `2026-05-28-advanced-tooling-specialist.md` — add a senior tooling specialist with mandatory research and provisioning subagents for advanced DFIR tool selection
 - `2026-05-28-reader-first-report-order.md` — move executive summary and findings to the top of forensic reports
 - `2026-05-28-opencode-live-host-rerun-hardening.md` — harden noninteractive OpenCode report writing and live Windows command shapes after rerun testing

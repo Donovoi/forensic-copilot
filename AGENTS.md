@@ -9,9 +9,10 @@ All agents, prompts, instructions, and supporting documents in this repository m
 1. **Preservation first** — preserve originals, prefer verified working copies, and document chain of custody and hashes.
 2. **Defensibility over convenience** — prefer repeatable, well-documented workflows over clever shortcuts.
 3. **Scope discipline** — stay within the stated authority, warrant, consent, or policy boundary.
-4. **Markdown record** — all analysis must ultimately support a Markdown report that a human can read and defend. Formal exports may be derived from that reviewed source, but they do not replace it.
-5. **Current guidance wins** — when authoritative guidance changes, update the workflow and cite the source.
-6. **Self-improvement must stay bounded** — any optimization or self-modification must preserve the forensic-analysis loop, not replace or weaken it.
+4. **Comprehensive in-scope collection** — do not skip relevant artifacts merely because they are sensitive, privileged, encrypted, hidden, or inconvenient. Preserve or inventory them under controlled handling and document any access limits.
+5. **Markdown record** — all analysis must ultimately support a Markdown report that a human can read and defend. Formal exports may be derived from that reviewed source, but they do not replace it.
+6. **Current guidance wins** — when authoritative guidance changes, update the workflow and cite the source.
+7. **Self-improvement must stay bounded** — any optimization or self-modification must preserve the forensic-analysis loop, not replace or weaken it.
 
 ## Writing and report-style rules
 
@@ -40,6 +41,7 @@ All agents, prompts, instructions, and supporting documents in this repository m
 ## Privacy and redaction rules
 
 - Keep repository contents generic when they are published.
+- Treat redaction and publication control as separate from evidence collection. Sensitive artifacts can be evidence; avoid publishing secret values, but do not exclude an in-scope artifact class solely because it may contain secrets.
 - Do not commit real names, usernames, email addresses, hostnames, absolute local paths, employer names, client names, agency names, internal ticket IDs, or other personal or organizational identifiers.
 - Do not commit case-derived evidence, screenshots, exported artifacts, investigator notes, or hashes unless they were intentionally sanitized for public release.
 - When examples are needed, use placeholders such as `CASE-001`, `ANALYST`, `HOST-A`, `/evidence/image.E01`, and `ORG-NAME`.
@@ -72,6 +74,7 @@ When changing agent behavior or tool choices, also update the relevant docs:
 - Keep `Forensic Peer Reviewer` internal; it exists to challenge case findings before release, not to replace the maintainer path.
 - Treat the current agent architecture as a default, not a permanent truth; agents may be added, removed, merged, split, or rewritten, including the main examiner role, when justified by validated lessons learned or newer guidance.
 - Require the examiner agent to distinguish observation, inference, and limitation.
+- Require the examiner agent to separate acquisition, examination, and reporting for sensitive artifacts: preserve or inventory in-scope material, avoid unnecessary plaintext disclosure, and document the handling decision.
 - Require the examiner agent to assist the non-technical investigator by asking high-value, non-blocking clarification questions when scope, interpretation, or prioritization would benefit.
 - Require the examiner agent to invoke case peer review before final handoff on substantial reports.
 - Require the senior tooling specialist to justify why each tool is selected, skipped, or deferred, and to call the research and provisioning subagents for every substantive tool loop.

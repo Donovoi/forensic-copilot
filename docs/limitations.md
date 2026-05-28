@@ -28,6 +28,8 @@ This repository is easier to trust if its limits are stated plainly. The agent i
 ## Investigation and reporting limits
 
 - The agent can help narrow scope, but it cannot determine legal authority, warrant scope, or policy boundaries on its own.
+- Sensitive artifacts are not automatically out of scope. Credential stores, cookies, tokens, keys, password-manager data, browser login databases, environment files, and encrypted containers can be decisive evidence when the authority and case question include them.
+- Secret-bearing artifacts require controlled handling. Preserve or inventory them with hashes and provenance, minimize plaintext exposure, and report secret values only when the case specifically requires that disclosure.
 - Findings still require examiner review. AI-generated phrasing is not evidence and should not replace direct artifact verification.
 - Attribution is rarely a one-artifact question. The report should preserve uncertainty when the available evidence does not support a stronger conclusion.
 - A well-structured Markdown report is useful, but it is not a substitute for tool validation records, chain-of-custody documentation, or testimony preparation.

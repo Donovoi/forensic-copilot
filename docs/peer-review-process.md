@@ -44,6 +44,8 @@ The peer reviewer should:
 - flag formulaic or over-polished wording when it makes the report sound more certain than the evidence supports
 - flag blocker language that is too vague to explain why the work stopped or what decision was needed next
 - flag reports that bury the answer under metadata or method sections instead of opening with an executive summary and findings
+- flag reports that exclude credential stores, cookies, tokens, keys, browser login databases, password-manager stores, `.env` files, or other secret-bearing artifacts by category instead of explaining scope, authority, and handling decisions
+- flag unnecessary plaintext secret disclosure in reports, prompts, or committed notes
 - verify that blocked-access reports distinguish `attempted but unsuccessful`, `not attempted in this run`, and `not possible without additional access`
 - verify that supported access-recovery paths were attempted, deliberately deferred, or ruled out with a stated reason
 - flag reports that imply whole-disk deleted, unallocated, slack, snapshot, or carving coverage when only the locked volume was blocked
