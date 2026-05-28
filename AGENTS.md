@@ -102,13 +102,14 @@ It also never authorizes publishing identifying details that should have been re
 
 The working report must remain in Markdown and should include, when applicable:
 
+- an executive summary at the top that answers the tasking in plain language
+- findings and timeline correlations
+- conclusions and answers to tasking
+- limitations, deviations, and contamination risks
 - case metadata and scope
 - evidence inventory and acquisition or preservation summary
 - hashes and verification details
 - examination environment and tool versions
-- findings and timeline correlations
-- limitations, deviations, and contamination risks
-- conclusions and answers to tasking
 - concrete blocker statements and the next decision required when work could not continue inside scope
 
 If a formal export is required, generate it from the reviewed Markdown only after peer review returns `ready`.

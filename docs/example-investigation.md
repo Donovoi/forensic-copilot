@@ -42,6 +42,10 @@ Once the first clarification pass is complete, the examiner should be able to st
 ## Example report excerpt
 
 ```md
+## Executive summary
+
+The examined artifacts show document-staging activity by `USER-A` during the final working evening, but the current evidence does not prove external transfer. The strongest supported finding is archive creation and related document access; transfer mechanisms such as removable media, cloud sync, email, or outbound network logs still require corroboration.
+
 ## Findings
 
 ### File access and archive creation

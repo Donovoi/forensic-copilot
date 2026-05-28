@@ -152,12 +152,13 @@ If some of this is missing, the examiner should ask concise follow-up questions 
 
 The canonical output is a Markdown report that records:
 
+- an executive summary that answers the tasking in plain language
+- findings and timeline correlations
+- conclusions stated in language a non-technical stakeholder can follow
+- explicit limitations and unresolved questions
 - the request and scope assumptions
 - evidence handling and verification notes
 - the examination method and tool versions
-- findings and timeline correlations
-- explicit limitations and unresolved questions
-- conclusions stated in language a non-technical stakeholder can follow
 
 When peer review closes as `ready`, the same Markdown source can be rendered into a formal export package for circulation or filing. The current export path is documented in `docs/formal-report-output.md`.
 

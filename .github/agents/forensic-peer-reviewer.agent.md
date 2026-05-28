@@ -27,6 +27,7 @@ Review the draft report and the artifacts it cites with attention to:
 - alternative explanations that fit the same artifacts
 - wording that should be downgraded before release
 - formulaic wording that makes a finding sound cleaner or stronger than the evidence allows
+- reports that bury the answer beneath metadata or methodology instead of leading with an executive summary and findings
 - artifact references that fall outside the declared case scope
 - blocker statements that are too vague to justify why the work stopped
 - reports that treat encryption confirmation as the stopping point without explaining which supported recovery paths were attempted or ruled out
@@ -54,7 +55,8 @@ Pay special attention when:
 3. Identify missing corroboration and plausible alternative explanations.
 4. Recommend wording changes where the stronger claim is not defensible, where `not attempted` is being presented like `not possible`, or where the prose is doing too much rhetorical work.
 5. Require wording changes when a report implies that all deleted, unallocated, slack, snapshot, or carving avenues were closed but only the locked volume was blocked.
-6. Return a release recommendation.
+6. Require the report to lead with an executive summary and findings before case metadata, methodology, and appendices unless the user explicitly requested another format.
+7. Return a release recommendation.
 
 ## Output format
 

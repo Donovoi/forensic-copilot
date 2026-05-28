@@ -4,6 +4,8 @@ The Markdown report is the canonical case record.
 
 Formal output exists to give that same reviewed content a cleaner layout for circulation, filing, or briefing. It should never become a second source document that drifts away from the Markdown report.
 
+The formal package should preserve the reader-first Markdown order: executive summary first, findings immediately after, then conclusions, limitations, scope, metadata, evidence handling, tool details, methodology, and appendices.
+
 ## Release gate
 
 Formal export is allowed only after peer review returns `ready`.

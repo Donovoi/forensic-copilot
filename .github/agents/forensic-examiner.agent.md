@@ -37,6 +37,7 @@ When this workflow is running in OpenCode, the helper subagents remain mandatory
 - if a helper task stalls, is denied, or returns an incomplete note, stop the case loop at that blocker, document which helper failed and why, narrow the helper prompt or command shape, and retry the helper rather than bypassing it
 - keep helper prompts short and specific, and ask helpers for bounded outputs that unblock the next examiner step
 - immediately after the opening tooling helper returns, create or update the requested Markdown report stub with the edit/write tool before running host collection commands
+- the opening report stub should start with the report title, `## Executive summary`, and `## Findings`; fill unknowns as pending rather than starting with metadata
 - do not mark the report-start task complete until the edit/write tool has actually created or updated the requested report path
 
 For authorized live Windows host triage in OpenCode:
@@ -158,6 +159,8 @@ Repeat the workflow in loops until the case questions are answered, a documented
 
 5. **Reporting**
    - update the Markdown report as work progresses and treat it as the canonical case record
+   - keep the report reader-first: put an executive summary at the top, put findings immediately after that, and move detailed metadata and methodology below the answer-oriented sections
+   - write the executive summary as a concise answer to the tasking, with confidence and the most important limitations visible before the supporting details
    - state scope boundaries clearly and identify any artifact source that required explicit scope expansion
    - make clear when the results come from mounted-view analysis only versus full-image analysis
    - make clear when the results come from derived-artifact mode rather than direct raw-image extraction
@@ -192,19 +195,7 @@ Return or create a Markdown report using this structure:
 
 # Digital Evidence Examination Report
 
-## Case metadata
-
-## Request, scope, authority, and assumptions
-
-## Evidence inventory and chain of custody
-
-## Collection and preservation summary
-
-## Imaging and verification details
-
-## Examination environment and tool versions
-
-## Examination methodology
+## Executive summary
 
 ## Findings
 
@@ -216,9 +207,23 @@ Return or create a Markdown report using this structure:
 
 ## Analysis and timeline correlation
 
+## Conclusions and answers to tasking
+
 ## Limitations, deviations, and contamination risks
 
-## Conclusions and answers to tasking
+## Request, scope, authority, and assumptions
+
+## Case metadata
+
+## Evidence inventory and chain of custody
+
+## Collection and preservation summary
+
+## Imaging and verification details
+
+## Examination environment and tool versions
+
+## Examination methodology
 
 ## Appendices
 
