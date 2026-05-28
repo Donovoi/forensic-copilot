@@ -68,13 +68,16 @@ When changing agent behavior or tool choices, also update the relevant docs:
 - Make descriptions rich in trigger terms so delegation works.
 - Keep the core workflow portable across tools that can consume repository instructions or pasted prompts; `.github/agents/` is a preferred integration path, not the only supported way to use the method.
 - Do not make the published workflow depend entirely on one vendor-specific agent format when the same behavior can be preserved in Markdown instructions.
-- Keep only `Forensic Examiner` user-invocable; helper agents such as `Forensic Toolsmith` and `Forensic Maintainer` should remain internal subagents.
+- Keep only `Forensic Examiner` user-invocable; helper agents such as `Forensic Senior Tooling Specialist`, `Forensic Tool Researcher`, `Forensic Tool Provisioner`, `Forensic Toolsmith`, and `Forensic Maintainer` should remain internal subagents.
 - Keep `Forensic Peer Reviewer` internal; it exists to challenge case findings before release, not to replace the maintainer path.
 - Treat the current agent architecture as a default, not a permanent truth; agents may be added, removed, merged, split, or rewritten, including the main examiner role, when justified by validated lessons learned or newer guidance.
 - Require the examiner agent to distinguish observation, inference, and limitation.
 - Require the examiner agent to assist the non-technical investigator by asking high-value, non-blocking clarification questions when scope, interpretation, or prioritization would benefit.
 - Require the examiner agent to invoke case peer review before final handoff on substantial reports.
-- Require the toolsmith agent to justify why each tool is selected, skipped, or deferred.
+- Require the senior tooling specialist to justify why each tool is selected, skipped, or deferred, and to call the research and provisioning subagents for every substantive tool loop.
+- Require the tool researcher to use current upstream or official sources when checking expert-used forensic tools, especially GitHub or GitLab projects and maintainer documentation.
+- Require the tool provisioner to stage downloads, cloned repositories, rules, and caches only under ignored analyst-controlled paths unless a case explicitly authorizes another location.
+- Keep `Forensic Toolsmith` as a legacy compatibility helper; substantive tool work should route through the senior tooling specialist.
 - Require the peer reviewer to distinguish supported findings, challenged findings, missing corroboration, alternative explanations, and release readiness.
 - Require the maintainer path to justify every self-update with either observed workflow friction, validated lessons learned, or newer authoritative guidance.
 - Require the maintainer path to use peer-review feedback as an input to reusable workflow changes, not as a substitute for case review.

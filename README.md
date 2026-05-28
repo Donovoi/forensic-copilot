@@ -2,7 +2,7 @@
 
 ![Forensic Copilot hero illustration](docs/assets/forensic-copilot-hero.svg)
 
-`Forensic Copilot` provides a GitHub Copilot custom agent plus a portable Markdown instruction set for investigator-facing host and disk examinations. The current emphasis is Linux-based review of mounted file systems and common disk-image formats where the analyst needs a traceable workflow, explicit limitations, and a Markdown report.
+`Forensic Copilot` provides a GitHub Copilot custom agent plus a portable Markdown instruction set for investigator-facing host and disk examinations. The current emphasis is preservation-first review of mounted file systems, common disk-image formats, and authorized host triage where the analyst needs a traceable workflow, explicit limitations, current tool selection, and a Markdown report.
 
 The repo gives a human examiner, incident responder, or non-technical investigator a structured way to work through a case. Use it alongside evidentiary judgment, lab SOPs, and formal tool validation.
 
@@ -19,7 +19,10 @@ For the best results, keep these files in the active workspace or prompt context
 
 - `AGENTS.md` for repository-wide rules and guardrails
 - `.github/agents/forensic-examiner.agent.md` as the main user-facing workflow
-- `.github/agents/forensic-toolsmith.agent.md` for tool-readiness logic
+- `.github/agents/forensic-senior-tooling-specialist.agent.md` for advanced tool strategy and subagent orchestration
+- `.github/agents/forensic-tool-researcher.agent.md` for current upstream and expert-tool research
+- `.github/agents/forensic-tool-provisioner.agent.md` for tool staging, update, verification, and execution-flow handoff
+- `.github/agents/forensic-toolsmith.agent.md` as a legacy compatibility helper that delegates to the senior tooling specialist
 - `.github/agents/forensic-peer-reviewer.agent.md` for case-review logic
 - `.github/agents/forensic-maintainer.agent.md` for workflow-maintenance logic
 - `docs/limitations.md`, `docs/tooling-matrix.md`, and `docs/peer-review-process.md` for supporting policy and execution detail
@@ -27,7 +30,7 @@ For the best results, keep these files in the active workspace or prompt context
 ### GitHub Copilot in VS Code
 
 1. Clone this repo or copy the `.github/agents/` directory into the target workspace.
-2. Ensure all four agent files are present in the workspace `.github/agents/` directory, even though only `Forensic Examiner` is user-facing.
+2. Ensure all agent files are present in the workspace `.github/agents/` directory, even though only `Forensic Examiner` is user-facing.
 3. Keep the repo docs available if you want the maintainer path to update the same canonical source instead of a drifting local copy.
 4. Reload the VS Code window if the agent picker does not refresh automatically.
 5. Select **`Forensic Examiner`** in Copilot Chat.
@@ -57,7 +60,7 @@ This repo includes `opencode.json` so OpenCode can load the forensic examiner di
    opencode run --agent forensic-examiner --model openai/gpt-5.5 "Analyze this authorized live Windows host for user activity during the last two hours. Use low-impact read-only commands only and write the Markdown report under reports/."
    ```
 
-The OpenCode configuration sets `forensic-examiner` as the default project agent and uses `openai/gpt-5.5`. It also registers the helper agents as OpenCode subagents so the examiner can invoke `forensic-toolsmith`, `forensic-peer-reviewer`, and `forensic-maintainer` through the Task tool as part of the standard loop.
+The OpenCode configuration sets `forensic-examiner` as the default project agent and uses `openai/gpt-5.5`. It also registers the helper agents as OpenCode subagents so the examiner can invoke `forensic-senior-tooling-specialist`, `forensic-peer-reviewer`, and `forensic-maintainer` through the Task tool as part of the standard loop. The senior tooling specialist then invokes `forensic-tool-researcher` and `forensic-tool-provisioner` for substantive tool decisions, so research, staging, and execution-flow design remain part of the loop instead of optional side work.
 
 ### Other agentic tools and local model setups
 
@@ -87,7 +90,7 @@ Start with a prompt like:
 
 > Investigate `/evidence/image.E01` for suspicious user activity.
 
-From that prompt alone, the examiner should infer preservation-first handling, keep the scope limited to that image, start a Markdown case record, assume triage unless deeper work is justified, and use the internal toolsmith to prepare the minimal Linux image-analysis stack automatically when needed.
+From that prompt alone, the examiner should infer preservation-first handling, keep the scope limited to that image, start a Markdown case record, assume triage unless deeper work is justified, and use the internal senior tooling specialist to research, select, and prepare the minimal image-analysis stack automatically when needed.
 
 For a worked example, see `docs/example-investigation.md`. If you need a formal package after peer review, see `docs/formal-report-output.md`.
 
@@ -98,7 +101,7 @@ For a worked example, see `docs/example-investigation.md`. If you need a formal 
 | Mounted file-system paths                         | Primary               | Useful for scoped review and artifact extraction. Not equivalent to full-image analysis.           |
 | `raw/dd`, `E01`, `AFF4`, `VMDK/VHD`               | Primary               | Intended inputs for filesystem, artifact, and timeline work.                                       |
 | Live-host decision support                        | Limited               | Used to frame preservation and acquisition decisions, not to replace live-response SOPs.           |
-| Firmware or opaque blobs                          | Secondary             | Supported when the evidence requires it, usually through tool selection by the internal toolsmith. |
+| Firmware or opaque blobs                          | Secondary             | Supported when the evidence requires it, usually through tool selection by the internal senior tooling specialist. |
 | Memory, mobile, cloud-native, or packet-only work | Outside primary scope | May require separate workflows, additional agents, or external SOPs.                               |
 
 ## What the examiner does
@@ -111,8 +114,8 @@ On each run the examiner is expected to:
 - ask only the clarification questions that are likely to change scope, interpretation, or priority
 - infer preservation-first, scope-limited triage from a bare evidence path instead of asking the user to restate those defaults
 - classify the host role early enough to avoid treating servers like desktop endpoints
-- invoke internal helper paths for tool readiness, case peer review, and workflow review
-- have the internal toolsmith verify or stage the minimal Linux image-analysis toolchain automatically when the evidence type already implies it
+- invoke internal helper paths for advanced tool strategy, current tool research, provisioning, case peer review, and workflow review
+- have the internal senior tooling specialist verify or stage the minimal toolchain automatically when the evidence type or case question already implies it
 - if direct access is blocked, pursue supported recovery and narrower corroborative paths before a blocker-only handoff, and state whether deleted-entry, unallocated-space, slack, snapshot, and carving work was attempted, deferred, or impossible
 - keep evidence handling preservation-first and read-only where possible
 - separate observation, inference, and limitation
@@ -120,7 +123,10 @@ On each run the examiner is expected to:
 
 The helper roles are internal:
 
-- `Forensic Toolsmith` handles tool selection, readiness, and platform caveats
+- `Forensic Senior Tooling Specialist` maps the case question to expert-used tools, live-off-the-land options, and a safe execution flow
+- `Forensic Tool Researcher` checks current upstream repositories, official docs, releases, and adoption signals for the specialist
+- `Forensic Tool Provisioner` downloads, clones, updates, organizes, verifies, or documents selected tools and command flow under ignored staging paths
+- `Forensic Toolsmith` remains only as a compatibility alias for older prompts and delegates substantive work to the senior tooling specialist
 - `Forensic Peer Reviewer` challenges case findings, missing corroboration, and overconfident wording before release
 - `Forensic Maintainer` reviews lessons learned and bounded updates to the workflow
 
@@ -163,7 +169,7 @@ The workflow starts with the case request and then loops back through clarificat
 
 1. receive the case request
 2. narrow the task with high-value clarification questions
-3. check tool readiness and platform constraints
+3. run the senior tooling specialist, including research and provisioning subagents, to check tool readiness and platform constraints
 4. examine the evidence with preservation-first handling
 5. analyze and correlate the resulting artifacts
 6. write or update the Markdown report

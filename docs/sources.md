@@ -2,7 +2,7 @@
 
 This file records the external material that currently informs the repo. It is not meant to be exhaustive. It is meant to show what was actually checked, why it matters, and where that guidance enters the workflow.
 
-Last reviewed: `2026-05-18`
+Last reviewed: `2026-05-28`
 
 ## Process guidance checked directly
 
@@ -26,32 +26,42 @@ That is deliberate. This file should not imply a document was checked if it was 
 
 ## Tool upstreams checked directly
 
-| Tool or project  | Why it is tracked                                              | Current repo position                                                                                               | Link                                        |
-| ---------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| `The Sleuth Kit` | core filesystem and image analysis tooling                     | still a primary Linux-friendly examiner tool                                                                        | <https://github.com/sleuthkit/sleuthkit>    |
-| `bulk_extractor` | feature extraction, scanning, and supporting carving workflows | useful companion tool, not a substitute for filesystem analysis                                                     | <https://github.com/simsong/bulk_extractor> |
-| `Plaso`          | timeline generation from multiple artifacts                    | useful when timeline depth justifies the setup cost                                                                 | <https://github.com/log2timeline/plaso>     |
-| `Timesketch`     | collaborative timeline review and enrichment                   | heavier than local CLI workflows; justified mainly for larger or team-based timeline work                           | <https://github.com/google/timesketch>      |
-| `Binwalk`        | firmware and blob analysis                                     | appropriate for firmware and opaque binary work, not general host forensics                                         | <https://github.com/ReFirmLabs/binwalk>     |
-| `uv`             | local automation for repo scripts and Python-based CLI helpers | useful for running report-packaging helpers and ephemeral Python tools without adding more bespoke environment glue | <https://docs.astral.sh/uv/>                |
+| Tool or project          | Why it is tracked                                                | Current repo position                                                                                               | Link                                               |
+| ------------------------ | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| `The Sleuth Kit`         | core filesystem and image analysis tooling                       | still a primary Linux-friendly examiner tool                                                                        | <https://github.com/sleuthkit/sleuthkit>           |
+| `libewf`                 | EWF/E01 verification, metadata inspection, and Linux-side access | tracked as the baseline Linux-friendly access layer for E01 handling before filesystem analysis                     | <https://github.com/libyal/libewf>                 |
+| `bulk_extractor`         | feature extraction, scanning, and supporting carving workflows   | useful companion tool, not a substitute for filesystem analysis                                                     | <https://github.com/simsong/bulk_extractor>        |
+| `Velociraptor`           | endpoint collection, VQL artifacts, and offline collectors       | candidate for authorized live/offline endpoint collection when native commands are insufficient                      | <https://docs.velociraptor.app/>                   |
+| `Velociraptor Artifacts` | reusable endpoint collection logic and tool wrapping             | tracked for artifact-based collection, dead-disk remapping possibilities, and external-tool management              | <https://docs.velociraptor.app/docs/artifacts/>    |
+| `Hayabusa`               | Windows event-log timelines and Sigma-oriented threat hunting    | strong candidate for Windows last-hours user-activity and incident timelines                                        | <https://github.com/Yamato-Security/hayabusa>      |
+| `Chainsaw`               | rapid Windows forensic artifact search and Sigma hunting         | strong candidate for fast EVTX and selected Windows artifact triage                                                 | <https://github.com/WithSecureLabs/chainsaw>       |
+| `SigmaHQ`                | detection-rule corpus and format ecosystem                       | supporting rule source for compatible event-log hunting tools                                                       | <https://github.com/SigmaHQ/sigma>                 |
+| `KAPE` docs              | targeted Windows collection and processing model                 | Windows-first candidate when authorized triage collection or parser orchestration is appropriate                    | <https://ericzimmerman.github.io/KapeDocs/>        |
+| `KapeFiles`              | community targets and modules for KAPE                           | tracked as the versioned target/module source when KAPE is selected                                                 | <https://github.com/EricZimmerman/KapeFiles>       |
+| `Zimmerman tools`        | Windows artifact parsing and timeline-friendly outputs           | Windows-first parser family to select by artifact type, not as a blanket dependency                                 | <https://ericzimmerman.github.io/>                 |
+| `DFIR-ORC`               | configurable Windows forensic artifact collection                | candidate when its collection model, configuration, and operational requirements fit the case                       | <https://github.com/DFIR-ORC/dfir-orc>             |
+| `Plaso`                  | timeline generation from multiple artifacts                      | useful when timeline depth justifies the setup cost                                                                 | <https://github.com/log2timeline/plaso>            |
+| `Plaso` docs             | current install, support, and timeline guidance                  | used to verify that Plaso remains a timeline engine rather than a lightweight one-off parser                        | <https://plaso.readthedocs.io/en/latest/index.html> |
+| `Timesketch`             | collaborative timeline review and enrichment                     | heavier than local CLI workflows; justified mainly for larger or team-based timeline work                           | <https://github.com/google/timesketch>             |
+| `Dissect`                | unified framework for containers, filesystems, and artifacts     | candidate when a single Python framework reduces extraction friction across image and artifact formats              | <https://github.com/fox-it/dissect>                |
+| `Binwalk`                | firmware and blob analysis                                       | appropriate for firmware and opaque binary work, not general host forensics                                         | <https://github.com/ReFirmLabs/binwalk>            |
+| `uv`                     | local automation for repo scripts and Python-based CLI helpers   | useful for running report-packaging helpers and ephemeral Python tools without adding more bespoke environment glue | <https://docs.astral.sh/uv/>                       |
 
 ## Secondary workflow references
 
 | Project or reference                    | How it informs the repo                                                                                                                          | Note                                                                                                                                  |
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `ForensicArtifacts/artifacts`           | artifact-family coverage and structured thinking about supported operating systems and source types                                              | Used as a checklist and coverage reference, not as a standalone proof engine.                                                         |
-| `ForensicArtifacts/artifacts-kb`        | supporting context for artifact families and collection terminology                                                                              | Useful for coverage and naming consistency.                                                                                           |
+| `ForensicArtifacts/artifacts`           | artifact-family coverage and structured thinking about supported operating systems and source types                                              | Used as a checklist and coverage reference, not as a standalone proof engine. <https://github.com/ForensicArtifacts/artifacts>        |
+| `ForensicArtifacts/artifacts-kb`        | supporting context for artifact families and collection terminology                                                                              | Useful for coverage and naming consistency. <https://github.com/ForensicArtifacts/artifacts-kb>                                       |
 | Linux-forensics practitioner literature | high-level Linux-forensics themes such as service-aware interpretation, auth/session priority, timezone discipline, and conservative attribution | Used only at the level of practitioner themes in this environment; no copyrighted text is quoted or treated as direct authority here. |
-
-## Additional tracked tool upstream
-
-| Tool or project | Why it is tracked                                                | Current repo position                                                                           | Link                               |
-| --------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------- |
-| `libewf`        | EWF/E01 verification, metadata inspection, and Linux-side access | tracked as the baseline Linux-friendly access layer for E01 handling before filesystem analysis | <https://github.com/libyal/libewf> |
 
 ## Current working observations
 
 - `libewf` remains the baseline Linux-friendly access and verification layer for `E01` / EWF inputs and pairs naturally with The Sleuth Kit for filesystem work.
+- For Windows last-hours user-activity questions, `Hayabusa`, `Chainsaw`, KAPE/KapeFiles, Zimmerman tools, and Velociraptor are now tracked as first-class candidates, but the workflow must still choose the smallest safe subset for the case.
+- `Velociraptor` is powerful for endpoint artifacts and offline collectors, but its operational model should be documented before use.
+- `DFIR-ORC` is tracked as a Windows collection framework, not a general parser or default live-host first step.
+- `Dissect` is tracked as a broad forensic framework that may reduce extraction friction in mixed image/container cases.
 - `Timesketch` remains more service-oriented than lightweight local tooling.
 - `The Sleuth Kit` remains a sensible default for Linux-based image and filesystem work.
 - `Binwalk` is treated as a specialist tool, not a general-purpose substitute for host forensics.
