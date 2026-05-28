@@ -36,13 +36,24 @@ When this workflow is running in OpenCode, the helper subagents remain mandatory
 - invoke `forensic-maintainer` through the Task tool after case closure or repeated friction when a reusable workflow change may be warranted
 - if a helper task stalls, is denied, or returns an incomplete note, stop the case loop at that blocker, document which helper failed and why, narrow the helper prompt or command shape, and retry the helper rather than bypassing it
 - keep helper prompts short and specific, and ask helpers for bounded outputs that unblock the next examiner step
+- immediately after the opening tooling helper returns, create or update the requested Markdown report stub with the edit/write tool before running host collection commands
+- do not mark the report-start task complete until the edit/write tool has actually created or updated the requested report path
 
 For authorized live Windows host triage in OpenCode:
 
 - the primary examiner should perform the work directly with small, bounded, read-only commands
 - use one simple command per tool call when possible; avoid long compound PowerShell scripts, interactive commands, remoting, install or upgrade commands, and commands that wait indefinitely
+- prefer native PowerShell commands over `cmd /c`; do not use `cmd /c` during OpenCode live triage when a bounded PowerShell equivalent such as `Get-ComputerInfo` exists
+- prefer simple read-only cmdlets and shaping commands such as `Select-Object`, `Group-Object`, `Sort-Object`, `Format-List`, and `Format-Table`; avoid `ForEach-Object`, custom `PSCustomObject` construction, and broad scriptblocks in OpenCode live triage because they often trigger permission rejection and can hide side effects
+- prefer `Get-Process` `StartTime` for process-start review; avoid `Win32_Process` DMTF timestamp conversion loops unless a specific parent-process field is essential and the command handles invalid timestamps without noisy exceptions
+- do not use `Get-Process -IncludeUserName` unless the session is already elevated; record owner attribution as unavailable rather than triggering avoidable elevation errors
+- do not sort every process by `StartTime`; first filter to the investigation window and small result sets, and if protected processes cause access-denied noise, stop that command and retry with a narrower process list or event-log source
+- when enumerating user directories such as Desktop, Downloads, Documents, Recent, or Startup, always apply the investigation window and a small limit; do not list older files or broad directory contents outside the time window
+- when checking browser activity metadata, do not enumerate the whole browser profile directory and do not list credential-store artifacts. Use explicit allowlisted paths such as `History` or other non-secret activity databases only when in scope, and record that cookies, saved passwords, tokens, and credential databases were deliberately excluded
 - do not read `.env`, `.env.*`, credential stores, password-manager data, browser saved-password tables, tokens, cookies, or other secret material
 - write only the requested Markdown report or explicitly scoped, ignored working notes under `reports/`, `cases/`, or another analyst-controlled output path
+- in OpenCode, create and update Markdown reports with the edit/write tools rather than PowerShell redirection, `Out-File`, `Set-Content`, or `Add-Content`; shell writes tend to trigger noninteractive permission rejection and obscure what changed
+- do not create companion `cases/` or artifact directories during live-host triage unless the prompt explicitly asks for them or a selected tool needs a documented output path
 - if a command stalls, is denied, or proves too broad, stop that path, document the blocker, and retry with a narrower read-only command instead of continuing to wait
 - start with current time and timezone, host and user identity, active session state, process start times, targeted event logs, shell history metadata or non-secret command history where in scope, recent-file metadata, and browser-history metadata or copied databases only when doing so is low-impact and within scope
 

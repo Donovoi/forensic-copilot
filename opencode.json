@@ -42,12 +42,32 @@
           "Get-CimInstance Win32_*": "allow",
           "Get-ComputerInfo*": "allow",
           "Get-Process*": "allow",
+          "Get-Service*": "allow",
+          "Get-ScheduledTask*": "allow",
+          "Get-LocalUser*": "allow",
+          "Get-LocalGroupMember*": "allow",
+          "Get-ChildItem *": "allow",
+          "Get-Item *": "allow",
+          "Get-ItemProperty *": "allow",
           "Get-WinEvent*": "allow",
           "wevtutil *": "allow",
-          "Test-Path *": "allow"
+          "Where-Object*": "allow",
+          "Select-Object*": "allow",
+          "Sort-Object*": "allow",
+          "Measure-Object*": "allow",
+          "Group-Object*": "allow",
+          "Format-Table*": "allow",
+          "Format-List*": "allow",
+          "Out-String*": "allow",
+          "Test-Path *": "allow",
+          "New-Item -ItemType Directory -Force -Path \"reports*": "allow",
+          "New-Item -ItemType Directory -Force -Path reports*": "allow",
+          "New-Item -ItemType Directory -Force -Path \"cases*": "allow",
+          "New-Item -ItemType Directory -Force -Path cases*": "allow",
+          "Out-Null*": "allow"
         },
-        "edit": "ask",
-        "write": "ask"
+        "edit": "allow",
+        "write": "allow"
       }
     },
     "forensic-senior-tooling-specialist": {
