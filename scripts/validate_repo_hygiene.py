@@ -18,6 +18,17 @@ IGNORED_DIRS = {
     "__pycache__",
     "venv",
 }
+IGNORED_RELATIVE_DIRS = {
+    "acquisitions",
+    "artifacts",
+    "cases",
+    "evidence",
+    "exports",
+    "reports",
+    "toolcache",
+    "tooling/cache",
+    "tooling/downloads",
+}
 FORBIDDEN_PATHS = {
     ".tmp_test_probe.py": "scratch probe files should not be committed",
     ".vscode/tasks.json": "workstation-specific VS Code tasks should stay local",
@@ -52,8 +63,13 @@ def parse_args() -> argparse.Namespace:
 
 def iter_repo_files(root: Path):
     for current_dir, dirnames, filenames in os.walk(root):
+        current_path = Path(current_dir)
         dirnames[:] = sorted(
-            name for name in dirnames if name not in IGNORED_DIRS and not name.startswith(".git")
+            name
+            for name in dirnames
+            if name not in IGNORED_DIRS
+            and not name.startswith(".git")
+            and (current_path / name).relative_to(root).as_posix() not in IGNORED_RELATIVE_DIRS
         )
         for filename in sorted(filenames):
             yield Path(current_dir) / filename

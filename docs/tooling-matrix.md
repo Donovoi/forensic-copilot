@@ -85,6 +85,7 @@ When direct image access is blocked and only derived outputs are available:
 - Windows-first tools should be documented, not magically normalized into a Linux host.
 - Proprietary tools may require manual download, licensing, or separate analyst workstations.
 - Container or VM-based execution can be acceptable when documented and reproducible.
+- On live Windows hosts, especially through OpenCode or another single-agent runner, the opening pass should use native read-only commands and short bounded queries before considering extra tooling. Avoid install steps, broad recursive sweeps, and long compound shell probes unless the scope and urgency justify them.
 
 ## Maintenance notes
 

@@ -34,6 +34,7 @@ Treat tool selection as case-driven, not inventory-driven. The right outcome is 
 - Capture installation friction and verification failures when they would improve future tooling guidance.
 - When the examiner needs a formal report package, treat `uv` as the script runner and `pandoc` as a separate document-conversion dependency with its own install path.
 - If the evidence type clearly implies a baseline stack, do not wait for the examiner to ask for each tool one by one.
+- For live Windows host triage in OpenCode, prefer built-in, read-only Windows commands and short bounded queries. Do not install tools, launch long-running watchers, or run broad recursive collection unless the examiner explicitly documents why that expansion is necessary and authorized.
 
 ## Do not
 
@@ -77,6 +78,7 @@ Typical mappings:
 - When the baseline stack is obvious from the evidence type, stage it automatically when feasible; fall back to documentation-only guidance only when installation or staging is actually blocked.
 - If the setup effort outweighs the value for the current case, state that explicitly rather than forcing the install.
 - If the examination must rely on derived outputs rather than direct image access, require a provenance ledger and state the narrower set of questions that the available artifacts can answer.
+- On Windows live hosts, keep the first-pass tool plan to native commands such as `Get-Date`, `Get-TimeZone`, `whoami`, `quser`, `Get-CimInstance`, `Get-Process`, `Get-WinEvent`, and narrowly scoped file metadata queries. Avoid compound command probes that can stall command-safety layers in agent runners.
 
 ## Workflow
 

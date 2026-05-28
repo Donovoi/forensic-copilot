@@ -39,7 +39,7 @@ Preferred placeholder patterns:
 
 The repo includes `scripts/validate_repo_hygiene.py` for a baseline automated sweep.
 
-Use it to catch obvious workstation-specific paths and scratch files before you commit. It does not replace manual review for privacy, case scope, or publication risk.
+Use it to catch obvious workstation-specific paths and scratch files before you commit. It skips the same top-level case-output and evidence-staging directories that are ignored by git, such as `reports/`, `cases/`, `evidence/`, `artifacts/`, `exports/`, `acquisitions/`, and `toolcache/`, so local investigation outputs can remain present but untracked while the published repository is checked. It does not replace manual review for privacy, case scope, or publication risk.
 
 ## Important limitation
 

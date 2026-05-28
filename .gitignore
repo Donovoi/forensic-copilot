@@ -3,6 +3,11 @@
 /tooling/downloads/
 /tooling/cache/
 
+# Local credentials
+.env
+.env.*
+!.env.example
+
 # Virtual environments
 /.venv/
 venv/

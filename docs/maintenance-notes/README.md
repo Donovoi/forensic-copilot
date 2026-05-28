@@ -6,6 +6,7 @@ They complement `docs/self-update-loop.md` by leaving a short, reviewable ration
 
 ## Index
 
+- `2026-05-28-opencode-live-host-triage.md` — add OpenCode project configuration, GPT-5.5 setup guidance, and inline helper-mode for live Windows triage
 - `2026-05-19-blocked-access-recovery-and-carving-clarity.md` — require a blocked-access recovery branch and explicit attempted-versus-impossible deleted/unallocated/carving reporting
 - `2026-05-18-repo-hygiene-and-export-portability.md` — remove local residue, add validation automation, and harden formal export portability
 - `2026-05-18-portable-agent-setup.md` — keep setup and usage guidance portable across agent runners

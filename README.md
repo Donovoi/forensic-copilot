@@ -32,6 +32,33 @@ For the best results, keep these files in the active workspace or prompt context
 4. Reload the VS Code window if the agent picker does not refresh automatically.
 5. Select **`Forensic Examiner`** in Copilot Chat.
 
+### OpenCode with OpenAI
+
+This repo includes `opencode.json` so OpenCode can load the forensic examiner directly instead of relying on Copilot-specific `.agent.md` discovery.
+
+1. Install or update OpenCode. Version `1.15.11` or newer is recommended for the `openai/gpt-5.5` model entry:
+
+   ```powershell
+   opencode upgrade -m npm
+   opencode --version
+   opencode models openai
+   ```
+
+2. Configure an OpenAI API key through OpenCode or an environment variable. Keep local credential files out of git; `.env` and `.env.*` are ignored by default.
+3. Start the examiner with the project agent and OpenAI model:
+
+   ```powershell
+   opencode run --agent forensic-examiner --model openai/gpt-5.5 "Investigate /evidence/image.E01 for suspicious user activity."
+   ```
+
+4. For authorized live Windows host triage, keep the first run narrow and explicit:
+
+   ```powershell
+   opencode run --agent forensic-examiner --model openai/gpt-5.5 "Analyze this authorized live Windows host for user activity during the last two hours. Use low-impact read-only commands only and write the Markdown report under reports/."
+   ```
+
+The OpenCode configuration sets `forensic-examiner` as the default project agent and uses `openai/gpt-5.5`. It also registers the helper agents as OpenCode subagents so the examiner can invoke `forensic-toolsmith`, `forensic-peer-reviewer`, and `forensic-maintainer` through the Task tool as part of the standard loop.
+
 ### Other agentic tools and local model setups
 
 If your tool does not support named custom agents, use the same workflow in a portable way:
@@ -52,7 +79,7 @@ This structure is intended to stay usable across GitHub Copilot, OpenCode, Codex
 - maintain or edit a Markdown report in the workspace
 - optionally run commands or tools when the environment allows it
 
-For Ollama specifically, the compatibility lives in the instruction files and the repo-aware wrapper or coding agent that sits in front of the model. Ollama by itself is the serving layer, not the workflow layer.
+For Ollama specifically, the compatibility lives in the instruction files and the repo-aware wrapper or coding agent that sits in front of the model. Ollama by itself is the serving layer, not the workflow layer. For OpenCode, prefer the committed `opencode.json` and OpenAI model path when the goal is to run this workflow with GPT rather than a local Gemma-family model.
 
 ### First prompt
 
