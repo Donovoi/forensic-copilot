@@ -32,8 +32,12 @@ Provision only the tools the senior specialist selected. Do not expand the tool 
 
 - Prepare the commands the examiner or next collection subagent should run, including input paths, output paths, timeframe filters, timezone assumptions, and expected output formats.
 - Prefer one bounded command per step.
+- In local-model OpenCode runs, do not use a todo list for a focused provisioning request unless the senior specialist asked for multiple downloads or a multi-step build. Return the compact execution flow directly; do not add prose before the heading or after the blocker line.
+- For WSL-to-Windows PowerShell command templates, do not use raw `$` variables or `$_` inside double-quoted `powershell.exe -NoProfile -Command` strings. Prefer fixed literal timestamps and simplified filters such as `Where-Object StartTime -GE [datetime]'YYYY-MM-DDTHH:MM:SS'`; escape `$` only when a variable is unavoidable.
+- For last-N-hours tasking, require a single captured collection start, a fixed absolute window start/end, and that same window reused across every command.
+- Commands that may return more than about 50 rows should save full output as CSV or JSON under `artifacts/` or `acquisitions/`, then print only path, row count, and a small preview.
 - Avoid interactive installers, watchers, daemons, or service deployments unless the senior specialist explicitly selected that operational model.
-- For live Windows hosts, prefer native read-only collection first; external tools should be run only after authorization and with explicit output paths outside evidence.
+- For live Windows hosts, prefer native read-only collection first; external tools should be run only after authorization and with explicit output paths outside evidence. If the selected lane is native-first, document the execution flow and mark heavier downloads or clones deferred rather than trying to stage them during the first local-model pass.
 - For event-log tools, include both detection-oriented outputs and timeline-oriented outputs when the case question needs user activity reconstruction.
 - For KAPE, Velociraptor, DFIR-ORC, or other collectors, distinguish collection from analysis and document expected artifacts.
 - For rule-based tools, record the rule source and update method.
@@ -50,7 +54,9 @@ Provision only the tools the senior specialist selected. Do not expand the tool 
 
 ## Output format
 
-Return a Markdown note containing:
+Return a compact Markdown note. For local-model OpenCode runs, the entire note must be 25 lines or fewer, with command templates kept to the smallest safe first pass.
+
+Use this structure:
 
 # Forensic Tool Provisioning and Execution Flow
 
@@ -68,11 +74,6 @@ Return a Markdown note containing:
 
 ## Blockers and fallback paths
 
-For each staged or documented tool, include:
+For each staged or documented tool, use one line with: source, version or commit evidence, path, verification result, first command template, output path, and status.
 
-- source URL and version or commit
-- install or clone path
-- verification result
-- first command template
-- output path guidance
-- whether the tool is ready, deferred, blocked, or documentation-only
+Stop after blockers and fallback paths. The senior specialist can ask a narrower follow-up if more detail is needed.

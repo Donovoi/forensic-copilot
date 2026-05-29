@@ -3,27 +3,46 @@
   "model": "openai/gpt-5.5",
   "default_agent": "forensic-examiner",
   "disabled_providers": ["gemini", "google", "ollama"],
-  "instructions": [
-    "AGENTS.md",
-    ".github/agents/*.agent.md",
-    "docs/limitations.md",
-    "docs/tooling-matrix.md",
-    "docs/peer-review-process.md",
-    "docs/privacy-and-redaction.md"
-  ],
+  "provider": {
+    "llamacpp-local": {
+      "options": {
+        "timeout": 3600000,
+        "chunkTimeout": 3600000
+      },
+      "models": {
+        "gemma-heretic-bf16": {
+          "limit": {
+            "context": 16384,
+            "output": 512
+          }
+        }
+      }
+    }
+  },
+  "instructions": ["AGENTS.opencode.md"],
+  "tool_output": {
+    "max_lines": 120,
+    "max_bytes": 8000
+  },
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "tail_turns": 2,
+    "preserve_recent_tokens": 1500,
+    "reserved": 3000
+  },
   "agent": {
     "forensic-examiner": {
       "description": "User-facing forensic examiner for scoped host, filesystem, and image investigations with Markdown reporting.",
       "mode": "primary",
-      "model": "openai/gpt-5.5",
-      "prompt": "{file:.github/agents/forensic-examiner.agent.md}",
+      "prompt": "{file:docs/opencode-agents/forensic-examiner.md}",
       "permission": {
         "read": "allow",
         "list": "allow",
         "glob": "allow",
         "grep": "allow",
-        "webfetch": "allow",
-        "websearch": "allow",
+        "webfetch": "deny",
+        "websearch": "deny",
         "todowrite": "allow",
         "task": {
           "*": "deny",
@@ -34,6 +53,18 @@
         },
         "bash": {
           "*": "ask",
+          "date*": "allow",
+          "pwd": "allow",
+          "pwd *": "allow",
+          "ls -d reports artifacts acquisitions 2>/dev/null": "allow",
+          "ls -d reports artifacts acquisitions*": "allow",
+          "ls -d reports*": "allow",
+          "ls -d artifacts*": "allow",
+          "ls -d acquisitions*": "allow",
+          "test -d reports*": "allow",
+          "mkdir -p reports*": "allow",
+          "mkdir -p artifacts*": "allow",
+          "mkdir -p acquisitions*": "allow",
           "Get-Date*": "allow",
           "Get-TimeZone*": "allow",
           "hostname*": "allow",
@@ -71,6 +102,8 @@
           "New-Item -ItemType Directory -Force -Path acquisitions*": "allow",
           "Copy-Item *": "allow",
           "Compress-Archive *": "allow",
+          "powershell.exe -NoProfile -Command *": "allow",
+          "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command *": "allow",
           "Out-Null*": "allow"
         },
         "edit": "allow",
@@ -80,53 +113,40 @@
     "forensic-senior-tooling-specialist": {
       "description": "Internal senior forensic tooling strategist that coordinates current tool research, provisioning, and execution-flow handoff.",
       "mode": "subagent",
-      "model": "openai/gpt-5.5",
-      "prompt": "{file:.github/agents/forensic-senior-tooling-specialist.agent.md}",
+      "steps": 5,
+      "prompt": "{file:docs/opencode-agents/forensic-senior-tooling-specialist.md}",
       "permission": {
-        "read": "allow",
-        "list": "allow",
-        "glob": "allow",
-        "grep": "allow",
-        "webfetch": "allow",
-        "websearch": "allow",
-        "todowrite": "allow",
+        "read": "deny",
+        "list": "deny",
+        "glob": "deny",
+        "grep": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "todowrite": "deny",
         "task": {
           "*": "deny",
           "forensic-tool-researcher": "allow",
           "forensic-tool-provisioner": "allow",
           "forensic-maintainer": "allow"
         },
-        "bash": {
-          "*": "ask",
-          "Get-Date*": "allow",
-          "Get-TimeZone*": "allow",
-          "hostname*": "allow",
-          "whoami*": "allow",
-          "quser*": "allow",
-          "Get-Command *": "allow",
-          "Test-Path *": "allow",
-          "Get-ChildItem *": "allow",
-          "Get-CimInstance Win32_*": "allow",
-          "Get-ComputerInfo*": "allow",
-          "Get-Process*": "allow"
-        },
-        "edit": "ask",
-        "write": "ask"
+        "bash": "deny",
+        "edit": "deny",
+        "write": "deny"
       }
     },
     "forensic-tool-researcher": {
       "description": "Internal research-only subagent for current DFIR tool candidates, upstream repositories, official docs, releases, and caveats.",
       "mode": "subagent",
-      "model": "openai/gpt-5.5",
-      "prompt": "{file:.github/agents/forensic-tool-researcher.agent.md}",
+      "steps": 3,
+      "prompt": "{file:docs/opencode-agents/forensic-tool-researcher.md}",
       "permission": {
-        "read": "allow",
-        "list": "allow",
-        "glob": "allow",
-        "grep": "allow",
+        "read": "deny",
+        "list": "deny",
+        "glob": "deny",
+        "grep": "deny",
         "webfetch": "allow",
-        "websearch": "allow",
-        "todowrite": "allow",
+        "websearch": "deny",
+        "todowrite": "deny",
         "task": "deny",
         "bash": "deny",
         "edit": "deny",
@@ -136,16 +156,16 @@
     "forensic-tool-provisioner": {
       "description": "Internal provisioning subagent for staging selected forensic tools, verifying versions or hashes, and preparing bounded execution flows.",
       "mode": "subagent",
-      "model": "openai/gpt-5.5",
-      "prompt": "{file:.github/agents/forensic-tool-provisioner.agent.md}",
+      "steps": 4,
+      "prompt": "{file:docs/opencode-agents/forensic-tool-provisioner.md}",
       "permission": {
         "read": "allow",
         "list": "allow",
         "glob": "allow",
         "grep": "allow",
         "webfetch": "allow",
-        "websearch": "allow",
-        "todowrite": "allow",
+        "websearch": "deny",
+        "todowrite": "deny",
         "task": {
           "*": "deny",
           "forensic-maintainer": "allow"
@@ -175,8 +195,7 @@
     "forensic-toolsmith": {
       "description": "Legacy compatibility helper that delegates substantive tool research and provisioning to the senior tooling specialist.",
       "mode": "subagent",
-      "model": "openai/gpt-5.5",
-      "prompt": "{file:.github/agents/forensic-toolsmith.agent.md}",
+      "prompt": "{file:docs/opencode-agents/forensic-toolsmith.md}",
       "permission": {
         "read": "allow",
         "list": "allow",
@@ -198,8 +217,7 @@
     "forensic-peer-reviewer": {
       "description": "Internal second-reader for challenging forensic reports, inference strength, corroboration, and release readiness.",
       "mode": "subagent",
-      "model": "openai/gpt-5.5",
-      "prompt": "{file:.github/agents/forensic-peer-reviewer.agent.md}",
+      "prompt": "{file:docs/opencode-agents/forensic-peer-reviewer.md}",
       "permission": {
         "read": "allow",
         "list": "allow",
@@ -217,8 +235,7 @@
     "forensic-maintainer": {
       "description": "Internal maintainer for narrow, justified workflow updates after real investigations or tooling friction.",
       "mode": "subagent",
-      "model": "openai/gpt-5.5",
-      "prompt": "{file:.github/agents/forensic-maintainer.agent.md}",
+      "prompt": "{file:docs/opencode-agents/forensic-maintainer.md}",
       "permission": {
         "read": "allow",
         "list": "allow",

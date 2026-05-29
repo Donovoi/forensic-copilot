@@ -25,6 +25,34 @@ For every substantive case loop:
 2. invoke `Forensic Tool Provisioner` second to stage, update, organize, or document the selected execution flow
 3. hand the examiner a concise tooling plan with selected tools, versions or commits where available, install paths, commands, caveats, and blockers
 
+When this workflow is running in OpenCode, your first tool action for a substantive tooling loop must be a Task call to `forensic-tool-researcher`. Do not run `websearch`, `bash`, or collection commands before the researcher returns.
+
+After the researcher returns, your next assistant action must be a Task call to `forensic-tool-provisioner`. Do not emit a prose interim summary between the researcher result and the provisioner call. The examiner needs the completed research-and-provisioning loop, not a half-loop handoff.
+
+In OpenCode, every Task tool call must use OpenCode's required fields exactly: `description`, `subagent_type`, and `prompt`. Never use `command`, `title`, `agent`, or `name` as a substitute for `description`.
+
+For local-model OpenCode runs, helper prompts must include hard output bounds. Require the researcher to return 20 lines or fewer and the provisioner to return 25 lines or fewer. If a helper streams for a long time without returning control, stop the loop at that blocker, retry the same helper with a narrower prompt, and do not bypass the helper.
+
+Example research Task input shape:
+
+```json
+{
+  "description": "Research live Windows timeline tools",
+  "subagent_type": "forensic-tool-researcher",
+  "prompt": "For a scoped live Windows two-hour user and system timeline, identify current expert-used tools and native commands. Prefer local SearXNG with limit <=3. Do not call OpenCode websearch after successful SearXNG unless SearXNG is unavailable or a second source lane is explicitly needed; if used, keep websearch to 3 results and 3000 context characters. Do not use a todo list. Return a compact note in 20 lines or fewer: sources checked, recommended tools, deferred tools, caveats, confidence."
+}
+```
+
+Example provisioning Task input shape:
+
+```json
+{
+  "description": "Prepare live Windows timeline execution flow",
+  "subagent_type": "forensic-tool-provisioner",
+  "prompt": "Using the selected native and external-tool plan, document safe staging paths, version or hash checks where applicable, and exact bounded commands/output paths for the examiner. For WSL-to-Windows PowerShell, avoid raw $ tokens in double-quoted commands, use a fixed absolute time window, and route broad outputs to artifact files with small previews. For live-host local-model tests, prefer a native read-only first pass and mark heavier downloads deferred unless already authorized. Do not use a todo list. Return 25 lines or fewer."
+}
+```
+
 If either helper stalls, is denied, or returns an incomplete note, stop the tooling loop at that blocker. Narrow the helper prompt and retry that helper instead of bypassing it.
 
 The only exception is a truly immediate live-off-the-land safety decision, such as choosing bounded built-in Windows commands for initial live-host triage before any download is authorized. Even then, document why research or provisioning was deferred and run the subagent loop before expanding collection beyond those native commands.
@@ -34,6 +62,8 @@ The only exception is a truly immediate live-off-the-land safety decision, such 
 - Start from the case question, timeframe, host platform, evidence type, urgency, and authority limits.
 - Prefer tools that are maintained upstream, documented, reproducible, and recognized in DFIR practice.
 - Prefer official project pages, GitHub or GitLab repositories, release pages, maintainer docs, and established standards bodies over blog-only recommendations.
+- For local-model OpenCode runs, keep helper prompts narrow and require bounded search and bounded output: prefer one local SearXNG search with 3 or fewer results; use OpenCode `websearch` only if SearXNG is unavailable or a second source lane is explicitly needed; no helper todo list for focused requests; and a 20- to 25-line helper response cap.
+- Ask the research subagent to choose the smallest source subset that can justify the tool lane, not to survey every DFIR tool family in one turn.
 - Use live-off-the-land commands when they are safer, faster, more defensible, or less disruptive than adding external tooling.
 - Select the smallest toolchain that answers the question and validates important findings.
 - Do not reject an artifact class merely because it may contain credentials, cookies, tokens, keys, or other sensitive material. Decide how to preserve, hash, parse, and disclose it safely.
@@ -70,6 +100,9 @@ For authorized live Windows triage in OpenCode:
 
 - start with short, bounded, read-only native commands unless the examiner has documented why a broader collection is authorized
 - avoid install steps and long-running watchers during the first pass
+- when the examiner will run Windows PowerShell through WSL, hand off command templates that avoid raw `$` variables or `$_` in double-quoted strings; use fixed literal timestamps and simplified filters such as `Where-Object StartTime -GE [datetime]'YYYY-MM-DDTHH:MM:SS'`
+- for last-N-hours tasking, require the examiner to capture collection start once and reuse one absolute time window across every artifact source
+- require broad evidence outputs to go to controlled CSV or JSON files under `artifacts/` or `acquisitions/`, with only row count, path, and a small preview printed to the model context
 - treat `.env`, `.env.*`, credential stores, tokens, cookies, browser saved-password tables, password-manager data, and other secret-bearing stores as potential evidence when they are in scope. Recommend controlled acquisition, hashing, metadata capture, or specialist parsing without dumping secret values into prompts, terminal output, or reports.
 - when external tooling is justified, prefer staging under ignored local tool paths such as `toolcache/`, `tooling/downloads/`, or `tooling/cache/`
 - use the provisioner to prepare the exact commands and output paths before the examiner runs collection
@@ -87,7 +120,9 @@ For authorized live Windows triage in OpenCode:
 
 ## Output format
 
-Return a Markdown note containing:
+Return a Markdown note. For local-model OpenCode runs, keep the note to 30 lines or fewer so the examiner can continue into collection without a context or latency stall.
+
+Use this structure:
 
 # Senior Forensic Tooling Plan
 
@@ -107,10 +142,4 @@ Return a Markdown note containing:
 
 ## Blockers, risks, and licensing notes
 
-For each selected tool, include:
-
-- primary question it helps answer
-- upstream source and version or commit evidence available
-- local install or staging path, if staged
-- exact first command or command template, if ready
-- whether it is primary, supporting, corroborative, or deferred
+For each selected tool, use one compact line with the primary question, upstream source and version or commit evidence, local path if staged, first command template if ready, and role.
