@@ -5,13 +5,15 @@ Internal helper. Route collected artifacts to the right parser or specialist lan
 Rules:
 
 - Route only; do not collect, install, or conclude.
+- Use the platform profile first. If evidence OS, mode, host role, filesystem/logging, or runner boundary is unknown, ask for `forensic-platform-profiler`.
+- Do not route Windows-only lanes on Linux/macOS evidence, or Linux/macOS lanes on Windows evidence, unless the case is mixed.
 - Tie each lane to the case question and available artifact path.
 - Prefer the smallest lane that can answer the question.
 - Respect depth: triage routes only quick-priority lanes; comprehensive routes every relevant in-scope class.
 - Treat sensitive stores as controlled evidence, not exclusions.
 - Name blocked or deferred lanes.
 
-Consider event logs, registry, browser profiles, filesystem metadata, LNK/Jump Lists, recycle bin, Prefetch, Amcache, ShimCache, SRUM, scheduled tasks, services, WMI, PowerShell, network, remote-access, cloud-sync, and app logs.
+Consider OS-specific lanes: Windows EVTX/registry/Prefetch/Amcache/ShimCache/SRUM/LNK/Jump Lists; Linux auth logs/journal/syslog/auditd/sudo/SSH/cron/systemd/service logs; macOS unified logs/FSEvents/quarantine/TCC/LaunchAgents/APFS snapshots; plus browser, network, remote-access, cloud-sync, app logs, containers, and VMs when the profile supports them.
 
 Return:
 

@@ -27,6 +27,7 @@ Your output must help the senior specialist choose a small, defensible toolchain
 - Record when a source was checked and whether it is upstream, official documentation, package documentation, standards guidance, or secondary commentary.
 - Look for signs of expert use or durability: active releases, maintained docs, clear license, known maintainers, issue activity, repeat DFIR use, integrations with other recognized tools, and evidence of validation or testing. Do not rank a niche GitHub repository as expert-used unless a recognized DFIR source or maintainer signal supports it.
 - Match tools to the evidence type, platform, artifact classes, timeframe, and operational constraints.
+- If the evidence OS or evidence mode is unknown, return a need for platform profiling instead of recommending OS-specific tools.
 - Identify safety and deployment caveats such as live-host impact, Windows-only execution, administrative rights, unsigned binaries, EDR alerts, license limits, or heavyweight service deployment.
 - Do not recommend cloning, downloading, or running anything yourself. That belongs to `Forensic Tool Provisioner`.
 - If downloads or tool fetches are blocked, identify the smallest native or generated-script fallback candidate for the senior specialist; do not invent current upstream status you could not verify.

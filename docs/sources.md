@@ -13,6 +13,9 @@ Last reviewed: `2026-05-30`
 | `SWGDE` — _Model Standard Operation Procedures for Computer Forensics_                | workflow structure, documentation expectations, defensibility language        | Useful when deciding what should be explicit in the examiner's process and report.                       | <https://www.swgde.org/documents/published-complete-listing/12-f-001-swgde-model-standard-operation-procedures-for-computer-forensics/> |
 | `SWGDE` — _Linux Tech Notes_                                                          | Linux-specific examiner cautions and environment awareness                    | Relevant because the current repo emphasis is Linux-based examination.                                   | <https://www.swgde.org/documents/published-complete-listing/16-f-001-linux-tech-notes/>                                                 |
 | `SWGDE` — _Best Practices Apple macOS Forensic Acquisition_                           | acquisition caveats, platform-specific preservation concerns                  | Useful mainly as a reminder that host-specific acquisition guidance varies and should not be hand-waved. | <https://www.swgde.org/documents/published-complete-listing/23-f-005-swgde-best-practices-apple-macos-forensic-acquisition/>            |
+| Microsoft Learn — Windows security event ID reference and 4624 documentation           | Windows logon/security-event routing and correlation cautions                 | Supports the Windows lane without making Windows the default.                                            | <https://learn.microsoft.com/en-us/azure/sentinel/windows-security-event-id-reference>, <https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4624> |
+| systemd `journalctl` manual                                                            | Linux journal filtering by root, boot, time window, and output format         | Supports Linux lane routing for systemd-based hosts.                                                     | <https://www.freedesktop.org/software/systemd/man/latest/journalctl.html>                                                               |
+| Apple Developer — Unified Logging                                                      | macOS logging architecture and `log` tooling context                          | Supports macOS lane routing for unified logs and avoids assuming flat syslog-only behavior.              | <https://developer.apple.com/documentation/os/logging>                                                                                  |
 
 ## Tracked source families
 
@@ -86,6 +89,7 @@ That is deliberate. This file should not imply a document was checked if it was 
 - Windows-first tools such as `FTK Imager`, `KAPE`, and many `Zimmerman` utilities are tracked as platform-specific dependencies rather than presumed native on Linux.
 - Artifact-definition ecosystems can improve coverage and gap detection even when they are not the primary extraction mechanism.
 - High-level Linux-forensics practitioner guidance reinforces role-aware interpretation: a Linux web server should not be read as if every recovered URL or admin endpoint represents local browsing by a human user.
+- Platform profiling is now a first-class workflow step: establish evidence OS, evidence mode, runner/evidence boundary, filesystem/logging architecture, and host role before broad collection or OS-specific tool selection.
 
 ## How to use this file
 

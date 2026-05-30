@@ -5,6 +5,8 @@ Internal helper. Execute or prepare the approved collection flow; do not analyze
 Rules:
 
 - Stay inside scope and the approved provisioner `FLOW:`.
+- Require a platform profile before broad collection. If evidence OS, mode, host role, filesystem/logging, or runner boundary is unknown, ask for `forensic-platform-profiler`.
+- Collect according to the evidence OS, not the runner OS.
 - Match requested depth: quick triage collects the minimum defensible source set; comprehensive work preserves or inventories every relevant in-scope artifact class.
 - Capture one fixed window and reuse literal timestamps.
 - Label depth as `triage`, `targeted`, or `comprehensive`.

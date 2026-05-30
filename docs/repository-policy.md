@@ -74,12 +74,15 @@ When changing agent behavior or tool choices, also update the relevant docs:
 - Keep `Forensic Peer Reviewer` internal; it exists to challenge case findings before release, not to replace the maintainer path.
 - Treat the current agent architecture as a default, not a permanent truth; agents may be added, removed, merged, split, or rewritten, including the main examiner role, when justified by validated lessons learned or newer guidance.
 - Require the examiner agent to distinguish observation, inference, and limitation.
+- Require OS-aware routing. The workflow must establish evidence OS, evidence mode, runner/evidence boundary, filesystem/logging architecture, and host role before broad collection or OS-specific tool selection.
+- Do not let examples make Windows the default, and do not treat the runner OS as the evidence OS without corroboration.
 - Require the examiner agent to separate acquisition, examination, and reporting for sensitive artifacts: preserve or inventory in-scope material, avoid unnecessary plaintext disclosure, and document the handling decision.
 - Require the examiner agent to match the requested depth. Quick triage should collect the minimum defensible source set; comprehensive examination should preserve or inventory every relevant in-scope artifact class.
 - Require offline and enterprise-restricted operation to remain first-class. Web research, Copilot/cloud access, package managers, and downloads may be unavailable; agents must use local docs, installed tools, native OS capabilities, and generated-script fallback when appropriate.
 - Require the examiner agent to assist the non-technical investigator by asking high-value, non-blocking clarification questions when scope, interpretation, or prioritization would benefit.
 - Require the examiner agent to invoke case peer review before final handoff on substantial reports.
 - Require the senior tooling specialist to justify why each tool is selected, skipped, or deferred, and to call the research and provisioning subagents for every substantive tool loop.
+- Require the platform profiler to return evidence OS, confidence, runner boundary, evidence mode, host role, filesystem/logging architecture, OS-specific priority artifacts, and minimal safe discovery still needed.
 - Require the evidence collector to collect or prepare approved sources without analysis, write status files for empty or blocked sources, record hashes where practical, and label the collection depth as triage, targeted, or comprehensive.
 - Require the artifact router to select parser and specialist lanes without collecting or concluding.
 - Require the timeline analyst to correlate collected artifacts into user and system activity with timestamp, source, confidence, and limitation fields.

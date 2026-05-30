@@ -53,6 +53,7 @@
         "task": {
           "*": "deny",
           "forensic-senior-tooling-specialist": "allow",
+          "forensic-platform-profiler": "allow",
           "forensic-evidence-collector": "allow",
           "forensic-artifact-router": "allow",
           "forensic-timeline-analyst": "allow",
@@ -146,6 +147,7 @@
         "todowrite": "deny",
         "task": {
           "*": "deny",
+          "forensic-platform-profiler": "allow",
           "forensic-tool-researcher": "allow",
           "forensic-tool-provisioner": "allow",
           "forensic-script-author": "allow",
@@ -153,6 +155,37 @@
           "forensic-maintainer": "allow"
         },
         "bash": "deny",
+        "edit": "deny",
+        "write": "deny"
+      }
+    },
+    "forensic-platform-profiler": {
+      "description": "Internal OS and evidence-mode profiler that separates runner OS from evidence OS and maps OS-specific forensic priorities before collection.",
+      "mode": "subagent",
+      "steps": 4,
+      "prompt": "{file:docs/opencode-agents/forensic-platform-profiler.md}",
+      "permission": {
+        "read": "allow",
+        "list": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "todowrite": "deny",
+        "task": "deny",
+        "bash": {
+          "*": "ask",
+          "uname*": "allow",
+          "cat /etc/os-release*": "allow",
+          "lsb_release*": "allow",
+          "sw_vers*": "allow",
+          "diskutil list*": "allow",
+          "mount*": "allow",
+          "findmnt*": "allow",
+          "powershell.exe -NoProfile -Command *Get-CimInstance Win32_OperatingSystem*": "allow",
+          "powershell.exe -NoProfile -Command *Get-ComputerInfo*": "allow",
+          "powershell.exe -NoProfile -Command *Get-Volume*": "allow"
+        },
         "edit": "deny",
         "write": "deny"
       }

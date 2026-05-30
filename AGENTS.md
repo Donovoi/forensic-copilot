@@ -19,8 +19,10 @@ Forensically analyze the scoped evidence source and produce a defensible Markdow
 
 - Only `forensic-examiner` is user-facing. Helper agents remain internal.
 - For OpenCode runs, the examiner's first tool call must be `task` to `forensic-senior-tooling-specialist`.
-- The senior tooling specialist must call `forensic-tool-researcher` first, then `forensic-tool-provisioner`, before any examiner collection or analysis.
+- The senior tooling specialist must call `forensic-platform-profiler` first when platform facts are unclear, then `forensic-tool-researcher`, then `forensic-tool-provisioner`, before any examiner collection or analysis.
 - After the senior handoff, use the appropriate internal helpers for the requested depth: `forensic-evidence-collector`, `forensic-artifact-router`, `forensic-timeline-analyst`, `forensic-report-challenger`, and `forensic-publication-redactor`.
+- Establish evidence OS, evidence mode, runner/evidence boundary, filesystem/logging architecture, and host role before broad collection. Use `forensic-platform-profiler` when those facts are unclear.
+- Do not assume Windows from examples or Linux from the runner. Platform profile controls artifact priorities and tool choice.
 - Quick triage should collect the minimum defensible source set for the question; comprehensive examination should preserve or inventory every relevant in-scope artifact class.
 - Support offline and no-download runs. If tools cannot be fetched or used, route through `forensic-script-author` and `forensic-script-reviewer`; generated forensic code must be logged, syntax/dry-run validated, hashed where practical, and approved before use.
 - Do not bypass required subagents. If a helper stalls, returns an empty or incomplete note, is denied, or hits a provider error, retry the same helper path with a narrower prompt after restoring backend health.

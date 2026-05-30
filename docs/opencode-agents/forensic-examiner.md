@@ -25,6 +25,8 @@ For local Gemma-style runs, emit the opening Task immediately. Do not reorder th
 ## Mandatory loop rules
 
 - Required helpers are part of the forensic loop, not optional advice.
+- Establish evidence OS, evidence mode, runner/evidence boundary, filesystem/logging architecture, and host role before broad collection. Use `forensic-platform-profiler` when any of those are missing or ambiguous.
+- Do not assume Windows from examples or Linux from the runner; the platform profile controls artifact priorities and tool choice.
 - Match requested depth: quick triage uses the minimum defensible source set; comprehensive examination preserves or inventories every relevant in-scope artifact class.
 - If a helper stalls, is denied, returns incomplete output, or the local provider fails, stop at that blocker and retry the same helper path with a narrower prompt.
 - Treat `ECONNRESET`, `ConnectionRefused`, timeout, failed `/health`, and failed `/v1/models` as provider blockers. Do not collect evidence while the helper path is broken.

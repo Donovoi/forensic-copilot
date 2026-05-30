@@ -10,6 +10,7 @@ Rules:
 - Use `webfetch` only for narrow official upstream pages, release pages, docs, or repositories already identified.
 - If web/search is disallowed or unavailable, use local repository docs, installed tool metadata, and native OS capabilities; label the answer `OFFLINE-SOURCE-BASIS` and state the review-date limit.
 - If local sources are not enough to justify a tool choice, return a blocker instead of guessing.
+- If evidence OS or mode is unknown, return `NEEDS_PLATFORM_PROFILE` instead of OS-specific tools.
 - Keep the response to 8 lines or fewer.
 
 Return:

@@ -4,7 +4,7 @@
 
 Forensic Copilot is a portable agent workflow for digital forensic triage, host review, disk-image work, and Markdown reporting.
 
-It gives you one visible agent, **Forensic Examiner**, plus internal helper agents for tool research, provisioning, evidence collection, timeline analysis, report challenge, redaction, and offline script fallback.
+It gives you one visible agent, **Forensic Examiner**, plus internal helper agents for platform profiling, tool research, provisioning, evidence collection, timeline analysis, report challenge, redaction, and offline script fallback.
 
 Use it with real examiner judgment, your legal authority, and your local SOPs. It helps structure the work; it does not replace validation, chain of custody, or human review.
 
@@ -30,6 +30,7 @@ A bare path is enough to begin. The examiner should infer preservation-first, sc
 - preserves or inventories relevant in-scope artifacts, including sensitive ones
 - separates observation, inference, limitation, and confidence
 - picks tools through a senior tooling subagent instead of guessing
+- profiles the evidence OS before OS-specific collection or tool choice
 - supports quick triage and deeper comprehensive examination
 - works online, offline, or in enterprise environments with blocked downloads
 - creates local fallback scripts only when needed, and only after review
@@ -94,16 +95,17 @@ Only **Forensic Examiner** is user-facing.
 The internal loop is:
 
 1. `forensic-senior-tooling-specialist`
-2. `forensic-tool-researcher`
-3. `forensic-tool-provisioner`
-4. `forensic-script-author` and `forensic-script-reviewer` when tools cannot be fetched or used
-5. `forensic-evidence-collector`
-6. `forensic-artifact-router`
-7. `forensic-timeline-analyst`
-8. `forensic-report-challenger`
-9. `forensic-peer-reviewer`
-10. `forensic-publication-redactor`
-11. `forensic-maintainer` only when reusable workflow changes are justified
+2. `forensic-platform-profiler` when OS, mode, filesystem/logging, host role, or runner boundary is unclear
+3. `forensic-tool-researcher`
+4. `forensic-tool-provisioner`
+5. `forensic-script-author` and `forensic-script-reviewer` when tools cannot be fetched or used
+6. `forensic-evidence-collector`
+7. `forensic-artifact-router`
+8. `forensic-timeline-analyst`
+9. `forensic-report-challenger`
+10. `forensic-peer-reviewer`
+11. `forensic-publication-redactor`
+12. `forensic-maintainer` only when reusable workflow changes are justified
 
 The loop should not be bypassed. If a helper stalls or fails, retry the same helper path with a narrower prompt or restore the provider/backend before collecting evidence.
 
@@ -118,12 +120,15 @@ Comprehensive examination preserves or inventories every relevant in-scope artif
 Helpful inputs:
 
 - evidence path or live host scope
+- operating system, if known
 - question to answer
 - user, host, or account of interest
 - time window and timezone
 - authority or policy limits
 - live vs mounted vs image status
 - desired report path
+
+If the operating system is not known, the platform profiler should establish the evidence OS before broad collection. It must distinguish the runner from the evidence source, for example WSL running commands against a Windows host or a Linux analyst workstation examining a macOS APFS image.
 
 If some details are missing, the examiner should proceed with conservative assumptions and record them.
 

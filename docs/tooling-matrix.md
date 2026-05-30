@@ -13,21 +13,34 @@ This matrix is the starting point for the `Forensic Senior Tooling Specialist` a
 7. for substantive tool decisions, run the specialist loop: current tool research first, provisioning and execution-flow design second
 8. treat sensitivity as a handling issue, not a collection veto; in-scope credential, cookie, token, key, browser, and environment-file artifacts should be preserved or inventoried when they may answer the case question
 9. treat offline and no-download environments as normal operating modes; use local docs, installed tools, native commands, and generated-script fallback rather than assuming web access
+10. identify the evidence OS and evidence mode before OS-specific collection; the runner OS is not automatically the evidence OS
 
 ## Advanced tooling specialist flow
 
 The senior tooling specialist should not act as a one-person installer. For every substantive case loop it should:
 
 1. map the case question to artifact classes and platform constraints
-2. invoke `Forensic Tool Researcher` to check current upstream or official sources
-3. select the smallest justified toolchain
-4. invoke `Forensic Tool Provisioner` to stage, update, verify, or document the execution flow under ignored local paths such as `toolcache/`, `tooling/downloads/`, or `tooling/cache/`
-5. when downloads or selected tools are blocked, invoke the script-author and script-reviewer fallback before any generated code is used
-6. hand the examiner exact command templates, expected outputs, versions or commits, script review status, caveats, and blockers
+2. invoke `Forensic Platform Profiler` when OS, evidence mode, host role, filesystem/logging, or runner boundary is unclear
+3. invoke `Forensic Tool Researcher` to check current upstream or official sources for the profiled platform
+4. select the smallest justified toolchain
+5. invoke `Forensic Tool Provisioner` to stage, update, verify, or document the execution flow under ignored local paths such as `toolcache/`, `tooling/downloads/`, or `tooling/cache/`
+6. when downloads or selected tools are blocked, invoke the script-author and script-reviewer fallback before any generated code is used
+7. hand the examiner exact command templates, expected outputs, versions or commits, script review status, caveats, and blockers
 
 If a live-host case is still in its bounded first-response phase, the specialist may choose native commands first and defer downloads until scope and authority justify them. The deferral must be documented.
 
 If the environment is offline or cannot fetch tools, the fallback order is: installed trusted tools, native read-only commands, then generated standard-library scripts. Generated scripts must be logged, syntax-checked, dry-run or fixture-tested, hashed where practical, and approved by `Forensic Script Reviewer` before operational use.
+
+## OS-first routing
+
+Before selecting tools, classify the evidence platform:
+
+| Evidence platform | First forensic priorities | Avoid |
+| --- | --- | --- |
+| Windows endpoint/server | EVTX, registry, Prefetch/Amcache/ShimCache/SRUM where present, LNK/Jump Lists/ShellBags, scheduled tasks, services, PowerShell, RDP/SMB, NTFS metadata, browser/app artifacts | assuming endpoint artifacts exist on servers, using Linux runner facts as Windows evidence |
+| Linux endpoint/server | auth logs, journal/syslog/messages, auditd when configured, shell history, sudo/su, SSH, cron, systemd units/timers, package logs, service/web/app logs, user dotfiles, filesystem metadata | assuming all distros use the same log paths, treating absent auditd as proof of no activity |
+| macOS | APFS/HFS+ structure, FileVault/APFS state, unified logs, FSEvents, quarantine/Gatekeeper/XProtect, TCC, LaunchAgents/Daemons, login items, Spotlight metadata, snapshots, extended attributes | treating APFS like a simple mounted folder, ignoring extended attributes or unified logs |
+| Container/VM/cloud/appliance | host/guest boundary, image/layer format, mounted volumes, service logs, orchestrator/cloud logs, exported metadata, time source | mixing host and guest evidence or treating SaaS exports like full host images |
 
 ## Current matrix
 

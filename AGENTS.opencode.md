@@ -13,8 +13,10 @@ Forensically analyze the scoped evidence source and maintain a defensible Markdo
 - The examiner must not call `todowrite`, `bash`, `read`, `grep`, or host collection before the opening senior Task.
 - Every Task call must use `description`, `subagent_type`, and `prompt`.
 - Do not use `command`, `title`, `agent`, or `name` instead of `description`.
-- Keep the first Task prompt under 30 words. It only needs short case facts and the required researcher-then-provisioner sequence; use one semicolon-separated line and never paste the full user request or a newline. For local Gemma-style runs, the opening Task must be emitted immediately, keep `description`, `subagent_type`, and `prompt` in that order, and never end the argument object with a period.
-- The senior tooling specialist must call `forensic-tool-researcher` first, then `forensic-tool-provisioner` next, before handing work back to the examiner.
+- Keep the first Task prompt under 30 words. It only needs short case facts and the required platform/research/provision sequence; use one semicolon-separated line and never paste the full user request or a newline. For local Gemma-style runs, the opening Task must be emitted immediately, keep `description`, `subagent_type`, and `prompt` in that order, and never end the argument object with a period.
+- The senior tooling specialist must call `forensic-platform-profiler` first when platform facts are unclear, then `forensic-tool-researcher`, then `forensic-tool-provisioner` before handing work back to the examiner.
+- If evidence OS, evidence mode, runner/evidence boundary, filesystem/logging architecture, or host role is unclear, route through `forensic-platform-profiler` before broad collection or OS-specific tool choice.
+- Do not assume Windows from examples or Linux from the runner. Platform profile controls artifact priorities and tool choice.
 - After the senior handoff, use `forensic-evidence-collector` for scoped collection, `forensic-artifact-router` for parser or specialist-lane selection, `forensic-timeline-analyst` for timeline correlation, `forensic-report-challenger` for adversarial report review, and `forensic-publication-redactor` before publication or push.
 - Match requested depth: quick triage collects the minimum defensible source set; comprehensive examination preserves or inventories every relevant in-scope artifact class.
 - Offline and no-download runs must continue through the helper loop. If selected tools cannot be fetched or used, call `forensic-script-author` and then `forensic-script-reviewer`; generated code cannot run until review returns `SCRIPT_REVIEW: approved-for-controlled-use`.
@@ -27,7 +29,7 @@ Forensically analyze the scoped evidence source and maintain a defensible Markdo
 ## Local-model bounds
 
 - Keep helper prompts narrow and specific.
-- Require researcher notes of 8 lines or fewer, provisioner notes of 10 lines or fewer, and senior handoffs of 12 lines or fewer.
+- Require platform-profiler notes of 10 lines or fewer, researcher notes of 8 lines or fewer, provisioner notes of 10 lines or fewer, and senior handoffs of 12 lines or fewer.
 - Require collector notes of 12 lines or fewer, router notes of 10 lines or fewer, timeline notes of 12 lines or fewer, challenger notes of 12 lines or fewer, and redactor notes of 10 lines or fewer.
 - Require script-author notes of 12 lines or fewer and script-reviewer notes of 12 lines or fewer.
 - Require provisioner notes to begin with visible `FLOW:` text. A successful empty provisioner result is still a failed helper loop.
