@@ -41,8 +41,9 @@ When this workflow is running in OpenCode, the helper subagents remain mandatory
 - if a helper task stalls, is denied, or returns an incomplete note, stop the case loop at that blocker, document which helper failed and why, narrow the helper prompt or command shape, and retry the helper rather than bypassing it
 - if the local OpenAI-compatible model endpoint returns `ECONNRESET`, `ConnectionRefused`, timeout, or a provider health failure during a helper turn, treat that as a blocked helper loop; verify or restore the endpoint, then retry the same helper path rather than collecting evidence without the subagent
 - keep helper prompts short and specific, and ask helpers for bounded outputs that unblock the next examiner step
-- on local-model OpenCode runs, require bounded helper output explicitly: researcher 20 lines or fewer, provisioner 25 lines or fewer, senior handoff 30 lines or fewer, and no helper todo list for a single focused helper request
+- on local-model OpenCode runs, require bounded helper output explicitly: researcher 8 lines or fewer, provisioner 10 lines or fewer, senior handoff 12 lines or fewer, and no helper todo list for a single focused helper request
 - immediately after the opening tooling helper returns, create or update the requested Markdown report stub with the edit/write tool before running host collection commands
+- after the senior handoff, directory setup and current time/timezone capture may happen before the report, but the report stub must exist before the first broad evidence collection command such as process, event-log, network, filesystem, browser, or sensitive-artifact collection
 - the opening report stub should start with the report title, `## Executive summary`, and `## Findings`; fill unknowns as pending rather than starting with metadata
 - do not mark the report-start task complete until the edit/write tool has actually created or updated the requested report path
 
@@ -52,9 +53,11 @@ Example opening Task input shape:
 {
   "description": "Plan live Windows timeline tooling",
   "subagent_type": "forensic-senior-tooling-specialist",
-  "prompt": "Confirm the minimal defensible tool plan for this scoped live Windows timeline. Use the research and provisioning helpers. After researcher returns, immediately call the provisioner; do not summarize until provisioning returns. For local-model execution, require researcher output <=20 lines, provisioner output <=25 lines, no helper todo list for focused requests, and return your handoff <=30 lines with selected tools, deferred tools, exact first commands, output paths, caveats, and blockers."
+  "prompt": "live Windows; account USER-A; last 1h; research then provision; max 12 lines"
 }
 ```
+
+Append only the shortest concrete case facts to the compact first Task prompt as one semicolon-separated line, and keep that prompt under 30 words so slow local BF16 providers can return the subagent tool call before first-chunk timeouts. Never paste the full user request or a newline into the opening Task prompt. For local Gemma-style runs, emit the opening Task immediately, keep the fields in the example order, do not add a period after the last field, and make sure the tool argument JSON ends with `}`.
 
 For authorized live Windows host triage in OpenCode:
 
@@ -63,12 +66,18 @@ For authorized live Windows host triage in OpenCode:
 - WSL-local context commands such as `date`, `pwd`, or creating ignored output directories may be used only to establish the runner context or prepare report paths; do not mistake WSL runner metadata for Windows evidence
 - in noninteractive OpenCode runs, prepare output directories with a single idempotent `mkdir -p reports artifacts acquisitions` call when needed; do not combine directory probes and creation with `ls ... || mkdir ...` because a safe probe can still trigger an auto-rejected ask permission
 - use one simple command per tool call when possible; avoid long compound PowerShell scripts, interactive commands, remoting, install or upgrade commands, and commands that wait indefinitely
-- before the first Windows evidence command, capture collection start and timezone, compute the fixed absolute two-hour window, and reuse that literal window in every later query; do not keep using a moving `(Get-Date).AddHours(-2)` window after collection has begun
+- before the first Windows evidence command, capture collection start and timezone, compute the fixed absolute requested investigation window, and reuse that literal window in every later query; do not keep using a moving `Get-Date`/`AddHours` window after collection has begun
+- do not label local Windows time as UTC. Use local ISO timestamps plus `Get-TimeZone` for Windows event filters, and call `(Get-Date).ToUniversalTime().ToString('o')` only when a UTC value is specifically needed
 - when a PowerShell command is inside WSL/bash double quotes, do not use raw PowerShell `$` tokens such as `$startTime`, `$_`, `$env:...`, or `$_.FullName`; bash can expand them before PowerShell runs. Prefer literal timestamps and simplified PowerShell syntax, or escape each `$` as `\$` when a variable is unavoidable
+- before each WSL PowerShell evidence command, inspect the literal command text. If it contains `Where-Object {`, `ForEach-Object {`, `+.`, `.IncludeUserName`, raw `$`, `Now.AddHours`, or `&&`, rewrite it first
+- do not run scriptblock filters through WSL. Reject `Where-Object { ... }` and `ForEach-Object { ... }`; use property-form filters only when the property is known to exist, or collect the bounded source to CSV/JSON and analyze after collection
+- do not chain independent evidence sources with `&&`. Run event-log, process, network, filesystem, browser, and sensitive-artifact inventory sources separately so one empty or failed source cannot skip the rest
+- treat `NoMatchingEventsFound`, empty event logs, empty process lists, and empty network lists as evidence results. Write an empty CSV/JSON or status record with source, fixed window, row count `0`, and reason, then continue collecting other sources
+- after `NoMatchingEventsFound`, a non-zero event-log exit, or any zero-row broad source, do not start the next evidence source until a status file exists under the case artifact directory. Use the edit/write tool when shell-safe creation would require PowerShell variables
 - prefer native PowerShell commands over `cmd /c`; do not use `cmd /c` during OpenCode live triage when a bounded PowerShell equivalent such as `Get-ComputerInfo` exists
 - prefer simple read-only cmdlets and shaping commands such as `Select-Object`, `Group-Object`, `Sort-Object`, `Format-List`, and `Format-Table`; avoid `ForEach-Object`, custom `PSCustomObject` construction, broad scriptblocks, and `Where-Object { $_... }` in OpenCode WSL live triage because they often trigger permission rejection, shell expansion, or noisy exceptions
-- prefer `Get-Process` `StartTime` for process-start review with simplified syntax such as `Where-Object StartTime -GE [datetime]'YYYY-MM-DDTHH:MM:SS'`; avoid `Win32_Process` DMTF timestamp conversion loops unless a specific parent-process field is essential and the command handles invalid timestamps without noisy exceptions
-- do not use `Get-Process -IncludeUserName` unless the session is already elevated; record owner attribution as unavailable rather than triggering avoidable elevation errors
+- for process review in WSL live triage, prefer a current process snapshot with `Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,Name,ExecutablePath,CommandLine,CreationDate`; use event logs and session state for user attribution
+- do not use `Get-Process -IncludeUserName`, `.IncludeUserName`, or owner-filtered process commands unless the session is already elevated and the exact command has been tested; record owner attribution as unavailable rather than triggering avoidable elevation errors
 - do not sort every process by `StartTime`; first filter to the investigation window and small result sets, and if protected processes cause access-denied noise, stop that command and retry with a narrower process list or event-log source
 - when enumerating user directories such as Desktop, Downloads, Documents, Recent, or Startup, always apply the investigation window and a small limit; do not list older files or broad directory contents outside the time window
 - commands that may return more than about 50 rows must write the full in-scope result to a controlled evidence file under `artifacts/` or `acquisitions/` and print only the output path, row count, and a small preview; the Markdown report is still updated with the edit/write tools, not shell redirection

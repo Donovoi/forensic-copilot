@@ -17,7 +17,8 @@ This repo is designed to work in two modes:
 
 For the best results, keep these files in the active workspace or prompt context:
 
-- `AGENTS.md` for repository-wide rules and guardrails
+- `AGENTS.md` for compact repository-wide rules that auto-loaded tools can safely ingest
+- `docs/repository-policy.md` for the expanded repository policy and guardrails
 - `AGENTS.opencode.md` for lean OpenCode runtime instructions on local or smaller-context models
 - `docs/opencode-agents/` for lean OpenCode-specific agent prompts
 - `.github/agents/forensic-examiner.agent.md` as the main user-facing workflow
@@ -62,35 +63,52 @@ This repo includes `opencode.json` so OpenCode can load the forensic examiner di
    opencode run --agent forensic-examiner --model openai/gpt-5.5 "Analyze this authorized live Windows host for user activity during the last two hours. Use low-impact read-only commands only and write the Markdown report under reports/."
    ```
 
-The OpenCode configuration sets `forensic-examiner` as the default project agent and uses `openai/gpt-5.5`. It also registers the helper agents as OpenCode subagents so the examiner can invoke `forensic-senior-tooling-specialist`, `forensic-peer-reviewer`, and `forensic-maintainer` through the Task tool as part of the standard loop. The examiner's first OpenCode tool call should be the senior tooling Task, and the senior tooling specialist then invokes `forensic-tool-researcher` and `forensic-tool-provisioner` for substantive tool decisions, so research, staging, and execution-flow design remain part of the loop instead of optional side work.
+The OpenCode configuration sets `forensic-examiner` as the default project agent and uses `openai/gpt-5.5`. It also pins OpenCode's `small_model` to `openai/gpt-5.5` so lightweight sidecar calls, such as session title generation, do not inherit stale global provider settings. It registers the helper agents as OpenCode subagents so the examiner can invoke `forensic-senior-tooling-specialist`, `forensic-peer-reviewer`, and `forensic-maintainer` through the Task tool as part of the standard loop. The examiner's first OpenCode tool call should be the senior tooling Task, and the senior tooling specialist then invokes `forensic-tool-researcher` and `forensic-tool-provisioner` for substantive tool decisions, so research, staging, and execution-flow design remain part of the loop instead of optional side work.
 
-The project keeps OpenCode's prompt footprint intentionally small by loading `AGENTS.opencode.md` plus lean role prompts under `docs/opencode-agents/`. The full repository guardrail document and Copilot prompts remain in `AGENTS.md` and `.github/agents/`, but they are not injected into every OpenCode main-agent and subagent request. That keeps local providers with smaller context windows usable while preserving the same subagent loop. To test a configured local provider, override the model at runtime:
+The project keeps OpenCode's prompt footprint intentionally small by loading `AGENTS.opencode.md` plus lean role prompts under `docs/opencode-agents/`. OpenCode may still auto-load the top-level `AGENTS.md`, so that file is intentionally compact; the expanded repository guardrail document lives in `docs/repository-policy.md`, and the Copilot-compatible prompts remain in `.github/agents/`. That keeps local providers with smaller context windows usable while preserving the same subagent loop. To test a configured local provider, override the model at runtime:
 
-```powershell
-wsl -e bash -lc 'cd /mnt/c/path/to/forensic-copilot && opencode run --agent forensic-examiner --model llamacpp-local/gemma-heretic-bf16 "Analyze this authorized live Windows host for user and system activity during the last two hours. Write the Markdown report under reports/."'
+```bash
+cd /mnt/c/path/to/forensic-copilot
+OPENCODE_CONFIG_CONTENT='{"small_model":"llamacpp-local/gemma-heretic-bf16"}' \
+  opencode run --title "local forensic test" \
+  --agent forensic-examiner \
+  --model llamacpp-local/gemma-heretic-bf16 \
+  "Analyze this authorized live Windows host for user and system activity during the last two hours. Write the Markdown report under reports/."
 ```
 
+The `OPENCODE_CONFIG_CONTENT` override keeps lightweight OpenCode calls on the same local provider as the main run. Passing `--title` is also recommended for noninteractive local-model regression tests because it avoids spending a slow single-slot local model request on automatic title generation before the examiner reaches the first mandatory Task call.
+
+For llama.cpp-backed local Gemma tests, prefer a single-slot server with prompt cache and context checkpoints disabled when stability matters more than speed. A stable baseline shape is `-np 1 -ctxcp 0 --no-cache-idle-slots -sps 0.0 --reasoning off --reasoning-budget 0 --timeout 7200`, with batch and GPU-layer values sized for the host. If CUDA/cuBLAS errors recur even with conservative batch and low GPU-layer settings, restart the backend CPU-only with `-ngl 0` or use a verified quantized/non-BF16 local model before retrying. If the backend returns `ECONNRESET`, `ConnectionRefused`, or CUDA errors during a helper turn, stop at the helper blocker, restore `/health` and `/v1/models`, and rerun the same subagent path rather than collecting evidence directly.
+
+When launching OpenCode from Windows into WSL for a background regression, call the WSL-native binary explicitly, for example `$HOME/.local/bin/opencode`, or wrap the command with `wsl.exe -e bash -lc "..."`. A Windows npm shim on `PATH` can bootstrap OpenCode through Windows paths and stall before the local WSL provider is reached.
+
 When prompting local models, keep the first helper call schema explicit. The OpenCode Task tool requires `description`, `subagent_type`, and `prompt`; using `command` instead of `description` causes the helper call to fail before the subagent starts.
+Keep the examiner's first Task prompt compact, preferably under 30 words. On very slow BF16 local providers, an oversized first tool call can exceed the provider's first streamed chunk window before OpenCode receives the mandatory subagent call.
 
 Keep local-model web research bounded. The committed OpenCode config denies OpenCode `websearch` to the tooling researcher, so it should prefer local SearXNG with 3 or fewer results and use `webfetch` only for the smallest number of known official upstream pages needed to confirm the recommendation. If SearXNG is unavailable, the researcher should return a blocker instead of opening a broad second search lane. This keeps expert-tool research usable on providers with smaller context windows.
 
-Keep local-model helper output bounded too. A focused researcher note should fit in 20 lines, a provisioning note in 25 lines, and the senior handoff in 30 lines. In the OpenCode config the senior specialist is a task-only coordinator: it can call the researcher and provisioner, but it cannot run shell commands, search directly, or keep a todo list. After the researcher returns, the senior specialist should call the provisioner immediately rather than emitting an interim summary. For single focused helper requests, the helper should return the compact note directly rather than spending extra turns on todo-list bookkeeping. This keeps the mandatory subagent loop moving on slower local models without bypassing it.
+Keep local-model helper output bounded too. A focused researcher note should fit in 8 lines, a provisioning note in 10 lines, and the senior handoff in 12 lines. In the OpenCode config the senior specialist is a task-only coordinator: it can call the researcher and provisioner, but it cannot run shell commands, search directly, or keep a todo list. The senior specialist's first assistant turn should be only the researcher Task call, and its next turn after the researcher returns should be only the provisioner Task call. Provisioner notes must begin with visible `FLOW:` text; an empty provisioner result is a failed helper loop that must be retried, not a valid handoff. This keeps the mandatory subagent loop moving on slower local models without bypassing it.
 
-The project also sets conservative OpenCode tool-output, compaction, and Gemma test-model output limits, and gives the inherited `llamacpp-local` provider a one-hour request and stream-chunk timeout so very slow first-token latency does not cancel the mandatory subagent loop. Tool output is truncated into OpenCode's backing storage after a bounded preview, and automatic compaction is delayed enough that small evidence steps can complete before summarization. These settings reduce local-model context pressure; they are not a substitute for writing forensic evidence and report state to files.
+Keep the examiner's first Task prompt compact and JSON-safe for local Gemma runs: one semicolon-separated line under 30 words, no pasted full user request, no newline inside the `prompt` value, and no period after the final tool-argument field. The committed Gemma test-model output limit is 512 tokens so OpenCode has room to receive the complete Task tool-call JSON before helper output caps take over. The local Gemma model entry also sets low-verbosity, zero-temperature, and no-reasoning options because OpenCode passes model and agent options through to providers that support them.
+
+The project also sets conservative OpenCode tool-output and compaction limits, and gives the inherited `llamacpp-local` provider a one-hour request and stream-chunk timeout so very slow first-token latency does not cancel the mandatory subagent loop. Tool output is truncated into OpenCode's backing storage after a bounded preview, and automatic compaction is delayed enough that small evidence steps can complete before summarization. These settings reduce local-model context pressure; they are not a substitute for writing forensic evidence and report state to files.
 
 If a local OpenAI-compatible provider returns `ECONNRESET`, `ConnectionRefused`, or repeated timeout errors during a helper turn, treat that as a blocked subagent loop. Restore the backend so `/health` and `/v1/models` answer again, then rerun the same helper path; do not continue evidence collection without the required subagent.
 
 When OpenCode runs in WSL against the Windows host, the examiner should collect Windows artifacts through bounded `powershell.exe -NoProfile -Command` calls.
 For noninteractive `opencode run` jobs, prepare output paths with idempotent single commands such as `mkdir -p reports artifacts acquisitions`; avoid `ls ... || mkdir ...` setup chains because a safe probe can still be evaluated as an ask permission and auto-rejected.
-Do not place raw PowerShell `$` variables or `$_` scriptblock references inside WSL double-quoted commands, because bash may expand them before PowerShell starts. Prefer fixed literal timestamps, simplified filters such as `Where-Object StartTime -GE [datetime]'YYYY-MM-DDTHH:MM:SS'`, and CSV or JSON evidence files under `artifacts/` or `acquisitions/` with only small previews printed to the console.
+Do not place raw PowerShell `$` variables or `$_` scriptblock references inside WSL double-quoted commands, because bash may expand them before PowerShell starts. Reject and rewrite command text containing `Where-Object {`, `ForEach-Object {`, shell-mangled `+.`, `.IncludeUserName`, raw `$`, moving `Now.AddHours` windows, or `&&` source chains before execution. Prefer fixed literal local timestamps, property-form filters such as `Where-Object StartTime -GE [datetime]'YYYY-MM-DDTHH:MM:SS'` only when the property is known to exist, and CSV or JSON evidence files under `artifacts/` or `acquisitions/` with only small previews printed to the console. Do not append `Z` to local `Get-Date` output; record Windows timezone separately or call `.ToUniversalTime().ToString('o')` when a UTC value is required.
+For process collection from WSL, avoid `Get-Process -IncludeUserName`, `.IncludeUserName`, and owner-filtered process commands unless elevation and command behavior have already been verified. Use a current process snapshot such as `Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,Name,ExecutablePath,CommandLine,CreationDate`, then establish user attribution from session state and event logs.
 For last-N-hours work, capture collection start once, compute the absolute start and end of the investigation window, and reuse that fixed window across every artifact source rather than letting each command use a new moving `Get-Date` boundary.
+Run independent evidence sources separately. Do not chain event-log, process, network, filesystem, and browser collection with `&&`; an empty Security log result or `NoMatchingEventsFound` must be written as a zero-row evidence/status result and must not prevent later sources from running.
+For local-model runs, the examiner may create directories and capture current time/timezone after the senior handoff, but the Markdown report stub should be written before the first broad evidence source. If an event-log command exits with `NoMatchingEventsFound`, write a case artifact status JSON or Markdown note with source, command, fixed window, collection time, row count `0`, and reason before running the next source.
 
 ### Other agentic tools and local model setups
 
 If your tool does not support named custom agents, use the same workflow in a portable way:
 
 1. Open the repository so the tool can read `AGENTS.md` and the files under `.github/agents/`.
-2. Treat `AGENTS.md` as the repository-wide policy layer.
+2. Treat `AGENTS.md` as the compact repository-wide policy layer and `docs/repository-policy.md` as the expanded policy reference.
 3. Load or paste `.github/agents/forensic-examiner.agent.md` as the main system, developer, or role prompt for the active coding agent.
 4. If the runner does not understand the YAML frontmatter in `.agent.md` files, strip the frontmatter and use the Markdown body as the portable instruction text.
 5. Keep the helper-agent files in context as internal reference material, even if the tool cannot route true subagents.
@@ -236,7 +254,8 @@ See `docs/limitations.md` for the fuller list.
 - `docs/sources.md` — source basis and review anchors
 - `docs/privacy-and-redaction.md` — public-repo sanitization checklist
 - `scripts/` — formal export and repo-hygiene validation helpers
-- `AGENTS.md` — repository-wide rules for future changes
+- `AGENTS.md` — compact auto-loaded repository rules
+- `docs/repository-policy.md` — expanded repository policy for future changes
 - `AGENTS.opencode.md` — lean runtime rules loaded by OpenCode
 
 ## Source basis

@@ -25,13 +25,13 @@ For every substantive case loop:
 2. invoke `Forensic Tool Provisioner` second to stage, update, organize, or document the selected execution flow
 3. hand the examiner a concise tooling plan with selected tools, versions or commits where available, install paths, commands, caveats, and blockers
 
-When this workflow is running in OpenCode, your first tool action for a substantive tooling loop must be a Task call to `forensic-tool-researcher`. Do not run `websearch`, `bash`, or collection commands before the researcher returns.
+When this workflow is running in OpenCode, your first assistant turn for a substantive tooling loop must be only a Task call to `forensic-tool-researcher`. Do not emit Markdown, prose, `websearch`, `bash`, or collection commands before the researcher returns.
 
-After the researcher returns, your next assistant action must be a Task call to `forensic-tool-provisioner`. Do not emit a prose interim summary between the researcher result and the provisioner call. The examiner needs the completed research-and-provisioning loop, not a half-loop handoff.
+After the researcher returns, your next assistant action must be only a Task call to `forensic-tool-provisioner`. Do not emit a prose interim summary between the researcher result and the provisioner call. The examiner needs the completed research-and-provisioning loop, not a half-loop handoff.
 
 In OpenCode, every Task tool call must use OpenCode's required fields exactly: `description`, `subagent_type`, and `prompt`. Never use `command`, `title`, `agent`, or `name` as a substitute for `description`.
 
-For local-model OpenCode runs, helper prompts must include hard output bounds. Require the researcher to return 20 lines or fewer and the provisioner to return 25 lines or fewer. If a helper streams for a long time without returning control, stop the loop at that blocker, retry the same helper with a narrower prompt, and do not bypass the helper.
+For local-model OpenCode runs, helper prompts must include hard output bounds. Require the researcher to return 8 lines or fewer and the provisioner to return 10 lines or fewer. If a helper streams for a long time without returning control, stop the loop at that blocker, retry the same helper with a narrower prompt, and do not bypass the helper.
 
 Example research Task input shape:
 
@@ -39,7 +39,7 @@ Example research Task input shape:
 {
   "description": "Research live Windows timeline tools",
   "subagent_type": "forensic-tool-researcher",
-  "prompt": "For a scoped live Windows two-hour user and system timeline, identify current expert-used tools and native commands. Prefer local SearXNG with limit <=3. Do not call OpenCode websearch after successful SearXNG unless SearXNG is unavailable or a second source lane is explicitly needed; if used, keep websearch to 3 results and 3000 context characters. Do not use a todo list. Return a compact note in 20 lines or fewer: sources checked, recommended tools, deferred tools, caveats, confidence."
+  "prompt": "Research this live Windows user-activity timeline. Check native logs plus Hayabusa/Chainsaw/KAPE/Velociraptor fit. SearXNG<=3 or blocker. Return <=8 lines."
 }
 ```
 
@@ -49,11 +49,23 @@ Example provisioning Task input shape:
 {
   "description": "Prepare live Windows timeline execution flow",
   "subagent_type": "forensic-tool-provisioner",
-  "prompt": "Using the selected native and external-tool plan, document safe staging paths, version or hash checks where applicable, and exact bounded commands/output paths for the examiner. For WSL-to-Windows PowerShell, avoid raw $ tokens in double-quoted commands, use a fixed absolute time window, and route broad outputs to artifact files with small previews. For live-host local-model tests, prefer a native read-only first pass and mark heavier downloads deferred unless already authorized. Do not use a todo list. Return 25 lines or fewer."
+  "prompt": "Visible FLOW only. Prepare first-pass read-only Windows execution flow from the research. Fixed-window placeholders. No scriptblocks, raw dollar tokens, IncludeUserName, AddHours, or chains. Return <=10 lines."
 }
 ```
 
-If either helper stalls, is denied, or returns an incomplete note, stop the tooling loop at that blocker. Narrow the helper prompt and retry that helper instead of bypassing it.
+If either helper stalls, is denied, returns an empty note, returns an incomplete note, or the provisioner result is missing `FLOW:`, stop the tooling loop at that blocker. Narrow the helper prompt and retry that helper instead of bypassing it.
+
+If the provisioner result is empty, missing `FLOW:`, or has fewer than 3 concrete execution lines, immediately call `Forensic Tool Provisioner` again with a narrower visible-output prompt:
+
+```json
+{
+  "description": "Retry visible provisioning flow",
+  "subagent_type": "forensic-tool-provisioner",
+  "prompt": "FLOW: return 5 concrete native-first Windows evidence sources, output paths, zero-row status handling, report stub reminder. No prose before FLOW."
+}
+```
+
+Do not hand off to the examiner after an empty provisioner result.
 
 The only exception is a truly immediate live-off-the-land safety decision, such as choosing bounded built-in Windows commands for initial live-host triage before any download is authorized. Even then, document why research or provisioning was deferred and run the subagent loop before expanding collection beyond those native commands.
 
@@ -62,7 +74,7 @@ The only exception is a truly immediate live-off-the-land safety decision, such 
 - Start from the case question, timeframe, host platform, evidence type, urgency, and authority limits.
 - Prefer tools that are maintained upstream, documented, reproducible, and recognized in DFIR practice.
 - Prefer official project pages, GitHub or GitLab repositories, release pages, maintainer docs, and established standards bodies over blog-only recommendations.
-- For local-model OpenCode runs, keep helper prompts narrow and require bounded search and bounded output: prefer one local SearXNG search with 3 or fewer results; use OpenCode `websearch` only if SearXNG is unavailable or a second source lane is explicitly needed; no helper todo list for focused requests; and a 20- to 25-line helper response cap.
+- For local-model OpenCode runs, keep helper prompts narrow and require bounded search and bounded output: prefer one local SearXNG search with 3 or fewer results; use OpenCode `websearch` only if SearXNG is unavailable or a second source lane is explicitly needed; no helper todo list for focused requests; and an 8- to 10-line helper response cap.
 - Ask the research subagent to choose the smallest source subset that can justify the tool lane, not to survey every DFIR tool family in one turn.
 - Use live-off-the-land commands when they are safer, faster, more defensible, or less disruptive than adding external tooling.
 - Select the smallest toolchain that answers the question and validates important findings.
@@ -100,8 +112,14 @@ For authorized live Windows triage in OpenCode:
 
 - start with short, bounded, read-only native commands unless the examiner has documented why a broader collection is authorized
 - avoid install steps and long-running watchers during the first pass
-- when the examiner will run Windows PowerShell through WSL, hand off command templates that avoid raw `$` variables or `$_` in double-quoted strings; use fixed literal timestamps and simplified filters such as `Where-Object StartTime -GE [datetime]'YYYY-MM-DDTHH:MM:SS'`
+- when the examiner will run Windows PowerShell through WSL, hand off command templates that avoid raw `$` variables or `$_` in double-quoted strings; use fixed literal timestamp placeholders and simplified filters such as `Where-Object StartTime -GE [datetime]'YYYY-MM-DDTHH:MM:SS'`
+- do not hand off scriptblock filters such as `Where-Object { ... }` or `ForEach-Object { ... }`; use `Get-WinEvent -FilterHashtable`, property-form filters on known properties, or bounded snapshots saved to CSV/JSON
+- do not hand off `Get-Process -IncludeUserName`, `.IncludeUserName`, or owner-filtered process commands for WSL live triage. Prefer `Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,Name,ExecutablePath,CommandLine,CreationDate` and user attribution from sessions or event logs
 - for last-N-hours tasking, require the examiner to capture collection start once and reuse one absolute time window across every artifact source
+- never hand off moving-time expressions such as `Now.AddHours` when the examiner has not yet fixed the window; use `<WINDOW_START_LOCAL>` and `<WINDOW_END_LOCAL>` placeholders instead
+- require independent source collection. Event logs, process lists, network lists, filesystem metadata, browser artifacts, and sensitive-artifact inventories must not be chained with `&&`; zero-row or no-match results should produce a status record and collection should continue
+- require the examiner to write the report stub after setup/time capture and before first broad evidence collection
+- for event-log sources, hand off a paired status path and require the examiner to write it after `NoMatchingEventsFound` or a non-zero event-log exit before starting the next source
 - require broad evidence outputs to go to controlled CSV or JSON files under `artifacts/` or `acquisitions/`, with only row count, path, and a small preview printed to the model context
 - treat `.env`, `.env.*`, credential stores, tokens, cookies, browser saved-password tables, password-manager data, and other secret-bearing stores as potential evidence when they are in scope. Recommend controlled acquisition, hashing, metadata capture, or specialist parsing without dumping secret values into prompts, terminal output, or reports.
 - when external tooling is justified, prefer staging under ignored local tool paths such as `toolcache/`, `tooling/downloads/`, or `tooling/cache/`
@@ -114,13 +132,13 @@ For authorized live Windows triage in OpenCode:
 3. Invoke `Forensic Tool Researcher` with a focused prompt for those artifact classes and platform constraints.
 4. Decide which researched tools are selected, deferred, or rejected.
 5. Invoke `Forensic Tool Provisioner` with the selected tools, staging policy, and execution constraints.
-6. Review the provisioning note for safety, scope, and completeness.
+6. Review the provisioning note for safety, scope, completeness, and visible `FLOW:` content.
 7. Return a concise handoff to the examiner.
 8. Invoke `Forensic Maintainer` only when repeated friction, upstream drift, or a reusable workflow change is warranted.
 
 ## Output format
 
-Return a Markdown note. For local-model OpenCode runs, keep the note to 30 lines or fewer so the examiner can continue into collection without a context or latency stall.
+Return a Markdown note. For local-model OpenCode runs, keep the note to 12 lines or fewer so the examiner can continue into collection without a context or latency stall.
 
 Use this structure:
 

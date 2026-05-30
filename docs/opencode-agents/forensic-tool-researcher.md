@@ -9,7 +9,7 @@ Rules:
 - Prefer local SearXNG with 3 or fewer results when available.
 - Use `webfetch` only for narrow official upstream pages, release pages, docs, or repositories already identified.
 - If search or official pages are unavailable, return a blocker instead of guessing.
-- Keep the response to 20 lines or fewer.
+- Keep the response to 8 lines or fewer.
 
 Return:
 

@@ -1,6 +1,6 @@
 # OpenCode runtime instructions
 
-These instructions are the lean OpenCode runtime layer for Forensic Copilot. Keep the full repository policy in `AGENTS.md`; keep this file small enough for local OpenAI-compatible providers with limited context.
+These instructions are the lean OpenCode runtime layer for Forensic Copilot. `AGENTS.md` is also intentionally compact because OpenCode auto-loads it; the expanded repository policy is in `docs/repository-policy.md`.
 
 ## Mission
 
@@ -13,16 +13,19 @@ Forensically analyze the scoped evidence source and maintain a defensible Markdo
 - The examiner must not call `todowrite`, `bash`, `read`, `grep`, or host collection before the opening senior Task.
 - Every Task call must use `description`, `subagent_type`, and `prompt`.
 - Do not use `command`, `title`, `agent`, or `name` instead of `description`.
+- Keep the first Task prompt under 30 words. It only needs short case facts and the required researcher-then-provisioner sequence; use one semicolon-separated line and never paste the full user request or a newline. For local Gemma-style runs, the opening Task must be emitted immediately, keep `description`, `subagent_type`, and `prompt` in that order, and never end the argument object with a period.
 - The senior tooling specialist must call `forensic-tool-researcher` first, then `forensic-tool-provisioner` next, before handing work back to the examiner.
 - In OpenCode, the senior tooling specialist is a task-only coordinator; it should not read files, run shell commands, search the web directly, or keep its own todo list.
-- If any required helper stalls, is denied, returns an incomplete note, or hits a provider error, stop at that helper blocker and retry the same helper path with a narrower prompt. Do not collect evidence by bypassing mandatory subagents.
+- If any required helper stalls, is denied, returns an empty or incomplete note, or hits a provider error, stop at that helper blocker and retry the same helper path with a narrower prompt. Do not collect evidence by bypassing mandatory subagents.
+- If the provisioner returns no visible content, lacks `FLOW:`, or gives fewer than 3 concrete execution lines, the senior must retry `forensic-tool-provisioner` with a narrower visible-output prompt before handing work back to the examiner.
 - Treat local provider failures such as `ECONNRESET`, `ConnectionRefused`, timeout, or failed `/health` or `/v1/models` checks as blocked helper-loop failures until the backend is restored.
 - Run peer review before final handoff on substantial reports.
 
 ## Local-model bounds
 
 - Keep helper prompts narrow and specific.
-- Require researcher notes of 20 lines or fewer, provisioner notes of 25 lines or fewer, and senior handoffs of 30 lines or fewer.
+- Require researcher notes of 8 lines or fewer, provisioner notes of 10 lines or fewer, and senior handoffs of 12 lines or fewer.
+- Require provisioner notes to begin with visible `FLOW:` text. A successful empty provisioner result is still a failed helper loop.
 - Use local SearXNG with 3 or fewer results for research when available.
 - OpenCode `websearch` is denied for the researcher in this repo; use narrow `webfetch` only for known official upstream pages or return a blocker.
 - Durable case state belongs in report, artifact, and acquisition files, not in model context.
@@ -32,7 +35,15 @@ Forensically analyze the scoped evidence source and maintain a defensible Markdo
 - Treat WSL as the runner and Windows as the evidence source unless the prompt says otherwise.
 - Use low-impact, read-only `powershell.exe -NoProfile -Command` calls for Windows collection.
 - Capture collection start and timezone once, compute one fixed absolute investigation window, and reuse that literal window across all artifact sources.
+- When capturing time, do not append `Z` to local `Get-Date` output. Record local ISO time, Windows timezone, and UTC ISO separately if needed; use local literal timestamps without `Z` for Windows event-log filters unless the command explicitly converts to UTC.
 - Do not put raw PowerShell `$` variables or `$_` inside WSL/bash double-quoted command strings.
+- Do not run WSL-to-Windows PowerShell commands that contain scriptblock filters such as `Where-Object { ... }` or `ForEach-Object { ... }`. Use property-form filters such as `Where-Object StartTime -GE [datetime]'YYYY-MM-DDTHH:MM:SS'`, or collect the bounded source without inline filtering and analyze the saved CSV/JSON.
+- Before executing a WSL PowerShell command, inspect the literal command text. If it contains `Where-Object {`, `ForEach-Object {`, `+.`, `.IncludeUserName`, raw `$` variables, `Now.AddHours`, or `&&`, rewrite it first.
+- Do not use `Get-Process -IncludeUserName`, `.IncludeUserName`, or owner-filtered process commands in WSL live triage unless the session is already confirmed elevated and the exact command has been tested. Collect a process snapshot with `Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,Name,ExecutablePath,CommandLine,CreationDate` and use event logs or session artifacts for user attribution.
+- Do not join independent evidence sources with `&&` or other short-circuit chains. Run each source as its own tool call, or ensure a per-source error is written and later sources still run.
+- Treat `NoMatchingEventsFound`, empty process lists, and empty network lists as evidence results. Write an empty CSV/JSON or status file with the source, fixed window, row count `0`, and error or empty-result reason, then continue collecting other sources.
+- After a broad source returns `NoMatchingEventsFound`, a non-zero event-log exit, or zero rows, do not start the next evidence source until a status file exists under the case artifact directory. Use OpenCode write/edit tools for status files when shell-safe status creation would require PowerShell variables.
+- After the senior handoff, the examiner may create directories and capture current time/timezone, but must write the Markdown report stub before the first broad evidence collection command.
 - Broad queries must write full results to controlled CSV or JSON files under `artifacts/` or `acquisitions/` and print only path, row count, and a small preview.
 - Preserve or inventory sensitive in-scope artifacts such as cookies, tokens, credential stores, browser login databases, password-manager data, keys, and `.env` files without printing plaintext secrets unless the case specifically requires disclosure.
 - Write Markdown reports with OpenCode edit/write tools, not shell redirection.

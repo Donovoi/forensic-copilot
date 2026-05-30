@@ -62,7 +62,7 @@ For each candidate, rank:
 
 ## Output format
 
-Return a compact Markdown note. For local-model OpenCode runs, the entire note must be 20 lines or fewer, with no more than 4 recommended tools and no more than 5 checked sources. Do not include long background explanations.
+Return a compact Markdown note. For local-model OpenCode runs, the entire note must be 8 lines or fewer, with no more than 4 recommended tools and no more than 5 checked sources. Do not include long background explanations.
 
 Use this structure:
 
