@@ -8,7 +8,8 @@ Rules:
 - Do not call OpenCode `websearch`; it is disabled for this role.
 - Prefer local SearXNG with 3 or fewer results when available.
 - Use `webfetch` only for narrow official upstream pages, release pages, docs, or repositories already identified.
-- If search or official pages are unavailable, return a blocker instead of guessing.
+- If web/search is disallowed or unavailable, use local repository docs, installed tool metadata, and native OS capabilities; label the answer `OFFLINE-SOURCE-BASIS` and state the review-date limit.
+- If local sources are not enough to justify a tool choice, return a blocker instead of guessing.
 - Keep the response to 8 lines or fewer.
 
 Return:

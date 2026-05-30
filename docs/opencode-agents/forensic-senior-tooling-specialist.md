@@ -50,10 +50,38 @@ If the provisioner result is empty, missing `FLOW:`, or has fewer than 3 concret
 
 Do not hand off to the examiner after an empty provisioner result.
 
+## Offline or no-download fallback
+
+If the provisioner reports `SCRIPT_FALLBACK_REQUIRED`, `OFFLINE`, blocked downloads, blocked install rights, unavailable tools, or generated-code need, immediately call `task` to `forensic-script-author`, then `task` to `forensic-script-reviewer`.
+
+Script author Task shape:
+
+```json
+{
+  "description": "Generate offline forensic script",
+  "subagent_type": "forensic-script-author",
+  "prompt": "Offline/no-download case. Generate smallest read-only script with args, logs, zero-row status, no secrets. Do not run. Return <=12 lines."
+}
+```
+
+Script reviewer Task shape:
+
+```json
+{
+  "description": "Review generated forensic script",
+  "subagent_type": "forensic-script-reviewer",
+  "prompt": "Review generated script before use. Static, syntax, dry-run/fixture, log/hash checks. Return SCRIPT_REVIEW status and <=12 lines."
+}
+```
+
+Do not hand generated code to the examiner unless review returns `SCRIPT_REVIEW: approved-for-controlled-use`.
+
 ## Selection rules
 
 - Prefer maintained, documented, reproducible, expert-used tools.
 - Prefer native commands when they are safer, faster, or more defensible than adding tooling.
+- If web, downloads, package managers, or external repositories are blocked, use local docs, installed binaries, native OS capabilities, and the script fallback path.
+- Generated scripts must be reviewed, syntax-checked, dry-run or fixture-tested, hashed where practical, and logged before use.
 - For live Windows timeline work, consider native Windows logs and commands first, then Hayabusa, Chainsaw, KAPE, Eric Zimmerman tools, Velociraptor, DFIR-ORC, Plaso, Timesketch, Dissect, and ForensicArtifacts as justified by scope and platform.
 - Do not skip sensitive artifact classes because they may contain secrets; recommend controlled preservation, hashing, or specialist parsing without plaintext disclosure.
 - Do not install or run broad external tooling unless the examiner has scope and authorization.

@@ -7,6 +7,7 @@ They complement `docs/self-update-loop.md` by leaving a short, reviewable ration
 ## Index
 
 - `2026-05-29-opencode-local-model-context.md` — keep OpenCode global instructions, role prompts, context, and helper turns lean enough for local Gemma-style providers and allow WSL Windows collection bridge commands
+- `2026-05-30-offline-script-fallback-and-interface-docs.md` — support offline/no-download environments with generated-script review and clearer interface setup docs
 - `2026-05-30-expanded-subagent-loop.md` — add collection, artifact-routing, timeline-analysis, report-challenge, and publication-redaction helpers while preserving quick-triage depth
 - `2026-05-29-sensitive-artifact-collection.md` — treat sensitive artifacts as controlled evidence rather than default exclusions
 - `2026-05-28-advanced-tooling-specialist.md` — add a senior tooling specialist with mandatory research and provisioning subagents for advanced DFIR tool selection

@@ -3,7 +3,7 @@
   "model": "github-copilot/gpt-5.5",
   "small_model": "github-copilot/gpt-5.5",
   "default_agent": "forensic-examiner",
-  "disabled_providers": ["gemini", "google", "ollama"],
+  "disabled_providers": ["gemini", "google"],
   "provider": {
     "llamacpp-local": {
       "options": {
@@ -58,6 +58,8 @@
           "forensic-timeline-analyst": "allow",
           "forensic-report-challenger": "allow",
           "forensic-publication-redactor": "allow",
+          "forensic-script-author": "allow",
+          "forensic-script-reviewer": "allow",
           "forensic-toolsmith": "allow",
           "forensic-peer-reviewer": "allow",
           "forensic-maintainer": "allow"
@@ -146,6 +148,8 @@
           "*": "deny",
           "forensic-tool-researcher": "allow",
           "forensic-tool-provisioner": "allow",
+          "forensic-script-author": "allow",
+          "forensic-script-reviewer": "allow",
           "forensic-maintainer": "allow"
         },
         "bash": "deny",
@@ -159,10 +163,10 @@
       "steps": 3,
       "prompt": "{file:docs/opencode-agents/forensic-tool-researcher.md}",
       "permission": {
-        "read": "deny",
-        "list": "deny",
-        "glob": "deny",
-        "grep": "deny",
+        "read": "allow",
+        "list": "allow",
+        "glob": "allow",
+        "grep": "allow",
         "webfetch": "allow",
         "websearch": "deny",
         "todowrite": "deny",
@@ -338,6 +342,59 @@
         },
         "edit": "deny",
         "write": "deny"
+      }
+    },
+    "forensic-script-author": {
+      "description": "Internal offline/no-download fallback subagent that generates small read-only forensic scripts using installed runtimes and native APIs.",
+      "mode": "subagent",
+      "steps": 6,
+      "prompt": "{file:docs/opencode-agents/forensic-script-author.md}",
+      "permission": {
+        "read": "allow",
+        "list": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "todowrite": "deny",
+        "task": "deny",
+        "bash": {
+          "*": "ask",
+          "python --version*": "allow",
+          "python3 --version*": "allow",
+          "pwsh --version*": "allow",
+          "powershell.exe -NoProfile -Command *$PSVersionTable*": "allow",
+          "Get-Command *": "allow"
+        },
+        "edit": "allow",
+        "write": "allow"
+      }
+    },
+    "forensic-script-reviewer": {
+      "description": "Internal generated-script validation subagent for static review, syntax checks, dry-run or fixture tests, logging, and approval before use.",
+      "mode": "subagent",
+      "steps": 6,
+      "prompt": "{file:docs/opencode-agents/forensic-script-reviewer.md}",
+      "permission": {
+        "read": "allow",
+        "list": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "todowrite": "deny",
+        "task": "deny",
+        "bash": {
+          "*": "ask",
+          "python -m py_compile *": "allow",
+          "python3 -m py_compile *": "allow",
+          "bash -n *": "allow",
+          "pwsh -NoProfile -Command *": "ask",
+          "powershell.exe -NoProfile -Command *": "ask",
+          "Get-FileHash *": "allow"
+        },
+        "edit": "allow",
+        "write": "allow"
       }
     },
     "forensic-toolsmith": {

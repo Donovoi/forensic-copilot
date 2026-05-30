@@ -29,6 +29,8 @@ For local Gemma-style runs, emit the opening Task immediately. Do not reorder th
 - If a helper stalls, is denied, returns incomplete output, or the local provider fails, stop at that blocker and retry the same helper path with a narrower prompt.
 - Treat `ECONNRESET`, `ConnectionRefused`, timeout, failed `/health`, and failed `/v1/models` as provider blockers. Do not collect evidence while the helper path is broken.
 - For local Gemma-style runs, require bounded helper output: researcher <=8 lines, provisioner <=10 lines, and senior handoff <=12 lines.
+- If tools cannot be downloaded, cloned, installed, or used, the senior tooling specialist must call `forensic-script-author` and then `forensic-script-reviewer`.
+- Generated code cannot run until review returns `SCRIPT_REVIEW: approved-for-controlled-use`; record script path, hash, validation log, review status, and limits first.
 - Use `forensic-evidence-collector` after the senior handoff when collection work is needed.
 - Use `forensic-artifact-router` when artifact inventory needs parser or specialist-lane selection.
 - Use `forensic-timeline-analyst` when the task asks for user/system activity, timeline, or correlation.

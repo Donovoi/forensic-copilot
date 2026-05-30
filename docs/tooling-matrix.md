@@ -12,6 +12,7 @@ This matrix is the starting point for the `Forensic Senior Tooling Specialist` a
 6. when direct access is blocked, verify the smallest supported recovery branch before blocker-only handoff and make a separate layer-specific decision about any remaining disk-level scanning or carving
 7. for substantive tool decisions, run the specialist loop: current tool research first, provisioning and execution-flow design second
 8. treat sensitivity as a handling issue, not a collection veto; in-scope credential, cookie, token, key, browser, and environment-file artifacts should be preserved or inventoried when they may answer the case question
+9. treat offline and no-download environments as normal operating modes; use local docs, installed tools, native commands, and generated-script fallback rather than assuming web access
 
 ## Advanced tooling specialist flow
 
@@ -21,9 +22,12 @@ The senior tooling specialist should not act as a one-person installer. For ever
 2. invoke `Forensic Tool Researcher` to check current upstream or official sources
 3. select the smallest justified toolchain
 4. invoke `Forensic Tool Provisioner` to stage, update, verify, or document the execution flow under ignored local paths such as `toolcache/`, `tooling/downloads/`, or `tooling/cache/`
-5. hand the examiner exact command templates, expected outputs, versions or commits, caveats, and blockers
+5. when downloads or selected tools are blocked, invoke the script-author and script-reviewer fallback before any generated code is used
+6. hand the examiner exact command templates, expected outputs, versions or commits, script review status, caveats, and blockers
 
 If a live-host case is still in its bounded first-response phase, the specialist may choose native commands first and defer downloads until scope and authority justify them. The deferral must be documented.
+
+If the environment is offline or cannot fetch tools, the fallback order is: installed trusted tools, native read-only commands, then generated standard-library scripts. Generated scripts must be logged, syntax-checked, dry-run or fixture-tested, hashed where practical, and approved by `Forensic Script Reviewer` before operational use.
 
 ## Current matrix
 

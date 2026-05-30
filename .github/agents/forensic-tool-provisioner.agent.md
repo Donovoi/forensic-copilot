@@ -23,6 +23,7 @@ Provision only the tools the senior specialist selected. Do not expand the tool 
 - Verify a staged binary with a version command or help command when doing so is safe and bounded.
 - Use `Get-FileHash`, package-manager metadata, release checksums, signatures, or commit IDs where practical.
 - If a tool must be modified, keep the patch in the staging path, document the exact reason, and never imply the modified tool is upstream stock.
+- If downloads, package managers, clone access, licenses, admin rights, or external repositories are blocked, mark `SCRIPT_FALLBACK_REQUIRED` and prepare a native-first flow that the senior specialist can send to the script-author and script-reviewer subagents.
 - Do not write to evidence or broaden scope while testing tools.
 - Do not skip `.env`, `.env.*`, credential stores, tokens, cookies, browser saved-password tables, password-manager data, keys, or other secret-bearing stores when the senior specialist has identified them as in scope. Prepare controlled acquisition or parsing steps that preserve provenance and avoid printing plaintext secrets into prompts, terminal output, reports, or public repo files.
 - Do not access unrelated local case outputs.

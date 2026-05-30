@@ -2,7 +2,7 @@
 
 This file records the external material that currently informs the repo. It is not meant to be exhaustive. It is meant to show what was actually checked, why it matters, and where that guidance enters the workflow.
 
-Last reviewed: `2026-05-28`
+Last reviewed: `2026-05-30`
 
 ## Process guidance checked directly
 
@@ -54,6 +54,23 @@ That is deliberate. This file should not imply a document was checked if it was 
 | `ForensicArtifacts/artifacts`           | artifact-family coverage and structured thinking about supported operating systems and source types                                              | Used as a checklist and coverage reference, not as a standalone proof engine. <https://github.com/ForensicArtifacts/artifacts>        |
 | `ForensicArtifacts/artifacts-kb`        | supporting context for artifact families and collection terminology                                                                              | Useful for coverage and naming consistency. <https://github.com/ForensicArtifacts/artifacts-kb>                                       |
 | Linux-forensics practitioner literature | high-level Linux-forensics themes such as service-aware interpretation, auth/session priority, timezone discipline, and conservative attribution | Used only at the level of practitioner themes in this environment; no copyrighted text is quoted or treated as direct authority here. |
+
+## AI interface and README references
+
+| Source | Used for | Link |
+| --- | --- | --- |
+| GitHub README guidance | Keep the README focused on what the project does, why it helps, how to start, where to get help, and who maintains it. | <https://docs.github.com/articles/about-readmes/> |
+| GitHub Copilot custom agents | Repository-level `.github/agents/*.agent.md` guidance and custom-agent positioning. | <https://docs.github.com/en/copilot/concepts/agents/copilot-cli/about-custom-agents> |
+| VS Code custom instructions | `.github/copilot-instructions.md`, `AGENTS.md`, and workspace instruction behavior. | <https://code.visualstudio.com/docs/copilot/customization/custom-instructions> |
+| OpenAI Codex CLI getting started | Codex local execution and `AGENTS.md` project-instruction expectations. | <https://help.openai.com/en/articles/11096431> |
+| OpenAI Codex `AGENTS.md` docs | Codex project instruction file behavior and compatibility notes. | <https://github.com/openai/codex/blob/main/docs/agents_md.md> |
+| Claude Code memory docs | `CLAUDE.md` project memory guidance. | <https://code.claude.com/docs/en/memory> |
+| Claude Code subagents | `.claude/agents/` project subagent guidance. | <https://code.claude.com/docs/en/sub-agents> |
+| Gemini CLI context docs | `GEMINI.md` project context guidance. | <https://google-gemini.github.io/gemini-cli/docs/cli/gemini-md.html> |
+| Open WebUI prompts | Reusable prompt setup for local or enterprise web UI usage. | <https://docs.openwebui.com/features/workspace/prompts/> |
+| Open WebUI knowledge | Knowledge-base setup for loading repository guidance into Open WebUI. | <https://docs.openwebui.com/features/workspace/knowledge/> |
+| Open WebUI models | Model preset setup for custom system prompts, tools, and knowledge. | <https://docs.openwebui.com/features/workspace/models/> |
+| OpenCode agents | `opencode.json` agent and subagent configuration shape. | <https://dev.opencode.ai/docs/agents/> |
 
 ## Current working observations
 

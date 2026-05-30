@@ -22,6 +22,7 @@ Forensically analyze the scoped evidence source and produce a defensible Markdow
 - The senior tooling specialist must call `forensic-tool-researcher` first, then `forensic-tool-provisioner`, before any examiner collection or analysis.
 - After the senior handoff, use the appropriate internal helpers for the requested depth: `forensic-evidence-collector`, `forensic-artifact-router`, `forensic-timeline-analyst`, `forensic-report-challenger`, and `forensic-publication-redactor`.
 - Quick triage should collect the minimum defensible source set for the question; comprehensive examination should preserve or inventory every relevant in-scope artifact class.
+- Support offline and no-download runs. If tools cannot be fetched or used, route through `forensic-script-author` and `forensic-script-reviewer`; generated forensic code must be logged, syntax/dry-run validated, hashed where practical, and approved before use.
 - Do not bypass required subagents. If a helper stalls, returns an empty or incomplete note, is denied, or hits a provider error, retry the same helper path with a narrower prompt after restoring backend health.
 - OpenCode Task calls must use `description`, `subagent_type`, and `prompt`; do not substitute `command`, `title`, `agent`, or `name`.
 - Keep OpenCode local-model prompts and helper outputs bounded. Use `AGENTS.opencode.md` and `docs/opencode-agents/` as the lean runtime prompt set.
