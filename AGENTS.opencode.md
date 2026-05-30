@@ -15,6 +15,8 @@ Forensically analyze the scoped evidence source and maintain a defensible Markdo
 - Do not use `command`, `title`, `agent`, or `name` instead of `description`.
 - Keep the first Task prompt under 30 words. It only needs short case facts and the required researcher-then-provisioner sequence; use one semicolon-separated line and never paste the full user request or a newline. For local Gemma-style runs, the opening Task must be emitted immediately, keep `description`, `subagent_type`, and `prompt` in that order, and never end the argument object with a period.
 - The senior tooling specialist must call `forensic-tool-researcher` first, then `forensic-tool-provisioner` next, before handing work back to the examiner.
+- After the senior handoff, use `forensic-evidence-collector` for scoped collection, `forensic-artifact-router` for parser or specialist-lane selection, `forensic-timeline-analyst` for timeline correlation, `forensic-report-challenger` for adversarial report review, and `forensic-publication-redactor` before publication or push.
+- Match requested depth: quick triage collects the minimum defensible source set; comprehensive examination preserves or inventories every relevant in-scope artifact class.
 - In OpenCode, the senior tooling specialist is a task-only coordinator; it should not read files, run shell commands, search the web directly, or keep its own todo list.
 - If any required helper stalls, is denied, returns an empty or incomplete note, or hits a provider error, stop at that helper blocker and retry the same helper path with a narrower prompt. Do not collect evidence by bypassing mandatory subagents.
 - If the provisioner returns no visible content, lacks `FLOW:`, or gives fewer than 3 concrete execution lines, the senior must retry `forensic-tool-provisioner` with a narrower visible-output prompt before handing work back to the examiner.
@@ -25,6 +27,7 @@ Forensically analyze the scoped evidence source and maintain a defensible Markdo
 
 - Keep helper prompts narrow and specific.
 - Require researcher notes of 8 lines or fewer, provisioner notes of 10 lines or fewer, and senior handoffs of 12 lines or fewer.
+- Require collector notes of 12 lines or fewer, router notes of 10 lines or fewer, timeline notes of 12 lines or fewer, challenger notes of 12 lines or fewer, and redactor notes of 10 lines or fewer.
 - Require provisioner notes to begin with visible `FLOW:` text. A successful empty provisioner result is still a failed helper loop.
 - Use local SearXNG with 3 or fewer results for research when available.
 - OpenCode `websearch` is denied for the researcher in this repo; use narrow `webfetch` only for known official upstream pages or return a blocker.

@@ -25,9 +25,15 @@ For local Gemma-style runs, emit the opening Task immediately. Do not reorder th
 ## Mandatory loop rules
 
 - Required helpers are part of the forensic loop, not optional advice.
+- Match requested depth: quick triage uses the minimum defensible source set; comprehensive examination preserves or inventories every relevant in-scope artifact class.
 - If a helper stalls, is denied, returns incomplete output, or the local provider fails, stop at that blocker and retry the same helper path with a narrower prompt.
 - Treat `ECONNRESET`, `ConnectionRefused`, timeout, failed `/health`, and failed `/v1/models` as provider blockers. Do not collect evidence while the helper path is broken.
 - For local Gemma-style runs, require bounded helper output: researcher <=8 lines, provisioner <=10 lines, and senior handoff <=12 lines.
+- Use `forensic-evidence-collector` after the senior handoff when collection work is needed.
+- Use `forensic-artifact-router` when artifact inventory needs parser or specialist-lane selection.
+- Use `forensic-timeline-analyst` when the task asks for user/system activity, timeline, or correlation.
+- Use `forensic-report-challenger` before final handoff for substantial attribution-sensitive reports.
+- Use `forensic-publication-redactor` before publication, export, commit, or push.
 - Use `forensic-peer-reviewer` before final handoff on substantial reports.
 - Use `forensic-maintainer` only after case closure or repeated reusable workflow friction.
 

@@ -25,6 +25,11 @@ For the best results, keep these files in the active workspace or prompt context
 - `.github/agents/forensic-senior-tooling-specialist.agent.md` for advanced tool strategy and subagent orchestration
 - `.github/agents/forensic-tool-researcher.agent.md` for current upstream and expert-tool research
 - `.github/agents/forensic-tool-provisioner.agent.md` for tool staging, update, verification, and execution-flow handoff
+- `.github/agents/forensic-evidence-collector.agent.md` for scoped acquisition, status files, hashes, and collection handoff
+- `.github/agents/forensic-artifact-router.agent.md` for parser and specialist-lane routing
+- `.github/agents/forensic-timeline-analyst.agent.md` for user and system timeline correlation
+- `.github/agents/forensic-report-challenger.agent.md` for adversarial report review
+- `.github/agents/forensic-publication-redactor.agent.md` for pre-publication and pre-push leakage checks
 - `.github/agents/forensic-toolsmith.agent.md` as a legacy compatibility helper that delegates to the senior tooling specialist
 - `.github/agents/forensic-peer-reviewer.agent.md` for case-review logic
 - `.github/agents/forensic-maintainer.agent.md` for workflow-maintenance logic
@@ -38,32 +43,36 @@ For the best results, keep these files in the active workspace or prompt context
 4. Reload the VS Code window if the agent picker does not refresh automatically.
 5. Select **`Forensic Examiner`** in Copilot Chat.
 
-### OpenCode with OpenAI
+### OpenCode with GPT-5.5
 
 This repo includes `opencode.json` so OpenCode can load the forensic examiner directly instead of relying on Copilot-specific `.agent.md` discovery.
 
-1. Install or update OpenCode. Version `1.15.11` or newer is recommended for the `openai/gpt-5.5` model entry:
+1. Install or update OpenCode. Version `1.15.11` or newer is recommended for the `github-copilot/gpt-5.5` model entry when your OpenCode/Copilot account supports that model:
 
    ```powershell
    opencode upgrade -m npm
    opencode --version
-   opencode models openai
+   opencode models
    ```
 
-2. Configure an OpenAI API key through OpenCode or an environment variable. Keep local credential files out of git; `.env` and `.env.*` are ignored by default.
-3. Start the examiner with the project agent and OpenAI model:
+2. Configure OpenCode authentication for the provider that exposes GPT-5.5, such as a Copilot login or provider-specific API key. Keep local credential files out of git; `.env` and `.env.*` are ignored by default.
+3. Start the examiner with the project agent and GPT-5.5 model:
 
    ```powershell
-   opencode run --agent forensic-examiner --model openai/gpt-5.5 "Investigate /evidence/image.E01 for suspicious user activity."
+   opencode run --agent forensic-examiner --model github-copilot/gpt-5.5 "Investigate /evidence/image.E01 for suspicious user activity."
    ```
 
 4. For authorized live Windows host triage, keep the first run narrow and explicit:
 
    ```powershell
-   opencode run --agent forensic-examiner --model openai/gpt-5.5 "Analyze this authorized live Windows host for user activity during the last two hours. Use low-impact read-only commands only and write the Markdown report under reports/."
+   opencode run --agent forensic-examiner --model github-copilot/gpt-5.5 "Analyze this authorized live Windows host for user activity during the last two hours. Use low-impact read-only commands only and write the Markdown report under reports/."
    ```
 
-The OpenCode configuration sets `forensic-examiner` as the default project agent and uses `openai/gpt-5.5`. It also pins OpenCode's `small_model` to `openai/gpt-5.5` so lightweight sidecar calls, such as session title generation, do not inherit stale global provider settings. It registers the helper agents as OpenCode subagents so the examiner can invoke `forensic-senior-tooling-specialist`, `forensic-peer-reviewer`, and `forensic-maintainer` through the Task tool as part of the standard loop. The examiner's first OpenCode tool call should be the senior tooling Task, and the senior tooling specialist then invokes `forensic-tool-researcher` and `forensic-tool-provisioner` for substantive tool decisions, so research, staging, and execution-flow design remain part of the loop instead of optional side work.
+The OpenCode configuration sets `forensic-examiner` as the default project agent and uses `github-copilot/gpt-5.5`, which is the desired GPT-5.5 model path when exposed by OpenCode. It also pins OpenCode's `small_model` to `github-copilot/gpt-5.5` so lightweight sidecar calls, such as session title generation, do not inherit stale global provider settings. It registers the helper agents as OpenCode subagents so the examiner can invoke the senior tooling specialist, evidence collector, artifact router, timeline analyst, report challenger, publication redactor, peer reviewer, and maintainer through the Task tool as part of the standard loop. The examiner's first OpenCode tool call should be the senior tooling Task, and the senior tooling specialist then invokes `forensic-tool-researcher` and `forensic-tool-provisioner` for substantive tool decisions, so research, staging, and execution-flow design remain part of the loop instead of optional side work.
+
+Model discovery and runtime support can differ by account. In one validation run, `opencode models` listed `github-copilot/gpt-5.5`, but the provider rejected it at request time with `model_not_supported`; later Copilot GPT-family probes also hit quota. Treat that as a provider/account blocker, not an agent-loop failure. For harness-only tests, override `--model` and `OPENCODE_CONFIG_CONTENT` to a currently supported non-Gemma model, then return to GPT-5.5 when the account supports it.
+
+After the senior handoff, the examiner selects the next helper by requested depth and case question. Quick triage should use the minimum defensible source set needed to answer or prioritize the question. Comprehensive examination should preserve or inventory every relevant in-scope artifact class. Collection work can route through `forensic-evidence-collector`; parser prioritization through `forensic-artifact-router`; user/system timeline correlation through `forensic-timeline-analyst`; adversarial report challenge through `forensic-report-challenger`; and publication or pre-push checks through `forensic-publication-redactor`.
 
 The project keeps OpenCode's prompt footprint intentionally small by loading `AGENTS.opencode.md` plus lean role prompts under `docs/opencode-agents/`. OpenCode may still auto-load the top-level `AGENTS.md`, so that file is intentionally compact; the expanded repository guardrail document lives in `docs/repository-policy.md`, and the Copilot-compatible prompts remain in `.github/agents/`. That keeps local providers with smaller context windows usable while preserving the same subagent loop. To test a configured local provider, override the model at runtime:
 

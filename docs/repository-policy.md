@@ -75,9 +75,15 @@ When changing agent behavior or tool choices, also update the relevant docs:
 - Treat the current agent architecture as a default, not a permanent truth; agents may be added, removed, merged, split, or rewritten, including the main examiner role, when justified by validated lessons learned or newer guidance.
 - Require the examiner agent to distinguish observation, inference, and limitation.
 - Require the examiner agent to separate acquisition, examination, and reporting for sensitive artifacts: preserve or inventory in-scope material, avoid unnecessary plaintext disclosure, and document the handling decision.
+- Require the examiner agent to match the requested depth. Quick triage should collect the minimum defensible source set; comprehensive examination should preserve or inventory every relevant in-scope artifact class.
 - Require the examiner agent to assist the non-technical investigator by asking high-value, non-blocking clarification questions when scope, interpretation, or prioritization would benefit.
 - Require the examiner agent to invoke case peer review before final handoff on substantial reports.
 - Require the senior tooling specialist to justify why each tool is selected, skipped, or deferred, and to call the research and provisioning subagents for every substantive tool loop.
+- Require the evidence collector to collect or prepare approved sources without analysis, write status files for empty or blocked sources, record hashes where practical, and label the collection depth as triage, targeted, or comprehensive.
+- Require the artifact router to select parser and specialist lanes without collecting or concluding.
+- Require the timeline analyst to correlate collected artifacts into user and system activity with timestamp, source, confidence, and limitation fields.
+- Require the report challenger to adversarially test attribution, causality, alternative explanations, and release-blocking report claims.
+- Require the publication redactor to check repository, report, export, and Git metadata for publication leakage before sharing or pushing when relevant.
 - For OpenCode Task tool calls, use `description`, `subagent_type`, and `prompt` exactly. Do not use `command` as a Task description field; OpenCode rejects that schema and the helper loop stalls.
 - Require the tool researcher to use current upstream or official sources when checking expert-used forensic tools, especially GitHub or GitLab projects and maintainer documentation.
 - Keep OpenCode local-model web research bounded: prefer local SearXNG with 3 or fewer results and do not follow a successful SearXNG search with OpenCode `websearch`. In this repo, the tooling researcher has OpenCode `websearch` denied; if local SearXNG is unavailable, it should return a blocker or use narrowly targeted `webfetch` on known official URLs.

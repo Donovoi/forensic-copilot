@@ -2,7 +2,7 @@
 
 ## Trigger for review
 
-OpenCode testing showed that the custom examiner could load with `openai/gpt-5.5`, but a live-host triage run stalled after the examiner delegated immediately to the toolsmith helper. The helper attempted a compound Windows command probe before the examiner collected artifacts or wrote the requested report.
+OpenCode testing showed that the custom examiner could load with the configured GPT-5.5 model path, but a live-host triage run stalled after the examiner delegated immediately to the toolsmith helper. The helper attempted a compound Windows command probe before the examiner collected artifacts or wrote the requested report.
 
 ## Files reviewed
 
@@ -31,7 +31,7 @@ OpenCode testing showed that the custom examiner could load with `openai/gpt-5.5
 
 ## Changes applied or proposed
 
-- Added `opencode.json` with `forensic-examiner` as the default project agent and `openai/gpt-5.5` as the model.
+- Added `opencode.json` with `forensic-examiner` as the default project agent and GPT-5.5 as the model.
 - Added OpenCode setup and run guidance to the README.
 - Required OpenCode helper use through the Task tool and added instructions to stop, narrow, and retry if a helper stalls.
 - Added Windows live-host triage command constraints to the examiner and toolsmith guidance.

@@ -8,11 +8,11 @@ A WSL OpenCode test using `llamacpp-local/gemma-heretic-bf16` failed before coll
 
 The project `opencode.json` loaded `AGENTS.md`, every `.github/agents/*.agent.md` file, and several support docs as global instructions. The selected examiner prompt was then loaded again as the active agent prompt, so helper-agent prompts and docs were duplicated in every main-agent request.
 
-The agent definitions also hard-pinned each role to `openai/gpt-5.5`, which made one-off local-provider testing harder than it needed to be.
+The agent definitions also hard-pinned each role to a GPT-5.5 provider path, which made one-off local-provider testing harder than it needed to be.
 
 ## Decision
 
-Keep OpenCode's global instruction list lean and rely on per-agent prompts for helper roles. The top-level default model remains `openai/gpt-5.5`, but individual agent entries no longer pin the model, so `--model llamacpp-local/gemma-heretic-bf16` can test the full workflow on the local provider.
+Keep OpenCode's global instruction list lean and rely on per-agent prompts for helper roles. The top-level default model remains GPT-5.5, but individual agent entries no longer pin the model, so `--model llamacpp-local/gemma-heretic-bf16` can test the full workflow on the local provider.
 
 For WSL live-host collection against the Windows source host, allow bounded `powershell.exe -NoProfile -Command` bridge calls from the examiner instead of requiring unsafe global permission bypasses.
 
@@ -50,7 +50,7 @@ A subsequent Gemma rerun proved the first mandatory Task call and successfully s
 
 Another retry lowered the examiner prompt to roughly 1,024 tokens and the senior prompt to roughly 10,190 tokens, proving the lean prompt split worked but still leaving a large helper request. The senior role now has task-only OpenCode permissions and no todo, read, shell, or direct web tools. It must coordinate the researcher and provisioner rather than carrying extra tool schemas into its own prompt.
 
-A later local-provider rerun exposed a different pre-agent stall: OpenCode used the inherited global `small_model` for automatic session title generation before the examiner reached its first Task call. In that environment the inherited sidecar was `github-copilot/claude-haiku-4.5`, which rejected the configured reasoning effort and left the run parked before forensic work began. OpenCode documents `small_model` as the model used for lightweight tasks such as title generation, so the project now pins the default `small_model` to `openai/gpt-5.5`. Local Gemma regression tests should override it with `OPENCODE_CONFIG_CONTENT='{"small_model":"llamacpp-local/gemma-heretic-bf16"}'` and pass `--title` so title generation cannot delay the mandatory subagent loop.
+A later local-provider rerun exposed a different pre-agent stall: OpenCode used the inherited global `small_model` for automatic session title generation before the examiner reached its first Task call. In that environment the inherited sidecar rejected the configured reasoning effort and left the run parked before forensic work began. OpenCode documents `small_model` as the model used for lightweight tasks such as title generation, so the project now pins the default `small_model` to GPT-5.5. Local Gemma regression tests should override it with `OPENCODE_CONFIG_CONTENT='{"small_model":"llamacpp-local/gemma-heretic-bf16"}'` and pass `--title` so title generation cannot delay the mandatory subagent loop.
 
 The next one-hour live-host test proved the full subagent chain but exposed a collection-control bug. The senior handoff still suggested moving-window PowerShell and raw `$_` scriptblocks; the examiner then ran three independent evidence sources in one `&&` chain. When `Get-WinEvent` returned `NoMatchingEventsFound`, the process and network commands never ran and the agent tried to read output files that were not created. OpenCode live-host instructions now require fixed local timestamps, separate UTC values when needed, no raw `$_`, no `Now.AddHours`, and one evidence source per tool call. Empty event logs or zero-row artifacts must be written as explicit evidence/status results so later sources are not skipped.
 

@@ -19,7 +19,7 @@ The advanced tooling rerun showed that the subagent loop could complete, but sev
 
 ## Verification
 
-- `opencode run` health check completed with `openai/gpt-5.5`.
+- `opencode run` health check completed with the configured GPT-5.5 model path.
 - A report-write smoke test completed after changing examiner `edit` and `write` to `allow`.
 - The full attached-prompt run completed and wrote a generic ignored report under `reports/`; peer review returned `ready with caveats`.
 - A final attached-prompt rerun completed and wrote a second generic ignored report under `reports/`.

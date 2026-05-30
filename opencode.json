@@ -1,7 +1,7 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "openai/gpt-5.5",
-  "small_model": "openai/gpt-5.5",
+  "model": "github-copilot/gpt-5.5",
+  "small_model": "github-copilot/gpt-5.5",
   "default_agent": "forensic-examiner",
   "disabled_providers": ["gemini", "google", "ollama"],
   "provider": {
@@ -53,6 +53,11 @@
         "task": {
           "*": "deny",
           "forensic-senior-tooling-specialist": "allow",
+          "forensic-evidence-collector": "allow",
+          "forensic-artifact-router": "allow",
+          "forensic-timeline-analyst": "allow",
+          "forensic-report-challenger": "allow",
+          "forensic-publication-redactor": "allow",
           "forensic-toolsmith": "allow",
           "forensic-peer-reviewer": "allow",
           "forensic-maintainer": "allow"
@@ -204,6 +209,135 @@
         },
         "edit": "ask",
         "write": "ask"
+      }
+    },
+    "forensic-evidence-collector": {
+      "description": "Internal collection subagent that executes approved scoped collection flows, writes evidence/status outputs, records hashes and blockers, and avoids analysis.",
+      "mode": "subagent",
+      "steps": 8,
+      "prompt": "{file:docs/opencode-agents/forensic-evidence-collector.md}",
+      "permission": {
+        "read": "allow",
+        "list": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "todowrite": "deny",
+        "task": "deny",
+        "bash": {
+          "*": "ask",
+          "date*": "allow",
+          "pwd": "allow",
+          "mkdir -p reports*": "allow",
+          "mkdir -p artifacts*": "allow",
+          "mkdir -p acquisitions*": "allow",
+          "Get-Date*": "allow",
+          "Get-TimeZone*": "allow",
+          "Get-FileHash *": "allow",
+          "powershell.exe -NoProfile -Command *Where-Object {*": "deny",
+          "powershell.exe -NoProfile -Command *ForEach-Object {*": "deny",
+          "powershell.exe -NoProfile -Command *+.*": "deny",
+          "powershell.exe -NoProfile -Command *IncludeUserName*": "deny",
+          "powershell.exe -NoProfile -Command *Now.AddHours*": "deny",
+          "powershell.exe -NoProfile -Command *&&*": "deny",
+          "powershell.exe -NoProfile -Command *": "allow",
+          "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command *Where-Object {*": "deny",
+          "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command *ForEach-Object {*": "deny",
+          "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command *+.*": "deny",
+          "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command *IncludeUserName*": "deny",
+          "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command *Now.AddHours*": "deny",
+          "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command *&&*": "deny",
+          "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command *": "allow"
+        },
+        "edit": "allow",
+        "write": "allow"
+      }
+    },
+    "forensic-artifact-router": {
+      "description": "Internal routing subagent that maps collected artifacts to parser lanes, specialist analysis paths, controlled sensitive-store handling, and timeline inputs.",
+      "mode": "subagent",
+      "steps": 4,
+      "prompt": "{file:docs/opencode-agents/forensic-artifact-router.md}",
+      "permission": {
+        "read": "allow",
+        "list": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "todowrite": "deny",
+        "task": "deny",
+        "bash": "deny",
+        "edit": "deny",
+        "write": "deny"
+      }
+    },
+    "forensic-timeline-analyst": {
+      "description": "Internal timeline-analysis subagent that correlates collected artifacts into a normalized user and system activity timeline.",
+      "mode": "subagent",
+      "steps": 6,
+      "prompt": "{file:docs/opencode-agents/forensic-timeline-analyst.md}",
+      "permission": {
+        "read": "allow",
+        "list": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "todowrite": "deny",
+        "task": "deny",
+        "bash": "deny",
+        "edit": "allow",
+        "write": "allow"
+      }
+    },
+    "forensic-report-challenger": {
+      "description": "Internal adversarial report reviewer for unsupported claims, attribution weakness, alternative explanations, and release-blocking gaps.",
+      "mode": "subagent",
+      "steps": 4,
+      "prompt": "{file:docs/opencode-agents/forensic-report-challenger.md}",
+      "permission": {
+        "read": "allow",
+        "list": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "todowrite": "deny",
+        "task": "deny",
+        "bash": "deny",
+        "edit": "deny",
+        "write": "deny"
+      }
+    },
+    "forensic-publication-redactor": {
+      "description": "Internal publication-redaction reviewer for repo, report, export, and commit hygiene before sharing or pushing.",
+      "mode": "subagent",
+      "steps": 5,
+      "prompt": "{file:docs/opencode-agents/forensic-publication-redactor.md}",
+      "permission": {
+        "read": "allow",
+        "list": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "todowrite": "deny",
+        "task": "deny",
+        "bash": {
+          "*": "ask",
+          "git status*": "allow",
+          "git diff*": "allow",
+          "git grep *": "allow",
+          "git log *": "allow",
+          "git ls-files*": "allow",
+          "git rev-parse *": "allow",
+          "rg *": "allow",
+          "python scripts/validate_repo_hygiene.py*": "allow"
+        },
+        "edit": "deny",
+        "write": "deny"
       }
     },
     "forensic-toolsmith": {
