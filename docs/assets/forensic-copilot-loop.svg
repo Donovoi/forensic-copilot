@@ -1,108 +1,158 @@
-<svg width="1200" height="460" viewBox="0 0 1200 460" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="1200" height="620" viewBox="0 0 1200 620" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="panel" x1="0" y1="0" x2="1200" y2="420" gradientUnits="userSpaceOnUse">
+    <linearGradient id="panel" x1="0" y1="0" x2="1200" y2="620" gradientUnits="userSpaceOnUse">
       <stop stop-color="#F8FBFF"/>
-      <stop offset="1" stop-color="#EEF5FF"/>
+      <stop offset="1" stop-color="#ECF4FF"/>
     </linearGradient>
     <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#2563EB"/>
+      <stop stop-color="#3B82F6"/>
       <stop offset="1" stop-color="#1D4ED8"/>
     </linearGradient>
     <linearGradient id="teal" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#14B8A6"/>
-      <stop offset="1" stop-color="#059669"/>
+      <stop stop-color="#2DD4BF"/>
+      <stop offset="1" stop-color="#0F766E"/>
     </linearGradient>
-    <filter id="soft" x="0" y="0" width="1200" height="460" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#93B3E5" flood-opacity="0.25"/>
+    <linearGradient id="amber" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FBBF24"/>
+      <stop offset="1" stop-color="#EA580C"/>
+    </linearGradient>
+    <filter id="soft" x="-20" y="-20" width="1240" height="660" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#93B3E5" flood-opacity="0.26"/>
     </filter>
   </defs>
 
-  <rect width="1200" height="460" rx="28" fill="url(#panel)"/>
-  <text x="66" y="70" fill="#10223D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="34" font-weight="800">The forensic investigation loop</text>
-  <text x="66" y="104" fill="#48617F" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="19">A case-reviewing examiner cycle: clarify, tool-check, investigate, report, peer review, improve, and go again when needed.</text>
+  <rect width="1200" height="620" rx="28" fill="url(#panel)"/>
+  <text x="62" y="62" fill="#0F223D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="34" font-weight="850">Forensic Copilot loop</text>
+  <text x="62" y="95" fill="#52677F" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="18">One visible examiner coordinates platform-aware, offline-ready helper agents before evidence is collected or reported.</text>
 
-  <g filter="url(#soft)">
-    <rect x="64" y="154" width="120" height="104" rx="22" fill="#FFFFFF" stroke="#D4E4FF"/>
-    <rect x="200" y="154" width="120" height="104" rx="22" fill="#FFFFFF" stroke="#D4E4FF"/>
-    <rect x="336" y="154" width="120" height="104" rx="22" fill="#FFFFFF" stroke="#D4E4FF"/>
-    <rect x="472" y="154" width="120" height="104" rx="22" fill="#FFFFFF" stroke="#D4E4FF"/>
-    <rect x="608" y="154" width="120" height="104" rx="22" fill="#FFFFFF" stroke="#D4E4FF"/>
-    <rect x="744" y="154" width="120" height="104" rx="22" fill="#FFFFFF" stroke="#D4E4FF"/>
-    <rect x="880" y="154" width="120" height="104" rx="22" fill="#FFFFFF" stroke="#D4E4FF"/>
-    <rect x="1016" y="154" width="120" height="104" rx="22" fill="#FFFFFF" stroke="#D4E4FF"/>
+  <g transform="translate(62 130)" filter="url(#soft)">
+    <rect x="0" y="0" width="220" height="104" rx="18" fill="#FFFFFF" stroke="#D4E4FF"/>
+    <rect x="286" y="0" width="220" height="104" rx="18" fill="#FFFFFF" stroke="#D4E4FF"/>
+    <rect x="572" y="0" width="220" height="104" rx="18" fill="#FFFFFF" stroke="#D4E4FF"/>
+    <rect x="858" y="0" width="220" height="104" rx="18" fill="#FFFFFF" stroke="#D4E4FF"/>
   </g>
 
-  <g>
-    <circle cx="124" cy="188" r="18" fill="url(#blue)"/>
-    <text x="124" y="194" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" font-weight="800">1</text>
-    <text x="124" y="222" text-anchor="middle" fill="#0F223D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="18" font-weight="800">Brief</text>
-    <text x="124" y="244" text-anchor="middle" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13">Initial case</text>
-    <text x="124" y="262" text-anchor="middle" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13">request.</text>
+  <g transform="translate(62 130)">
+    <circle cx="34" cy="34" r="17" fill="url(#blue)"/>
+    <text x="34" y="40" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15" font-weight="850">1</text>
+    <text x="66" y="32" fill="#10223D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20" font-weight="850">Case brief</text>
+    <text x="20" y="66" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">Scope, authority, question,</text>
+    <text x="20" y="86" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">time window, report path.</text>
 
-    <circle cx="260" cy="188" r="18" fill="url(#blue)"/>
-    <text x="260" y="194" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" font-weight="800">2</text>
-    <text x="260" y="222" text-anchor="middle" fill="#0F223D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="18" font-weight="800">Clarify</text>
-    <text x="260" y="244" text-anchor="middle" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13">Ask only the</text>
-    <text x="260" y="262" text-anchor="middle" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13">useful questions.</text>
+    <circle cx="320" cy="34" r="17" fill="url(#blue)"/>
+    <text x="320" y="40" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15" font-weight="850">2</text>
+    <text x="352" y="32" fill="#10223D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20" font-weight="850">Platform profile</text>
+    <text x="306" y="66" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">Evidence OS, mode, host role,</text>
+    <text x="306" y="86" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">runner boundary, filesystem.</text>
 
-    <circle cx="396" cy="188" r="18" fill="url(#blue)"/>
-    <text x="396" y="194" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" font-weight="800">3</text>
-    <text x="396" y="222" text-anchor="middle" fill="#0F223D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="18" font-weight="800">Toolsmith</text>
-    <text x="396" y="244" text-anchor="middle" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13">Check tools</text>
-    <text x="396" y="262" text-anchor="middle" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13">and coverage.</text>
+    <circle cx="606" cy="34" r="17" fill="url(#teal)"/>
+    <text x="606" y="40" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15" font-weight="850">3</text>
+    <text x="638" y="32" fill="#10223D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20" font-weight="850">Tool plan</text>
+    <text x="592" y="66" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">Research, select, provision,</text>
+    <text x="592" y="86" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">or document native paths.</text>
 
-    <circle cx="532" cy="188" r="18" fill="url(#blue)"/>
-    <text x="532" y="194" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" font-weight="800">4</text>
-    <text x="532" y="222" text-anchor="middle" fill="#0F223D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="18" font-weight="800">Examine</text>
-    <text x="532" y="244" text-anchor="middle" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13">Handle evidence</text>
-    <text x="532" y="262" text-anchor="middle" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13">defensibly.</text>
-
-    <circle cx="668" cy="188" r="18" fill="url(#blue)"/>
-    <text x="668" y="194" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" font-weight="800">5</text>
-    <text x="668" y="222" text-anchor="middle" fill="#0F223D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="18" font-weight="800">Analyze</text>
-    <text x="668" y="244" text-anchor="middle" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13">Interpret facts</text>
-    <text x="668" y="262" text-anchor="middle" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13">for the case.</text>
-
-    <circle cx="804" cy="188" r="18" fill="url(#blue)"/>
-    <text x="804" y="194" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" font-weight="800">6</text>
-    <text x="804" y="222" text-anchor="middle" fill="#0F223D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="18" font-weight="800">Report</text>
-    <text x="804" y="244" text-anchor="middle" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13">Explain clearly</text>
-    <text x="804" y="262" text-anchor="middle" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13">in Markdown.</text>
-
-    <circle cx="940" cy="188" r="18" fill="url(#teal)"/>
-    <text x="940" y="194" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" font-weight="800">7</text>
-    <text x="940" y="222" text-anchor="middle" fill="#0F223D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="800">Peer review</text>
-    <text x="940" y="244" text-anchor="middle" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13">Challenge claims</text>
-    <text x="940" y="262" text-anchor="middle" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13">and gaps.</text>
-
-    <circle cx="1076" cy="188" r="18" fill="url(#teal)"/>
-    <text x="1076" y="194" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" font-weight="800">8</text>
-    <text x="1076" y="222" text-anchor="middle" fill="#0F223D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="18" font-weight="800">Review</text>
-    <text x="1076" y="244" text-anchor="middle" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13">Improve the</text>
-    <text x="1076" y="262" text-anchor="middle" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13">next run.</text>
+    <circle cx="892" cy="34" r="17" fill="url(#amber)"/>
+    <text x="892" y="40" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15" font-weight="850">4</text>
+    <text x="924" y="32" fill="#10223D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20" font-weight="850">Offline fallback</text>
+    <text x="878" y="66" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">Generate script only if tools</text>
+    <text x="878" y="86" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">are blocked, then review.</text>
   </g>
 
-  <g stroke="#7EA8E8" stroke-width="4" stroke-linecap="round">
-    <path d="M184 206H200"/>
-    <path d="M320 206H336"/>
-    <path d="M456 206H472"/>
-    <path d="M592 206H608"/>
-    <path d="M728 206H744"/>
-    <path d="M864 206H880"/>
-    <path d="M1000 206H1016"/>
+  <g stroke="#8FB4EA" stroke-width="4" stroke-linecap="round">
+    <path d="M282 182H348"/>
+    <path d="M568 182H634"/>
+    <path d="M854 182H920"/>
   </g>
-  <g fill="#7EA8E8">
-    <path d="M190 198L200 206L190 214V198Z"/>
-    <path d="M326 198L336 206L326 214V198Z"/>
-    <path d="M462 198L472 206L462 214V198Z"/>
-    <path d="M598 198L608 206L598 214V198Z"/>
-    <path d="M734 198L744 206L734 214V198Z"/>
-    <path d="M870 198L880 206L870 214V198Z"/>
-    <path d="M1006 198L1016 206L1006 214V198Z"/>
+  <g fill="#8FB4EA">
+    <path d="M338 174L350 182L338 190V174Z"/>
+    <path d="M624 174L636 182L624 190V174Z"/>
+    <path d="M910 174L922 182L910 190V174Z"/>
   </g>
 
-  <path d="M1096 286C1096 362 1008 392 860 392H392C290 392 260 364 260 316" fill="none" stroke="#10B981" stroke-width="5" stroke-linecap="round" stroke-dasharray="8 10"/>
-  <path d="M251 321L260 308L269 321" fill="#10B981"/>
-  <text x="600" y="418" text-anchor="middle" fill="#087F5B" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" font-weight="700">Loop again from clarify if peer review, new questions, or</text>
-  <text x="600" y="440" text-anchor="middle" fill="#087F5B" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" font-weight="700">method review shows a safer or clearer next step.</text>
+  <g transform="translate(62 286)" filter="url(#soft)">
+    <rect x="0" y="0" width="220" height="104" rx="18" fill="#FFFFFF" stroke="#D4E4FF"/>
+    <rect x="286" y="0" width="220" height="104" rx="18" fill="#FFFFFF" stroke="#D4E4FF"/>
+    <rect x="572" y="0" width="220" height="104" rx="18" fill="#FFFFFF" stroke="#D4E4FF"/>
+    <rect x="858" y="0" width="220" height="104" rx="18" fill="#FFFFFF" stroke="#D4E4FF"/>
+  </g>
+
+  <g transform="translate(62 286)">
+    <circle cx="34" cy="34" r="17" fill="#475569"/>
+    <text x="34" y="40" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15" font-weight="850">5</text>
+    <text x="66" y="32" fill="#10223D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20" font-weight="850">Collect</text>
+    <text x="20" y="66" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">Evidence files, status records,</text>
+    <text x="20" y="86" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">hashes, row counts.</text>
+
+    <circle cx="320" cy="34" r="17" fill="#475569"/>
+    <text x="320" y="40" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15" font-weight="850">6</text>
+    <text x="352" y="32" fill="#10223D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20" font-weight="850">Route artifacts</text>
+    <text x="306" y="66" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">OS-specific parsers, sensitive</text>
+    <text x="306" y="86" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">stores, blocked lanes.</text>
+
+    <circle cx="606" cy="34" r="17" fill="#475569"/>
+    <text x="606" y="40" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15" font-weight="850">7</text>
+    <text x="638" y="32" fill="#10223D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20" font-weight="850">Timeline</text>
+    <text x="592" y="66" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">Correlate user, system, and</text>
+    <text x="592" y="86" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">service activity with limits.</text>
+
+    <circle cx="892" cy="34" r="17" fill="#7C3AED"/>
+    <text x="892" y="40" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15" font-weight="850">8</text>
+    <text x="924" y="32" fill="#10223D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20" font-weight="850">Challenge</text>
+    <text x="878" y="66" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">Test attribution, causality,</text>
+    <text x="878" y="86" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">alternatives, and gaps.</text>
+  </g>
+
+  <g stroke="#8FB4EA" stroke-width="4" stroke-linecap="round">
+    <path d="M1140 234C1140 258 1114 260 1114 260H100C100 260 76 262 76 286"/>
+    <path d="M282 338H348"/>
+    <path d="M568 338H634"/>
+    <path d="M854 338H920"/>
+  </g>
+  <g fill="#8FB4EA">
+    <path d="M68 276L76 288L84 276H68Z"/>
+    <path d="M338 330L350 338L338 346V330Z"/>
+    <path d="M624 330L636 338L624 346V330Z"/>
+    <path d="M910 330L922 338L910 346V330Z"/>
+  </g>
+
+  <g transform="translate(204 456)" filter="url(#soft)">
+    <rect x="0" y="0" width="220" height="94" rx="18" fill="#FFFFFF" stroke="#D4E4FF"/>
+    <rect x="286" y="0" width="220" height="94" rx="18" fill="#FFFFFF" stroke="#D4E4FF"/>
+    <rect x="572" y="0" width="220" height="94" rx="18" fill="#FFFFFF" stroke="#D4E4FF"/>
+  </g>
+
+  <g transform="translate(204 456)">
+    <circle cx="34" cy="32" r="17" fill="#7C3AED"/>
+    <text x="34" y="38" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15" font-weight="850">9</text>
+    <text x="66" y="31" fill="#10223D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20" font-weight="850">Report</text>
+    <text x="20" y="64" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">Summary and findings first,</text>
+    <text x="20" y="84" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">method and limits below.</text>
+
+    <circle cx="320" cy="32" r="17" fill="url(#teal)"/>
+    <text x="320" y="38" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15" font-weight="850">10</text>
+    <text x="352" y="31" fill="#10223D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20" font-weight="850">Peer review</text>
+    <text x="306" y="64" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">Ready, caveats, or not ready</text>
+    <text x="306" y="84" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">before release.</text>
+
+    <circle cx="606" cy="32" r="17" fill="url(#teal)"/>
+    <text x="606" y="38" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15" font-weight="850">11</text>
+    <text x="638" y="31" fill="#10223D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20" font-weight="850">Redact and improve</text>
+    <text x="592" y="64" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">Publication hygiene, then</text>
+    <text x="592" y="84" fill="#5D7390" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14">bounded maintenance changes.</text>
+  </g>
+
+  <g stroke="#8FB4EA" stroke-width="4" stroke-linecap="round">
+    <path d="M1140 390C1140 430 1012 430 1012 430H238C238 430 214 432 214 456"/>
+    <path d="M424 503H490"/>
+    <path d="M710 503H776"/>
+  </g>
+  <g fill="#8FB4EA">
+    <path d="M206 446L214 458L222 446H206Z"/>
+    <path d="M480 495L492 503L480 511V495Z"/>
+    <path d="M766 495L778 503L766 511V495Z"/>
+  </g>
+
+  <path d="M1010 560C1010 590 816 596 642 596H360C238 596 176 578 176 530" fill="none" stroke="#10B981" stroke-width="4" stroke-linecap="round" stroke-dasharray="8 10"/>
+  <path d="M168 540L176 528L184 540H168Z" fill="#10B981"/>
+  <text x="590" y="590" text-anchor="middle" fill="#087F5B" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15" font-weight="800">If review finds gaps, loop back to clarify or platform profiling.</text>
 </svg>

@@ -90,6 +90,8 @@ See [docs/offline-usage.md](docs/offline-usage.md).
 
 ## Agent Loop
 
+![Forensic Copilot investigation loop](docs/assets/forensic-copilot-loop.svg)
+
 Only **Forensic Examiner** is user-facing.
 
 The internal loop is:
@@ -156,6 +158,7 @@ Formal exports can be generated after review. See [docs/formal-report-output.md]
 - [docs/repository-policy.md](docs/repository-policy.md) - expanded policy
 - [docs/tooling-matrix.md](docs/tooling-matrix.md) - tool-selection starting point
 - [docs/privacy-and-redaction.md](docs/privacy-and-redaction.md) - publication hygiene
+- [docs/assets/](docs/assets/) - README diagrams for the current platform-aware loop
 - [scripts/validate_repo_hygiene.py](scripts/validate_repo_hygiene.py) - repo hygiene check
 
 ## Privacy
