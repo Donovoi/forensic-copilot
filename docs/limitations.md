@@ -11,6 +11,7 @@ This repository is easier to trust if its limits are stated plainly. The agent i
 - A locked encrypted volume may block volume-internal filesystem review, deleted-entry review, volume-internal unallocated-space review, slack-space review, snapshot review, and plaintext carving until a supported unlock path exists.
 - That limit does not, by itself, mean that separate whole-disk free-space review or carving from other accessible plaintext regions was attempted. Reports should state those decisions separately.
 - Cloud-backed placeholders, remote mounts, and synchronized folders can make it unclear whether the visible files represent the full logical evidence set.
+- Enterprise policy, lab SOPs, or offline constraints may strictly limit where evidence can be read from, where tools and temporary files can be staged, and where reports or exports can be written. Missing input, compute, or output boundaries should be handled with conservative defaults and reported as assumptions.
 
 ## Derived-artifact limits
 
@@ -28,6 +29,7 @@ This repository is easier to trust if its limits are stated plainly. The agent i
 ## Investigation and reporting limits
 
 - The agent can help narrow scope, but it cannot determine legal authority, warrant scope, or policy boundaries on its own.
+- The agent cannot infer whether remote compute, cloud services, removable media, analyst shares, neighboring folders, or derived exports are authorized. It should ask before using them when they are not already inside the declared input, compute, or output boundary.
 - Sensitive artifacts are not automatically out of scope. Credential stores, cookies, tokens, keys, password-manager data, browser login databases, environment files, and encrypted containers can be decisive evidence when the authority and case question include them.
 - Secret-bearing artifacts require controlled handling. Preserve or inventory them with hashes and provenance, minimize plaintext exposure, and report secret values only when the case specifically requires that disclosure.
 - Findings still require examiner review. AI-generated phrasing is not evidence and should not replace direct artifact verification.

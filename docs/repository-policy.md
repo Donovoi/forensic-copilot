@@ -34,6 +34,9 @@ All agents, prompts, instructions, and supporting documents in this repository m
 
 - Treat the user-supplied evidence path, image path, or stated case boundary as the active scope unless the user explicitly expands it.
 - Do not rely on neighboring directories, prior exports, derived artifacts, analyst notes, or cached outputs outside that scope without explicit approval and report disclosure.
+- Treat data location as a scope boundary. Establish where the agent may read input evidence, where it may process, stage, cache, copy, or generate scripts, and where it may write reports, logs, exports, or redacted packages.
+- If only a bare evidence path is supplied, default to that path as the input/read scope, ignored analyst-controlled case/tool/artifact paths as the compute/staging scope, and the requested report path or a safe ignored report path as the output scope.
+- Ask before reading outside the input boundary, using neighboring or derived outputs, staging or caching on unapproved storage, using remote/cloud compute, or writing outside the output boundary.
 - If a requested step is blocked, name the blocker precisely. Say what is missing, what was tried, what path was ruled out, and what decision is needed next.
 - Do not silently replace a blocked direct-examination step with a weaker or broader fallback.
 - When the blocker changes what can be answered, stop and bring that decision back to the user.
@@ -76,6 +79,7 @@ When changing agent behavior or tool choices, also update the relevant docs:
 - Require the examiner agent to distinguish observation, inference, and limitation.
 - Require OS-aware routing. The workflow must establish evidence OS, evidence mode, runner/evidence boundary, filesystem/logging architecture, and host role before broad collection or OS-specific tool selection.
 - Do not let examples make Windows the default, and do not treat the runner OS as the evidence OS without corroboration.
+- Require the examiner agent to establish input/read, compute/staging, and output/report/export boundaries. Missing boundary details should not stall a bare-path triage, but the report must record conservative assumptions and any unanswered questions.
 - Require the examiner agent to separate acquisition, examination, and reporting for sensitive artifacts: preserve or inventory in-scope material, avoid unnecessary plaintext disclosure, and document the handling decision.
 - Require the examiner agent to match the requested depth. Quick triage should collect the minimum defensible source set; comprehensive examination should preserve or inventory every relevant in-scope artifact class.
 - Require offline and enterprise-restricted operation to remain first-class. Web research, Copilot/cloud access, package managers, and downloads may be unavailable; agents must use local docs, installed tools, native OS capabilities, and generated-script fallback when appropriate.
@@ -135,6 +139,7 @@ The working report must remain in Markdown and should include, when applicable:
 - conclusions and answers to tasking
 - limitations, deviations, and contamination risks
 - case metadata and scope
+- input/read, compute/staging, and output/report/export boundaries, including assumptions and unanswered questions
 - evidence inventory and acquisition or preservation summary
 - hashes and verification details
 - examination environment and tool versions

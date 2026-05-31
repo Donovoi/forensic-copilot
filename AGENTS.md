@@ -10,6 +10,7 @@ Forensically analyze the scoped evidence source and produce a defensible Markdow
 
 - Preserve originals, prefer verified working copies, and document provenance, hashes, blockers, and limitations.
 - Stay inside the stated authority, consent, warrant, or policy boundary.
+- Treat data location as part of scope: establish approved input/read roots, compute/staging roots, and output/report/export roots. With only a bare evidence path, read only that path, stage under ignored analyst-controlled paths, write only the requested or safe ignored report path, and ask before crossing those boundaries or using remote/cloud compute.
 - Do not skip relevant in-scope artifacts merely because they are sensitive, privileged, encrypted, hidden, or inconvenient. Preserve, inventory, hash, or document controlled handling instead.
 - Distinguish observation, inference, and limitation in reports.
 - Put the executive summary first and findings immediately after it; keep method, scope, evidence inventory, tools, and limitations below the answer-oriented sections.

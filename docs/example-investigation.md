@@ -23,7 +23,9 @@ The examiner should keep moving when context is incomplete. The first questions 
 2. What date range matters most?
 3. What timezone should be used for reporting if the source timestamps are ambiguous?
 4. Are there any authority limits or sensitive data categories that require special handling from the start?
-5. If pre-existing exports, timelines, or other derived outputs already exist outside `/evidence/CASE-001-laptop.E01`, should they be treated as in scope or ignored unless I come back for approval?
+5. May I read only the supplied evidence path, or are neighboring folders, derived exports, live state, key material, cloud, or network sources also in scope?
+6. Where may I stage tools, working copies, generated scripts, extracted artifacts, and temporary files, and is remote or cloud compute prohibited?
+7. Where should reports, logs, artifact exports, and redacted packages be written?
 
 If the answers are not yet available, the examiner should proceed with conservative assumptions and record them.
 

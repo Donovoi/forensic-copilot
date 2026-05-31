@@ -126,6 +126,9 @@ Comprehensive examination preserves or inventories every relevant in-scope artif
 Helpful inputs:
 
 - evidence path or live host scope
+- approved input/read roots, including whether neighboring folders, derived exports, live state, key material, cloud, or network sources are in scope
+- approved compute/staging roots for tools, generated scripts, working copies, extracted artifacts, temporary files, and whether local, remote, GPU, container, or cloud compute is allowed
+- approved output/report/export roots for reports, logs, artifact exports, review packages, and redacted deliverables
 - operating system, if known
 - question to answer
 - user, host, or account of interest
@@ -136,7 +139,7 @@ Helpful inputs:
 
 If the operating system is not known, the platform profiler should establish the evidence OS before broad collection. It must distinguish the runner from the evidence source, for example WSL running commands against a Windows host or a Linux analyst workstation examining a macOS APFS image.
 
-If some details are missing, the examiner should proceed with conservative assumptions and record them.
+If some details are missing, the examiner should proceed with conservative assumptions and record them. A bare evidence path is enough to begin: treat that path as the input scope, use ignored analyst-controlled case/tool/artifact paths for compute and staging, and write only the requested report or a safe ignored report path. Ask before reading outside the input boundary, staging or caching on unapproved storage, using remote or cloud compute, or writing outside the approved output boundary.
 
 ## What You Get
 

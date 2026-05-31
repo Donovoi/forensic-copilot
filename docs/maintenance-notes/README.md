@@ -6,6 +6,7 @@ They complement `docs/self-update-loop.md` by leaving a short, reviewable ration
 
 ## Index
 
+- `2026-05-31-data-location-boundaries.md` - establish input/read, compute/staging, and output/report boundaries without stalling bare-path triage
 - `2026-05-29-opencode-local-model-context.md` — keep OpenCode global instructions, role prompts, context, and helper turns lean enough for local Gemma-style providers and allow WSL Windows collection bridge commands
 - `2026-05-31-local-gemma-reasoning-preflight.md` — fail fast when local llama.cpp hidden reasoning consumes the visible first Task budget
 - `2026-05-30-os-aware-platform-routing.md` — add platform profiling so evidence OS and runner OS are separated before collection and tool selection

@@ -20,12 +20,14 @@ Opening Task shape:
 }
 ```
 
-For local Gemma-style runs, emit the opening Task immediately. Do not reorder the fields from the example, do not add a period after the last field, and make sure the tool argument JSON ends with `}`. If the user gave platform, timeframe, host, account, report path, or live-vs-image details, compress them into one semicolon-separated line. Keep the first Task prompt under 30 words so slow local models can return the subagent call before first-chunk timeouts. Never paste the full user request or a newline into the opening Task prompt. If a fact is long, omit it and let the senior infer from conversation context.
+For local Gemma-style runs, emit the opening Task immediately. Do not reorder the fields from the example, do not add a period after the last field, and make sure the tool argument JSON ends with `}`. If the user gave platform, timeframe, host, account, report path, live-vs-image details, or short data-boundary facts such as `io known` or `io unknown`, compress them into one semicolon-separated line. Keep the first Task prompt under 30 words so slow local models can return the subagent call before first-chunk timeouts. Never paste the full user request or a newline into the opening Task prompt. If a fact is long, omit it and let the senior infer from conversation context.
 
 ## Mandatory loop rules
 
 - Required helpers are part of the forensic loop, not optional advice.
 - Establish evidence OS, evidence mode, runner/evidence boundary, filesystem/logging architecture, and host role before broad collection. Use `forensic-platform-profiler` when any of those are missing or ambiguous.
+- Establish data-location boundaries before broad collection: input/read roots, compute/staging roots, and output/report/export roots. A bare evidence path defaults to that path as input scope, ignored analyst-controlled case/tool/artifact paths for compute, and the requested or safe ignored report path for output.
+- Ask concise questions after the mandatory senior handoff when missing data-location boundaries could materially affect legality, policy, contamination risk, remote/cloud compute, or ability to proceed. Do not read, stage, cache, compute, or write outside approved roots without approval.
 - Do not assume Windows from examples or Linux from the runner; the platform profile controls artifact priorities and tool choice.
 - Match requested depth: quick triage uses the minimum defensible source set; comprehensive examination preserves or inventories every relevant in-scope artifact class.
 - If a helper stalls, is denied, returns incomplete output, or the local provider fails, stop at that blocker and retry the same helper path with a narrower prompt.
@@ -43,7 +45,7 @@ For local Gemma-style runs, emit the opening Task immediately. Do not reorder th
 
 ## After the senior handoff
 
-After the senior handoff, only directory setup and current time/timezone capture may happen before the report. Then create or update the requested Markdown report with edit/write tools before any broad evidence collection command. Put `## Executive summary` first and `## Findings` second. Keep detailed metadata, method, evidence inventory, and limitations below the answer-oriented sections.
+After the senior handoff, only directory setup and current time/timezone capture may happen before the report. Then create or update the requested Markdown report with edit/write tools before any broad evidence collection command. Put `## Executive summary` first and `## Findings` second. Keep detailed metadata, method, evidence inventory, and limitations below the answer-oriented sections. Record data-location assumptions and unanswered input/compute/output questions in the report before broad collection.
 
 For live Windows collection from WSL:
 
