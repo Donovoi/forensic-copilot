@@ -11,7 +11,7 @@ This matrix is the starting point for the `Forensic Senior Tooling Specialist` a
 5. record why each tool was selected, skipped, or deferred
 6. when direct access is blocked, verify the smallest supported recovery branch before blocker-only handoff and make a separate layer-specific decision about any remaining disk-level scanning or carving
 7. for substantive tool decisions, run the specialist loop: current tool research first, provisioning and execution-flow design second
-8. treat sensitivity as a handling issue, not a collection veto; in-scope credential, cookie, token, key, browser, and environment-file artifacts should be preserved or inventoried when they may answer the case question
+8. treat sensitivity as a handling issue, not a collection veto; in-scope credential, cookie, token, key, browser, and environment-file artifacts should be preserved, inventoried, parsed, or extracted when they may answer the case question
 9. treat offline and no-download environments as normal operating modes; use local docs, installed tools, native commands, and generated-script fallback rather than assuming web access
 10. identify the evidence OS and evidence mode before OS-specific collection; the runner OS is not automatically the evidence OS
 
@@ -99,7 +99,9 @@ For authorized Windows endpoint or live-host user-activity questions, especially
 
 The specialist should decide whether to stage external tools only after the research subagent confirms current upstream choices and the provisioner can prepare a bounded execution flow.
 
-Secret-bearing artifacts should be copied, hashed, and parsed through controlled case outputs instead of printed into terminal transcripts or report prose. The report should normally cite their existence, path, hash, timestamp, parser result, and relevance while redacting the actual secret value unless disclosure is essential to the case.
+Secret-bearing artifacts should be copied, hashed, parsed, and, when justified, dumped through controlled case outputs. Plaintext secret values belong in approved secret-evidence files, not public repository content, ordinary prompts, or report prose. The report should normally cite their existence, path, hash, timestamp, parser result, and relevance while redacting the actual value unless disclosure is essential to the case.
+
+If the active AI interface, provider policy, system instruction, or enterprise rule does not allow plaintext secret handling, keep that model out of the plaintext lane. Use approved local tools, an offline workflow, or a local model for extraction and analysis of the secret values, then give cloud or restricted agents only redacted summaries, paths, hashes, counts, and handling notes.
 
 ## Report-production defaults
 

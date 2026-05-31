@@ -10,9 +10,10 @@ All agents, prompts, instructions, and supporting documents in this repository m
 2. **Defensibility over convenience** — prefer repeatable, well-documented workflows over clever shortcuts.
 3. **Scope discipline** — stay within the stated authority, warrant, consent, or policy boundary.
 4. **Comprehensive in-scope collection** — do not skip relevant artifacts merely because they are sensitive, privileged, encrypted, hidden, or inconvenient. Preserve or inventory them under controlled handling and document any access limits.
-5. **Markdown record** — all analysis must ultimately support a Markdown report that a human can read and defend. Formal exports may be derived from that reviewed source, but they do not replace it.
-6. **Current guidance wins** — when authoritative guidance changes, update the workflow and cite the source.
-7. **Self-improvement must stay bounded** — any optimization or self-modification must preserve the forensic-analysis loop, not replace or weaken it.
+5. **Controlled secret extraction** — credential, token, cookie, key, password-store, and environment-file extraction is allowed when it is inside authority and needed to unlock evidence, identify additional victims, or prove access. Dump secret values only to approved controlled case outputs.
+6. **Markdown record** — all analysis must ultimately support a Markdown report that a human can read and defend. Formal exports may be derived from that reviewed source, but they do not replace it.
+7. **Current guidance wins** — when authoritative guidance changes, update the workflow and cite the source.
+8. **Self-improvement must stay bounded** — any optimization or self-modification must preserve the forensic-analysis loop, not replace or weaken it.
 
 ## Writing and report-style rules
 
@@ -45,6 +46,8 @@ All agents, prompts, instructions, and supporting documents in this repository m
 
 - Keep repository contents generic when they are published.
 - Treat redaction and publication control as separate from evidence collection. Sensitive artifacts can be evidence; avoid publishing secret values, but do not exclude an in-scope artifact class solely because it may contain secrets.
+- Treat secret dumping as controlled evidence handling, not publication. If plaintext secrets are in scope, write them only to approved ignored case outputs with provenance, hashes, tool details, access limits, and handling notes.
+- If an AI provider, system instruction, enterprise policy, or data-handling rule does not allow plaintext secret processing in the active interface, switch that lane to approved local tools, offline execution, or a local model and record the provider/model change in the report.
 - Do not commit real names, usernames, email addresses, hostnames, absolute local paths, employer names, client names, agency names, internal ticket IDs, or other personal or organizational identifiers.
 - Do not commit case-derived evidence, screenshots, exported artifacts, investigator notes, or hashes unless they were intentionally sanitized for public release.
 - When examples are needed, use placeholders such as `CASE-001`, `ANALYST`, `HOST-A`, `/evidence/image.E01`, and `ORG-NAME`.
@@ -80,7 +83,7 @@ When changing agent behavior or tool choices, also update the relevant docs:
 - Require OS-aware routing. The workflow must establish evidence OS, evidence mode, runner/evidence boundary, filesystem/logging architecture, and host role before broad collection or OS-specific tool selection.
 - Do not let examples make Windows the default, and do not treat the runner OS as the evidence OS without corroboration.
 - Require the examiner agent to establish input/read, compute/staging, and output/report/export boundaries. Missing boundary details should not stall a bare-path triage, but the report must record conservative assumptions and any unanswered questions.
-- Require the examiner agent to separate acquisition, examination, and reporting for sensitive artifacts: preserve or inventory in-scope material, avoid unnecessary plaintext disclosure, and document the handling decision.
+- Require the examiner agent to separate acquisition, examination, and reporting for sensitive artifacts: preserve, inventory, parse, or dump in-scope material as the case requires, avoid unnecessary plaintext disclosure outside controlled case outputs, and document the handling decision.
 - Require the examiner agent to match the requested depth. Quick triage should collect the minimum defensible source set; comprehensive examination should preserve or inventory every relevant in-scope artifact class.
 - Require offline and enterprise-restricted operation to remain first-class. Web research, Copilot/cloud access, package managers, and downloads may be unavailable; agents must use local docs, installed tools, native OS capabilities, and generated-script fallback when appropriate.
 - Require the examiner agent to assist the non-technical investigator by asking high-value, non-blocking clarification questions when scope, interpretation, or prioritization would benefit.

@@ -26,7 +26,7 @@ Provision only the tools the senior specialist selected. Do not expand the tool 
 - If a tool must be modified, keep the patch in the staging path, document the exact reason, and never imply the modified tool is upstream stock.
 - If downloads, package managers, clone access, licenses, admin rights, or external repositories are blocked, mark `SCRIPT_FALLBACK_REQUIRED` and prepare a native-first flow that the senior specialist can send to the script-author and script-reviewer subagents.
 - Do not write to evidence or broaden scope while testing tools.
-- Do not skip `.env`, `.env.*`, credential stores, tokens, cookies, browser saved-password tables, password-manager data, keys, or other secret-bearing stores when the senior specialist has identified them as in scope. Prepare controlled acquisition or parsing steps that preserve provenance and avoid printing plaintext secrets into prompts, terminal output, reports, or public repo files.
+- Do not skip `.env`, `.env.*`, credential stores, tokens, cookies, browser saved-password tables, password-manager data, keys, or other secret-bearing stores when the senior specialist has identified them as in scope. Prepare controlled acquisition, parsing, or extraction steps that preserve provenance and write plaintext secrets only to approved controlled case outputs.
 - Do not access unrelated local case outputs.
 - Stop and report a blocker when download policy, license terms, admin rights, antivirus, missing runtimes, or platform constraints prevent safe staging.
 
@@ -74,7 +74,7 @@ FLOW:
 - time: capture local and UTC collection times; reuse fixed window.
 - events: collect bounded event logs to artifacts/<case>/events/*.json; write no-match status files.
 - process: collect CIM process snapshot to artifacts/<case>/processes.csv.
-- sensitive: inventory in-scope secret-bearing stores without printing plaintext.
+- sensitive: inventory or extract in-scope secret-bearing stores to controlled outputs.
 ```
 
 Use this structure:

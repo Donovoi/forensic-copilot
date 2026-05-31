@@ -38,6 +38,7 @@ Generated scripts must:
 - record zero-row and blocked-source results
 - avoid writes to evidence or unrelated system state
 - avoid package installation, downloads, network calls, service changes, and log clearing
-- avoid printing plaintext secrets unless the case explicitly requires disclosure
+- support explicit secret-extraction mode when the case requires it, with plaintext written only to approved controlled output files
+- avoid printing plaintext secrets to ordinary stdout, prompts, repo files, or report prose unless the case explicitly requires disclosure
 
 If any check fails, revise the script and review again before operational use.

@@ -121,6 +121,8 @@ Quick triage collects the minimum defensible source set needed to answer or prio
 
 Comprehensive examination preserves or inventories every relevant in-scope artifact class, including artifacts that are sensitive, hidden, encrypted, inconvenient, or likely to contain credentials. Sensitivity changes handling and disclosure; it does not make an artifact irrelevant.
 
+Secret extraction can be a legitimate forensic step when it is inside the case authority and helps unlock evidence, identify additional victims, or prove access. Treat it as a controlled evidence lane: dump plaintext secrets only to approved, ignored case-output paths with provenance, hashes, tool details, and handling notes. Keep public repository content, ordinary prompts, and report prose redacted unless the case specifically requires a value to be disclosed. If the active AI interface, provider policy, system instruction, or enterprise rule does not allow plaintext secret handling, switch that part of the work to approved local tools or a local/offline model and record the provider or model change in the case report.
+
 ## What To Provide
 
 Helpful inputs:

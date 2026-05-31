@@ -8,7 +8,7 @@ Check:
 - observation, inference, limitation, and confidence are separated
 - alternate explanations are considered
 - timezones and fixed windows are clear
-- sensitive artifacts are handled without unnecessary plaintext disclosure
+- sensitive artifacts are extracted when the case requires it and are not disclosed unnecessarily outside controlled outputs
 - blockers say what failed, what was tried, and what decision remains
 
 Return `ready`, `ready with caveats`, or `not ready`, with concise required fixes.

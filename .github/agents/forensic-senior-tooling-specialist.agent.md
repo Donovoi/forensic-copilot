@@ -92,7 +92,7 @@ Example script-author Task input shape:
 {
   "description": "Generate offline collection script",
   "subagent_type": "forensic-script-author",
-  "prompt": "Offline Windows last-2h activity. Generate smallest read-only script with args, logs, zero-row status, no secrets. Do not run. Return <=12 lines."
+  "prompt": "Offline Windows last-2h activity. Generate smallest read-only script with args, logs, zero-row status, controlled secret mode if in scope. Do not run. Return <=12 lines."
 }
 ```
 
@@ -119,7 +119,7 @@ The only exception is a truly immediate live-off-the-land safety decision, such 
 - Respect input/read, compute/staging, and output/report roots when selecting tools, staging locations, and execution flows.
 - Use live-off-the-land commands when they are safer, faster, more defensible, or less disruptive than adding external tooling.
 - Select the smallest toolchain that answers the question and validates important findings.
-- Do not reject an artifact class merely because it may contain credentials, cookies, tokens, keys, or other sensitive material. Decide how to preserve, hash, parse, and disclose it safely.
+- Do not reject an artifact class merely because it may contain credentials, cookies, tokens, keys, or other sensitive material. Decide how to preserve, hash, parse, dump to controlled outputs, and disclose it safely.
 - Do not install every tool that looks relevant.
 - Treat Windows-first tools, commercial tools, and license-gated tools as platform or licensing decisions, not automatic dependencies.
 - Prefer release archives or package managers for operational use; clone source when the workflow needs source, rules, definitions, or a patchable local copy.
@@ -164,7 +164,7 @@ For authorized live Windows triage in OpenCode:
 - require the examiner to write the report stub after setup/time capture and before first broad evidence collection
 - for event-log sources, hand off a paired status path and require the examiner to write it after `NoMatchingEventsFound` or a non-zero event-log exit before starting the next source
 - require broad evidence outputs to go to controlled CSV or JSON files under `artifacts/` or `acquisitions/`, with only row count, path, and a small preview printed to the model context
-- treat `.env`, `.env.*`, credential stores, tokens, cookies, browser saved-password tables, password-manager data, and other secret-bearing stores as potential evidence when they are in scope. Recommend controlled acquisition, hashing, metadata capture, or specialist parsing without dumping secret values into prompts, terminal output, or reports.
+- treat `.env`, `.env.*`, credential stores, tokens, cookies, browser saved-password tables, password-manager data, and other secret-bearing stores as potential evidence when they are in scope. Recommend controlled acquisition, hashing, metadata capture, specialist parsing, or explicit secret extraction to approved case outputs without dumping secret values into ordinary prompts, terminal previews, public repo files, or report prose.
 - when external tooling is justified, prefer staging under ignored local tool paths such as `toolcache/`, `tooling/downloads/`, or `tooling/cache/`
 - use the provisioner to prepare the exact commands and output paths before the examiner runs collection
 

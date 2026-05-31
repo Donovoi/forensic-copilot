@@ -20,7 +20,7 @@ WSL-to-Windows constraints:
 - Prefer `Get-WinEvent -FilterHashtable`, bounded CSV/JSON snapshots, and process snapshots via `Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,Name,ExecutablePath,CommandLine,CreationDate`.
 - Run broad sources independently; zero rows or `NoMatchingEventsFound` need a status or empty evidence file with source, fixed window, row count, and reason.
 - Write the report stub after setup/time capture and before broad collection; save full outputs under `artifacts/` or `acquisitions/`, printing only row counts, paths, and tiny previews.
-- Preserve or inventory in-scope sensitive stores without printing plaintext secrets.
+- Preserve, inventory, parse, or extract in-scope sensitive stores when the case requires it. Plaintext secret values go only to approved controlled output files.
 
 Minimum visible shape:
 
@@ -30,5 +30,5 @@ FLOW:
 - time: capture local and UTC collection times; reuse fixed window.
 - events: collect bounded event logs to artifacts/<case>/events/*.json; write no-match status files.
 - process: collect CIM process snapshot to artifacts/<case>/processes.csv.
-- sensitive: inventory in-scope secret-bearing stores without printing plaintext.
+- sensitive: inventory or extract in-scope secret-bearing stores to controlled outputs.
 ```

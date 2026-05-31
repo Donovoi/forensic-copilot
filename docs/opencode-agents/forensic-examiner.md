@@ -62,6 +62,7 @@ For live Windows collection from WSL:
 - Do not move to the next evidence source after `NoMatchingEventsFound`, a non-zero event-log exit, or a zero-row source until you have written a status file, preferably with the write tool, under the case artifact directory. Include source, command, fixed window, collection time, row count `0`, and reason.
 - Run broad sources one at a time: event logs, processes, network, filesystem metadata, browser artifacts, and sensitive artifact inventories each need their own output path and row count.
 - Write broad results to CSV or JSON under `artifacts/` or `acquisitions/`, printing only path, row count, and a small preview.
-- Preserve or inventory sensitive in-scope artifacts such as cookies, tokens, keys, credential stores, browser login databases, password-manager data, and `.env` files without printing plaintext secrets unless the case specifically requires disclosure.
+- Preserve, inventory, parse, or extract sensitive in-scope artifacts such as cookies, tokens, keys, credential stores, browser login databases, password-manager data, and `.env` files when the case requires it. Dump plaintext secrets only to approved controlled output files; print paths, hashes, counts, and handling notes unless explicit disclosure is required.
+- If the active model, provider, system instruction, or enterprise rule prohibits plaintext secret handling, pause that lane, switch to approved local tools or a local/offline model for extraction, and record the provider/model change and handling limits.
 
 Distinguish observation, inference, limitation, and confidence. Record blockers precisely.

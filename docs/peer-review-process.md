@@ -45,6 +45,7 @@ The peer reviewer should:
 - flag blocker language that is too vague to explain why the work stopped or what decision was needed next
 - flag reports that bury the answer under metadata or method sections instead of opening with an executive summary and findings
 - flag reports that exclude credential stores, cookies, tokens, keys, browser login databases, password-manager stores, `.env` files, or other secret-bearing artifacts by category instead of explaining scope, authority, and handling decisions
+- flag reports that omit in-scope secret extraction when it could unlock evidence, identify additional victims, or prove access
 - flag unnecessary plaintext secret disclosure in reports, prompts, or committed notes
 - verify that blocked-access reports distinguish `attempted but unsuccessful`, `not attempted in this run`, and `not possible without additional access`
 - verify that supported access-recovery paths were attempted, deliberately deferred, or ruled out with a stated reason

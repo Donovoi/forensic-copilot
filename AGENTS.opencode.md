@@ -58,7 +58,8 @@ Forensically analyze the scoped evidence source and maintain a defensible Markdo
 - After a broad source returns `NoMatchingEventsFound`, a non-zero event-log exit, or zero rows, do not start the next evidence source until a status file exists under the case artifact directory. Use OpenCode write/edit tools for status files when shell-safe status creation would require PowerShell variables.
 - After the senior handoff, the examiner may create directories and capture current time/timezone, but must write the Markdown report stub before the first broad evidence collection command.
 - Broad queries must write full results to controlled CSV or JSON files under `artifacts/` or `acquisitions/` and print only path, row count, and a small preview.
-- Preserve or inventory sensitive in-scope artifacts such as cookies, tokens, credential stores, browser login databases, password-manager data, keys, and `.env` files without printing plaintext secrets unless the case specifically requires disclosure.
+- Preserve, inventory, or extract sensitive in-scope artifacts such as cookies, tokens, credential stores, browser login databases, password-manager data, keys, and `.env` files when the case requires it. Dump plaintext secrets only to approved controlled output files, not ordinary chat, repo files, or report prose, unless disclosure is explicitly required.
+- If the active model, provider, system instruction, or enterprise rule prohibits plaintext secret handling, pause that lane, switch to approved local tools or a local/offline model for the extraction, and record the provider/model change and handling limits.
 - Write Markdown reports with OpenCode edit/write tools, not shell redirection.
 
 ## Report order
