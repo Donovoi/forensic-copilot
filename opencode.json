@@ -1,7 +1,5 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "github-copilot/gpt-5.5",
-  "small_model": "github-copilot/gpt-5.5",
   "default_agent": "forensic-examiner",
   "disabled_providers": ["gemini", "google"],
   "provider": {
@@ -12,14 +10,14 @@
       },
       "models": {
         "gemma-heretic-bf16": {
+          "reasoning": true,
           "options": {
-            "reasoningEffort": "none",
             "textVerbosity": "low",
             "temperature": 0
           },
           "limit": {
             "context": 16384,
-            "output": 512
+            "output": 4096
           }
         }
       }
@@ -165,27 +163,15 @@
       "steps": 4,
       "prompt": "{file:docs/opencode-agents/forensic-platform-profiler.md}",
       "permission": {
-        "read": "allow",
-        "list": "allow",
-        "glob": "allow",
-        "grep": "allow",
+        "read": "deny",
+        "list": "deny",
+        "glob": "deny",
+        "grep": "deny",
         "webfetch": "deny",
         "websearch": "deny",
         "todowrite": "deny",
         "task": "deny",
-        "bash": {
-          "*": "ask",
-          "uname*": "allow",
-          "cat /etc/os-release*": "allow",
-          "lsb_release*": "allow",
-          "sw_vers*": "allow",
-          "diskutil list*": "allow",
-          "mount*": "allow",
-          "findmnt*": "allow",
-          "powershell.exe -NoProfile -Command *Get-CimInstance Win32_OperatingSystem*": "allow",
-          "powershell.exe -NoProfile -Command *Get-ComputerInfo*": "allow",
-          "powershell.exe -NoProfile -Command *Get-Volume*": "allow"
-        },
+        "bash": "deny",
         "edit": "deny",
         "write": "deny"
       }

@@ -51,7 +51,7 @@ Detailed setup is in [docs/interface-setup.md](docs/interface-setup.md).
 
 ## OpenCode Example
 
-GPT-5.5 path when your OpenCode provider/account exposes it:
+Choose the model explicitly for each OpenCode run. The repo does not pin a top-level model because provider availability is account-specific and local-model backends are environment-specific.
 
 ```bash
 opencode run --agent forensic-examiner --model github-copilot/gpt-5.5 \
@@ -61,12 +61,16 @@ opencode run --agent forensic-examiner --model github-copilot/gpt-5.5 \
 Local/offline model override example:
 
 ```bash
+python scripts/check_opencode_llamacpp_backend.py --base-url http://LOCAL-GPU-HOST:8080 --smoke-tool-call --smoke-max-tokens 2048
+
 OPENCODE_CONFIG_CONTENT='{"model":"llamacpp-local/gemma-heretic-bf16","small_model":"llamacpp-local/gemma-heretic-bf16"}' \
   opencode run --agent forensic-examiner --model llamacpp-local/gemma-heretic-bf16 \
   "Analyze this authorized host for user activity during the last two hours."
 ```
 
-Model discovery and runtime support can differ by account. If `github-copilot/gpt-5.5` is listed but rejected by the provider, treat that as a provider/account blocker, not an agent-loop failure.
+For llama.cpp-backed Gemma runs, reasoning can stay enabled. Make sure the backend and OpenCode output cap leave enough room for the visible tool call after thinking. A finite server budget such as `--reasoning on --reasoning-budget 1024` is usually easier to test than unrestricted hidden reasoning. If the preflight smoke test produces only hidden reasoning, raise the output cap or tune the reasoning budget before testing the subagent loop.
+
+Model discovery and runtime support can differ by account. If a Copilot model is listed but rejected by the provider, treat that as a provider/account blocker, not an agent-loop failure.
 
 ## Offline and No-Download Mode
 
@@ -160,6 +164,7 @@ Formal exports can be generated after review. See [docs/formal-report-output.md]
 - [docs/privacy-and-redaction.md](docs/privacy-and-redaction.md) - publication hygiene
 - [docs/assets/](docs/assets/) - README diagrams for the current platform-aware loop
 - [scripts/validate_repo_hygiene.py](scripts/validate_repo_hygiene.py) - repo hygiene check
+- [scripts/check_opencode_llamacpp_backend.py](scripts/check_opencode_llamacpp_backend.py) - local llama.cpp backend preflight for OpenCode tests
 
 ## Privacy
 

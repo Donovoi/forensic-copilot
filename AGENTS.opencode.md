@@ -17,6 +17,7 @@ Forensically analyze the scoped evidence source and maintain a defensible Markdo
 - The senior tooling specialist must call `forensic-platform-profiler` first when platform facts are unclear, then `forensic-tool-researcher`, then `forensic-tool-provisioner` before handing work back to the examiner.
 - If evidence OS, evidence mode, runner/evidence boundary, filesystem/logging architecture, or host role is unclear, route through `forensic-platform-profiler` before broad collection or OS-specific tool choice.
 - Do not assume Windows from examples or Linux from the runner. Platform profile controls artifact priorities and tool choice.
+- BitLocker is a strong Windows-evidence signal and E01 is a strong dead-box disk-image signal. Use those facts to avoid unnecessary platform-profiler turns on slow local models unless another fact contradicts them.
 - After the senior handoff, use `forensic-evidence-collector` for scoped collection, `forensic-artifact-router` for parser or specialist-lane selection, `forensic-timeline-analyst` for timeline correlation, `forensic-report-challenger` for adversarial report review, and `forensic-publication-redactor` before publication or push.
 - Match requested depth: quick triage collects the minimum defensible source set; comprehensive examination preserves or inventories every relevant in-scope artifact class.
 - Offline and no-download runs must continue through the helper loop. If selected tools cannot be fetched or used, call `forensic-script-author` and then `forensic-script-reviewer`; generated code cannot run until review returns `SCRIPT_REVIEW: approved-for-controlled-use`.
@@ -24,11 +25,13 @@ Forensically analyze the scoped evidence source and maintain a defensible Markdo
 - If any required helper stalls, is denied, returns an empty or incomplete note, or hits a provider error, stop at that helper blocker and retry the same helper path with a narrower prompt. Do not collect evidence by bypassing mandatory subagents.
 - If the provisioner returns no visible content, lacks `FLOW:`, or gives fewer than 3 concrete execution lines, the senior must retry `forensic-tool-provisioner` with a narrower visible-output prompt before handing work back to the examiner.
 - Treat local provider failures such as `ECONNRESET`, `ConnectionRefused`, timeout, or failed `/health` or `/v1/models` checks as blocked helper-loop failures until the backend is restored.
+- For llama.cpp-backed local Gemma runs, reasoning may stay enabled, but the backend must be preflighted with `scripts/check_opencode_llamacpp_backend.py --smoke-tool-call`. If hidden reasoning consumes the whole first turn and no visible senior Task appears, treat it as a harness failure; increase output cap or use a finite reasoning budget, then retry the same helper path.
 - Run peer review before final handoff on substantial reports.
 
 ## Local-model bounds
 
 - Keep helper prompts narrow and specific.
+- Keep `forensic-platform-profiler` text-only in OpenCode. It should infer from the prompt or return `discovery_needed`, not load shell or broad file tool schemas.
 - Require platform-profiler notes of 10 lines or fewer, researcher notes of 8 lines or fewer, provisioner notes of 10 lines or fewer, and senior handoffs of 12 lines or fewer.
 - Require collector notes of 12 lines or fewer, router notes of 10 lines or fewer, timeline notes of 12 lines or fewer, challenger notes of 12 lines or fewer, and redactor notes of 10 lines or fewer.
 - Require script-author notes of 12 lines or fewer and script-reviewer notes of 12 lines or fewer.

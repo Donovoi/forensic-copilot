@@ -16,16 +16,20 @@ Use the native custom-agent files.
 Use the committed `opencode.json`.
 
 ```bash
-opencode run --agent forensic-examiner --model github-copilot/gpt-5.5 "Investigate /evidence/image.E01 for suspicious user activity."
+opencode run --agent forensic-examiner --model PROVIDER/MODEL "Investigate /evidence/image.E01 for suspicious user activity."
 ```
 
-For offline or local-model tests, override the model without changing the repo:
+For offline or local-model tests, preflight the backend and override both `model` and `small_model` without changing the repo:
 
 ```bash
+python scripts/check_opencode_llamacpp_backend.py --base-url http://LOCAL-GPU-HOST:8080 --smoke-tool-call --smoke-max-tokens 2048
+
 OPENCODE_CONFIG_CONTENT='{"model":"llamacpp-local/gemma-heretic-bf16","small_model":"llamacpp-local/gemma-heretic-bf16"}' \
   opencode run --agent forensic-examiner --model llamacpp-local/gemma-heretic-bf16 \
   "Analyze this authorized host for user activity during the last two hours."
 ```
+
+For llama.cpp-backed Gemma runs, keep reasoning enabled when that is the desired local-model behavior, but ensure the first turn has enough output budget for both thinking and the visible Task call. A finite llama.cpp budget such as `--reasoning on --reasoning-budget 1024` prevents unrestricted hidden thinking from consuming the whole OpenCode turn.
 
 OpenCode must still use the subagent loop. If tools cannot be downloaded, the senior tooling specialist must route through `forensic-script-author` and `forensic-script-reviewer`.
 

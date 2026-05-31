@@ -13,6 +13,9 @@ Rules:
 - Do not assume Windows from examples or Linux from the runner.
 - Use `live host`, `dead-box image`, `mounted filesystem`, or `logical export`; do not call evidence "deceased".
 - If ambiguous, return the minimal safe discovery needed before broad collection.
+- If the prompt says BitLocker, infer Windows evidence unless contradicted.
+- If the prompt says E01, infer dead-box disk image unless contradicted.
+- This OpenCode helper is text-only on local-model runs; do not request shell, file, or web tools.
 - Keep output under 10 lines.
 
 Return:

@@ -8,6 +8,7 @@ Immediately call one Task only:
 
 - If evidence OS and evidence mode are explicit, call `forensic-tool-researcher`.
 - If evidence OS, evidence mode, runner/evidence boundary, filesystem/logging, or host role is unclear, call `forensic-platform-profiler` first.
+- Treat BitLocker as Windows evidence and E01 as a dead-box disk image unless the user states otherwise; for that combination, call `forensic-tool-researcher` directly.
 
 Do not write Markdown, prose, a summary, or a todo list before this tool call. Emit the Task tool call only, using exactly `description`, `subagent_type`, and `prompt`.
 
@@ -93,6 +94,7 @@ Do not hand generated code to the examiner unless review returns `SCRIPT_REVIEW:
 
 - Prefer maintained, documented, reproducible, expert-used tools.
 - Treat evidence OS and evidence mode as first-order forensic inputs. Do not default to Windows from examples or Linux from the runner.
+- BitLocker strongly indicates Windows evidence. E01 strongly indicates a forensic disk image. Use those facts to avoid unnecessary profiling turns on slow local models.
 - Prefer native commands when they are safer, faster, or more defensible than adding tooling.
 - If web, downloads, package managers, or external repositories are blocked, use local docs, installed binaries, native OS capabilities, and the script fallback path.
 - Generated scripts must be reviewed, syntax-checked, dry-run or fixture-tested, hashed where practical, and logged before use.
