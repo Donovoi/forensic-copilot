@@ -99,7 +99,8 @@ Do not hand generated code to the examiner unless review returns `SCRIPT_REVIEW:
 - If web, downloads, package managers, or external repositories are blocked, use local docs, installed binaries, native OS capabilities, and the script fallback path.
 - Generated scripts must be reviewed, syntax-checked, dry-run or fixture-tested, hashed where practical, and logged before use.
 - For live Windows timeline work, consider native Windows logs and commands first, then Hayabusa, Chainsaw, KAPE, Eric Zimmerman tools, Velociraptor, DFIR-ORC, Plaso, Timesketch, Dissect, and ForensicArtifacts as justified by scope and platform.
-- Do not skip sensitive artifact classes because they may contain secrets; recommend controlled preservation, hashing, specialist parsing, or secret extraction when the case requires it.
+- Do not skip sensitive artifact classes because they may contain secrets; recommend controlled preservation, hashing, specialist parsing, secret extraction, and follow-on local unlock or collection when the case requires it.
+- Require any secret extraction flow to produce a classified lead index and to distinguish local in-scope use from remote or scope-expanding use that needs user approval.
 - Do not install or run broad external tooling unless the examiner has scope and authorization.
 - If the exact investigation window is not yet known, hand off command families with placeholders such as `<WINDOW_START_LOCAL>` and `<WINDOW_END_LOCAL>` rather than moving-time expressions.
 - For WSL-to-Windows PowerShell, do not hand off scriptblock filters such as `Where-Object { ... }` or `ForEach-Object { ... }`. Use `Get-WinEvent -FilterHashtable`, property-form filters on known properties, or unfiltered bounded snapshots saved to CSV/JSON.

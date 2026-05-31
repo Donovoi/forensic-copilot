@@ -104,6 +104,8 @@ For authorized live Windows host triage in OpenCode:
 - handle `.env`, `.env.*`, credential stores, password-manager data, browser saved-password tables, tokens, cookies, keys, and other secret-bearing artifacts as evidence when they are in scope. Use hashing, metadata capture, controlled copies, full-profile acquisition, parsing, or explicit secret extraction according to the case need.
 - dump plaintext secrets only to approved controlled case-output files unless the case specifically requires disclosure in the report. Keep ordinary prompts, public repo files, and report prose redacted by default; record artifact path, output path, hash, timestamp, tool, relevance, and handling decision.
 - if the active AI interface, provider policy, system instruction, or enterprise rule prohibits plaintext secret handling, switch that lane to approved local tools, offline execution, or a local model and record the provider/model change and handling limits in the report.
+- classify extracted secrets as evidence leads: source artifact, secret type, likely program/site/service, account or owner, local or remote use, confidence, controlled output path, and next allowed action.
+- use local in-scope secrets to unlock or collect more evidence when authority and data-location boundaries allow it. For remote services, cloud accounts, third-party systems, or scope expansion, tell the user what was gathered in redacted form and ask before using it unless authority already covers that access.
 - write only the requested Markdown report, explicitly scoped ignored working notes, or controlled evidence outputs under `reports/`, `cases/`, `artifacts/`, `acquisitions/`, or another analyst-controlled output path
 - in OpenCode, create and update Markdown reports with the edit/write tools rather than PowerShell redirection, `Out-File`, `Set-Content`, or `Add-Content`; shell writes tend to trigger noninteractive permission rejection and obscure what changed
 - do not create companion `cases/` or artifact directories during live-host triage unless the prompt explicitly asks for them or a selected tool needs a documented output path
@@ -204,12 +206,15 @@ Repeat the workflow in loops until the case questions are answered, a documented
    - enumerate partitions, volumes, users, OS artifacts, logs, browser data, credential and secret-bearing stores, persistence points, removable-media traces, cloud-sync traces, VMs, containers, and relevant documents
    - inspect deleted entries, unallocated space, slack, snapshots, journals, and sidecar metadata when the evidence and scope justify it
    - when an artifact may contain secrets, collect it with hashes and provenance, keep extraction or dumped-secret output in controlled case paths, and report relevance without unnecessary secret disclosure
+   - use extracted secrets as follow-on leads: classify them, route them through `Forensic Artifact Router`, attempt local in-scope unlocks when authorized, and record any new evidence gathered from that use
+   - when a secret appears to unlock a remote service or account outside the current evidence boundary, disclose the redacted lead and controlled output path to the user and ask for authority before attempting access
    - make a layer-specific decision on whole-disk free space, volume-internal unallocated space, deleted entries, slack, snapshots, and carving; record whether each was attempted, deferred, or unavailable, and why
    - for mounted file-system-only evidence, clearly mark what cannot be examined without the full image
    - extract artifacts reproducibly and preserve source paths, hashes, timestamps, and command history
 
 4. **Analysis**
    - build timelines and cross-artifact correlations where useful
+   - include secret-led unlock attempts and evidence gathered through those attempts as separate provenance events
    - answer who created, edited, accessed, or executed data when possible; how it was created; when the activity occurred; and how it relates to the case
    - normalize timezone assumptions and note clock skew, uncertainty, or inconsistent timestamp semantics
    - on servers, separate interactive user activity from hosted-service activity, automated administration, crawler noise, and preserved log residue

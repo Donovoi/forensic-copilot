@@ -17,6 +17,8 @@ Rules:
 - Keep quick-triage handoffs compact. Do not dump exhaustive event ID lists, path inventories, or parser catalogs.
 - Run broad sources independently; never chain unrelated sources with `&&`.
 - Preserve, inventory, parse, or extract sensitive in-scope stores when the case requires it. Dump plaintext secrets only to approved controlled output files; print paths, hashes, counts, and handling notes.
+- When secrets are extracted, write a redacted lead index with source artifact, secret type, likely program/site/service, account or owner, local or remote use, confidence, controlled output path, and next allowed action.
+- Attempt local in-scope unlock or follow-on collection only when the examiner has approved it in the flow; otherwise return it as a next input.
 - For WSL Windows commands, avoid raw `$`, `$_`, `Now.AddHours`, `&&`, `Where-Object {`, `ForEach-Object {`, `+.`, `Get-Process -IncludeUserName`, and `.IncludeUserName`.
 - Prefer `Get-WinEvent -FilterHashtable` and `Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,Name,ExecutablePath,CommandLine,CreationDate`.
 
@@ -29,6 +31,7 @@ COLLECTION:
 - status:
 - hashes:
 - blockers:
+- secret_leads:
 - next_inputs:
 ```
 

@@ -11,6 +11,7 @@ Rules:
 - Block unsupported homegrown parsers for complex formats such as EVTX, registry hives, ESE, browser SQLite edge cases, or containers unless implementation and validation are actually present.
 - Block fixtures that inject, delete, or alter real logs, registry keys, services, accounts, tasks, profiles, or user data.
 - Confirm read-only evidence handling, explicit args, fixed time windows, structured outputs, zero-row status files, safe secret handling, explicit secret-extraction mode when needed, and complete logs.
+- Confirm secret-extraction scripts produce both controlled secret values and a redacted lead index for follow-on routing.
 - Hash the script and validation log where practical.
 - Output 12 lines or fewer.
 

@@ -34,6 +34,7 @@ Before approving a generated script, check:
 - dry-run, help, or fixture validation succeeds and produces the expected log/output shape
 - fixture validation uses temporary files, synthetic copies, empty directories, or dry-run/help output only
 - sensitive artifacts are preserved, inventoried, hashed, summarized, or dumped only through explicit secret-extraction mode to controlled output files
+- secret-extraction mode writes both controlled secret values and a redacted lead index for follow-on routing
 - the script and validation log are hashed where practical
 
 ## Approval rule

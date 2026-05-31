@@ -21,6 +21,7 @@ WSL-to-Windows constraints:
 - Run broad sources independently; zero rows or `NoMatchingEventsFound` need a status or empty evidence file with source, fixed window, row count, and reason.
 - Write the report stub after setup/time capture and before broad collection; save full outputs under `artifacts/` or `acquisitions/`, printing only row counts, paths, and tiny previews.
 - Preserve, inventory, parse, or extract in-scope sensitive stores when the case requires it. Plaintext secret values go only to approved controlled output files.
+- Prepare local in-scope unlock or follow-on collection steps when extracted secrets can open more evidence; mark remote or scope-expanding use as approval-needed.
 
 Minimum visible shape:
 
@@ -31,4 +32,5 @@ FLOW:
 - events: collect bounded event logs to artifacts/<case>/events/*.json; write no-match status files.
 - process: collect CIM process snapshot to artifacts/<case>/processes.csv.
 - sensitive: inventory or extract in-scope secret-bearing stores to controlled outputs.
+- secret-leads: classify likely app/site/service and local/remote next action.
 ```

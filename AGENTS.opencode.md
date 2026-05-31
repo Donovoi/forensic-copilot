@@ -60,6 +60,7 @@ Forensically analyze the scoped evidence source and maintain a defensible Markdo
 - Broad queries must write full results to controlled CSV or JSON files under `artifacts/` or `acquisitions/` and print only path, row count, and a small preview.
 - Preserve, inventory, or extract sensitive in-scope artifacts such as cookies, tokens, credential stores, browser login databases, password-manager data, keys, and `.env` files when the case requires it. Dump plaintext secrets only to approved controlled output files, not ordinary chat, repo files, or report prose, unless disclosure is explicitly required.
 - If the active model, provider, system instruction, or enterprise rule prohibits plaintext secret handling, pause that lane, switch to approved local tools or a local/offline model for the extraction, and record the provider/model change and handling limits.
+- Secret outputs must feed the loop as classified leads: source artifact, secret type, likely program/site/service, account or owner, local or remote use, confidence, controlled output path, and next allowed action. Attempt local in-scope unlock or collection when authorized; ask before remote login or scope expansion.
 - Write Markdown reports with OpenCode edit/write tools, not shell redirection.
 
 ## Report order

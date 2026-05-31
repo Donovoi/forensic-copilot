@@ -123,6 +123,8 @@ Comprehensive examination preserves or inventories every relevant in-scope artif
 
 Secret extraction can be a legitimate forensic step when it is inside the case authority and helps unlock evidence, identify additional victims, or prove access. Treat it as a controlled evidence lane: dump plaintext secrets only to approved, ignored case-output paths with provenance, hashes, tool details, and handling notes. Keep public repository content, ordinary prompts, and report prose redacted unless the case specifically requires a value to be disclosed. If the active AI interface, provider policy, system instruction, or enterprise rule does not allow plaintext secret handling, switch that part of the work to approved local tools or a local/offline model and record the provider or model change in the case report.
 
+Extracted secrets should feed the next forensic loop. Classify each lead by source artifact, secret type, likely program/site/service, account or owner when known, local-versus-remote use, confidence, and controlled output path. Use local or otherwise in-scope secrets to unlock or collect additional evidence when authority and data-location boundaries allow it. For remote services, cloud accounts, or scope-expanding access, stop and give the user a redacted lead list plus the controlled secret-output path unless explicit authority already covers the login attempt.
+
 ## What To Provide
 
 Helpful inputs:

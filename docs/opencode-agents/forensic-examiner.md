@@ -64,5 +64,7 @@ For live Windows collection from WSL:
 - Write broad results to CSV or JSON under `artifacts/` or `acquisitions/`, printing only path, row count, and a small preview.
 - Preserve, inventory, parse, or extract sensitive in-scope artifacts such as cookies, tokens, keys, credential stores, browser login databases, password-manager data, and `.env` files when the case requires it. Dump plaintext secrets only to approved controlled output files; print paths, hashes, counts, and handling notes unless explicit disclosure is required.
 - If the active model, provider, system instruction, or enterprise rule prohibits plaintext secret handling, pause that lane, switch to approved local tools or a local/offline model for extraction, and record the provider/model change and handling limits.
+- Treat extracted secrets as leads for another loop. Identify secret type, source artifact, likely program/site/service, account or owner, local or remote use, confidence, controlled output path, and next allowed action.
+- Use local in-scope secrets to unlock or collect more evidence when the approved flow allows it. For remote services, cloud accounts, or scope expansion, tell the user what was found in redacted form and ask before use unless authority already covers it.
 
 Distinguish observation, inference, limitation, and confidence. Record blockers precisely.

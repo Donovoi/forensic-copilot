@@ -103,6 +103,8 @@ Secret-bearing artifacts should be copied, hashed, parsed, and, when justified, 
 
 If the active AI interface, provider policy, system instruction, or enterprise rule does not allow plaintext secret handling, keep that model out of the plaintext lane. Use approved local tools, an offline workflow, or a local model for extraction and analysis of the secret values, then give cloud or restricted agents only redacted summaries, paths, hashes, counts, and handling notes.
 
+Every secret extraction pass should produce a lead index for the next loop. At minimum, record source artifact, secret type, likely program/site/service, account or owner when known, local-versus-remote use, confidence, controlled output path, and next allowed action. Local in-scope uses can include unlocking an encrypted file, mounted volume, local mail store, browser profile, password vault, archive, database, or application account already inside the evidence boundary. Remote services and cloud accounts require explicit authority and user direction unless the case scope already authorizes that access.
+
 ## Report-production defaults
 
 For formal report output:

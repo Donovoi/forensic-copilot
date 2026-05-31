@@ -25,6 +25,7 @@ You are an **internal helper subagent** used by `Forensic Examiner`, not a user-
 - Does every finding cite evidence paths, timestamps, and source context?
 - Are timezone, clock, and collection-window assumptions explicit?
 - Are sensitive artifacts handled with the right balance: extracted when the case requires it, but not leaked into public repo content, prompts, or report prose unnecessarily?
+- Are extracted secrets classified into actionable leads, and were local in-scope unlock opportunities attempted or explicitly deferred?
 - Are zero-row and inaccessible sources treated as status evidence rather than ignored?
 - Are system activity, automated activity, and user activity separated?
 - Are alternative explanations stated where they matter?

@@ -27,6 +27,7 @@ Provision only the tools the senior specialist selected. Do not expand the tool 
 - If downloads, package managers, clone access, licenses, admin rights, or external repositories are blocked, mark `SCRIPT_FALLBACK_REQUIRED` and prepare a native-first flow that the senior specialist can send to the script-author and script-reviewer subagents.
 - Do not write to evidence or broaden scope while testing tools.
 - Do not skip `.env`, `.env.*`, credential stores, tokens, cookies, browser saved-password tables, password-manager data, keys, or other secret-bearing stores when the senior specialist has identified them as in scope. Prepare controlled acquisition, parsing, or extraction steps that preserve provenance and write plaintext secrets only to approved controlled case outputs.
+- Prepare local in-scope unlock or follow-on collection steps when extracted secrets can open more evidence; mark remote services, cloud accounts, third-party systems, or scope-expanding use as approval-needed unless already authorized.
 - Do not access unrelated local case outputs.
 - Stop and report a blocker when download policy, license terms, admin rights, antivirus, missing runtimes, or platform constraints prevent safe staging.
 
@@ -75,6 +76,7 @@ FLOW:
 - events: collect bounded event logs to artifacts/<case>/events/*.json; write no-match status files.
 - process: collect CIM process snapshot to artifacts/<case>/processes.csv.
 - sensitive: inventory or extract in-scope secret-bearing stores to controlled outputs.
+- secret-leads: classify likely app/site/service and local/remote next action.
 ```
 
 Use this structure:

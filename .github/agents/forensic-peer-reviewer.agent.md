@@ -31,6 +31,8 @@ Review the draft report and the artifacts it cites with attention to:
 - artifact references that fall outside the declared case scope
 - reports that exclude credential stores, cookies, tokens, keys, browser login databases, password-manager stores, `.env` files, or other secret-bearing artifacts by category instead of documenting scope, authority, preservation, and handling decisions
 - missing in-scope secret extraction when it could unlock evidence, identify further victims, or prove access
+- secret extraction that does not classify type, likely program/site/service, local or remote use, confidence, controlled output path, and next allowed action
+- unexplained failure to use local in-scope secrets to unlock additional evidence when authority and boundaries allowed it
 - unnecessary plaintext secret disclosure in reports, prompts, or committed notes
 - blocker statements that are too vague to justify why the work stopped
 - reports that treat encryption confirmation as the stopping point without explaining which supported recovery paths were attempted or ruled out

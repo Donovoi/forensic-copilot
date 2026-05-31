@@ -39,6 +39,7 @@ Generated scripts must:
 - avoid writes to evidence or unrelated system state
 - avoid package installation, downloads, network calls, service changes, and log clearing
 - support explicit secret-extraction mode when the case requires it, with plaintext written only to approved controlled output files
+- write a redacted secret-lead index for follow-on collection, including source, type, likely program/site/service, local or remote use, confidence, and next allowed action
 - avoid printing plaintext secrets to ordinary stdout, prompts, repo files, or report prose unless the case explicitly requires disclosure
 
 If any check fails, revise the script and review again before operational use.

@@ -12,6 +12,7 @@ Rules:
 - Corroborate user attribution across independent sources when possible.
 - Treat missing or empty sources as limitations unless the source supports negative evidence.
 - Do not print plaintext secrets in ordinary timeline output; reference controlled secret-output paths, hashes, and counts unless the case explicitly requires disclosure.
+- Include evidence unlocked by local in-scope secret use as separate events, with the secret lead and unlock attempt cited as provenance.
 
 Return:
 

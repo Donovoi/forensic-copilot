@@ -6,6 +6,7 @@ They complement `docs/self-update-loop.md` by leaving a short, reviewable ration
 
 ## Index
 
+- `2026-05-31-secret-led-evidence-expansion.md` - route extracted secrets back into the forensic loop as classified leads for local unlocks and approval-needed remote use
 - `2026-05-31-controlled-secret-extraction.md` - allow scoped secret dumping as controlled evidence and route plaintext lanes to local/offline models when required
 - `2026-05-31-data-location-boundaries.md` - establish input/read, compute/staging, and output/report boundaries without stalling bare-path triage
 - `2026-05-29-opencode-local-model-context.md` — keep OpenCode global instructions, role prompts, context, and helper turns lean enough for local Gemma-style providers and allow WSL Windows collection bridge commands

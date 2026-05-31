@@ -9,6 +9,7 @@ Rules:
 - Use standard-library Python, PowerShell, Bash, or already-present platform APIs.
 - No downloads, package installs, network calls, evidence writes, log clearing, or service changes.
 - Plaintext secret dumping is allowed only in an explicit secret-extraction mode requested by the case and must write values to approved controlled output files, not ordinary stdout or prompts.
+- Secret-extraction scripts must also write a redacted lead index with source, type, likely program/site/service, local or remote use, confidence, and next allowed action.
 - No fake parsers. Do not claim stdlib code can parse EVTX, registry hives, ESE, browser SQLite edge cases, or containers unless the generated code really implements and validates that parser.
 - No system-mutating fixtures. Do not inject, delete, or alter real logs, registry keys, services, accounts, tasks, profiles, or user data. Use temp files, synthetic copies, empty dirs, help, or dry-run only.
 - Scripts must take explicit input/output/window arguments, write structured CSV/JSON/JSONL/Markdown status outputs, and write a run log.

@@ -46,6 +46,8 @@ The peer reviewer should:
 - flag reports that bury the answer under metadata or method sections instead of opening with an executive summary and findings
 - flag reports that exclude credential stores, cookies, tokens, keys, browser login databases, password-manager stores, `.env` files, or other secret-bearing artifacts by category instead of explaining scope, authority, and handling decisions
 - flag reports that omit in-scope secret extraction when it could unlock evidence, identify additional victims, or prove access
+- flag secret extraction reports that do not classify the secret type, likely program/site/service, local-versus-remote use, confidence, controlled output path, and next allowed action
+- flag unexplained failure to use local in-scope secrets to unlock additional evidence when authority and data-location boundaries allowed it
 - flag unnecessary plaintext secret disclosure in reports, prompts, or committed notes
 - verify that blocked-access reports distinguish `attempted but unsuccessful`, `not attempted in this run`, and `not possible without additional access`
 - verify that supported access-recovery paths were attempted, deliberately deferred, or ruled out with a stated reason

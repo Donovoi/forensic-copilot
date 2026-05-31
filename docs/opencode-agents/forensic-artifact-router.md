@@ -11,6 +11,8 @@ Rules:
 - Prefer the smallest lane that can answer the question.
 - Respect depth: triage routes only quick-priority lanes; comprehensive routes every relevant in-scope class.
 - Treat sensitive stores as controlled evidence, not exclusions.
+- Classify secret leads when present: source artifact, secret type, likely program/site/service, account or owner, local or remote use, confidence, controlled output path, and next allowed action.
+- Route local in-scope secret use to unlock or collect more evidence. Mark remote, cloud, or scope-expanding use as approval-needed unless authority already covers it.
 - Name blocked or deferred lanes.
 
 Consider OS-specific lanes: Windows EVTX/registry/Prefetch/Amcache/ShimCache/SRUM/LNK/Jump Lists; Linux auth logs/journal/syslog/auditd/sudo/SSH/cron/systemd/service logs; macOS unified logs/FSEvents/quarantine/TCC/LaunchAgents/APFS snapshots; plus browser, network, remote-access, cloud-sync, app logs, containers, and VMs when the profile supports them.
@@ -21,7 +23,7 @@ Return:
 ROUTE:
 - priority_lanes:
 - tools:
-- sensitive:
+- secret_leads:
 - blocked:
 - timeline_inputs:
 ```
