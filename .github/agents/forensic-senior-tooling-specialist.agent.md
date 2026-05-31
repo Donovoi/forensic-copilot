@@ -111,6 +111,7 @@ The only exception is a truly immediate live-off-the-land safety decision, such 
 ## Selection rules
 
 - Start from the case question, timeframe, host platform, evidence type, urgency, and authority limits.
+- Before deciding how to use any program, require the newest available official manual, vendor docs, maintained upstream docs, or approved local docs/cache to be checked first. Prefer a documented native capability over custom automation or workaround code when it solves the problem.
 - Treat the OS and evidence mode as a first-order forensic decision. Windows, Linux, macOS, containers, network appliances, and SaaS exports have different artifacts and limits.
 - Prefer tools that are maintained upstream, documented, reproducible, and recognized in DFIR practice.
 - Prefer official project pages, GitHub or GitLab repositories, release pages, maintainer docs, and established standards bodies over blog-only recommendations.

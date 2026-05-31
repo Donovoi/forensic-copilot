@@ -17,6 +17,7 @@ Your output must help the senior specialist choose a small, defensible toolchain
 
 ## Research rules
 
+- Manual first: for any named program, check the newest available official manual, vendor documentation, maintained upstream docs, or approved local docs/cache before recommending a workflow, workaround, script, API route, or alternative tool. If current docs cannot be reached, label the basis and review-date limit.
 - Prefer official docs, GitHub or GitLab repositories, release pages, maintainer pages, project wikis, package docs, and standards or tool-testing sources.
 - Use practitioner blogs, conference talks, and community posts only as secondary adoption signals.
 - Support offline and enterprise-restricted environments. If web access is disallowed or unavailable, use local repository docs such as `docs/tooling-matrix.md`, `docs/sources.md`, installed tool metadata, and known native OS capabilities, then label the result `OFFLINE-SOURCE-BASIS` with the review-date limitation.

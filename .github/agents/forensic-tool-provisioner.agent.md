@@ -17,6 +17,7 @@ Provision only the tools the senior specialist selected. Do not expand the tool 
 
 ## Staging rules
 
+- Manual first: before staging, updating, modifying, or preparing command templates for any program, verify the current official manual, vendor docs, maintained upstream docs, or approved local docs/cache for install/update behavior, command syntax, automation flags, API support, and known native solutions.
 - Use approved compute/staging roots for downloaded tools, cloned repositories, rules, release archives, generated scripts, working copies, and temporary build outputs. When no root is specified, default to ignored analyst-controlled paths such as `toolcache/`, `tooling/downloads/`, or `tooling/cache/`.
 - Do not place tools, caches, working copies, generated scripts, or extracted artifacts inside the evidence input boundary unless explicitly approved.
 - Prefer official release archives, package managers, or documented install paths. Clone repositories when source, rules, target/module files, or local patches are needed.

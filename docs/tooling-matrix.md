@@ -6,14 +6,15 @@ This matrix is the starting point for the `Forensic Senior Tooling Specialist` a
 
 1. choose the smallest toolchain that answers the case questions
 2. when Linux image work clearly implies a baseline stack, stage or verify that minimal stack first instead of pushing setup back to the user
-3. prefer tools with strong upstream reputation and reproducible setup paths
-4. avoid platform drama unless the evidence actually requires it
-5. record why each tool was selected, skipped, or deferred
-6. when direct access is blocked, verify the smallest supported recovery branch before blocker-only handoff and make a separate layer-specific decision about any remaining disk-level scanning or carving
-7. for substantive tool decisions, run the specialist loop: current tool research first, provisioning and execution-flow design second
-8. treat sensitivity as a handling issue, not a collection veto; in-scope credential, cookie, token, key, browser, and environment-file artifacts should be preserved, inventoried, parsed, or extracted when they may answer the case question
-9. treat offline and no-download environments as normal operating modes; use local docs, installed tools, native commands, and generated-script fallback rather than assuming web access
-10. identify the evidence OS and evidence mode before OS-specific collection; the runner OS is not automatically the evidence OS
+3. consult the newest official manual, vendor documentation, maintained upstream docs, or approved local docs/cache before deciding a program's command syntax, API, automation, update, parallelization, or fallback behavior
+4. prefer tools with strong upstream reputation and reproducible setup paths
+5. avoid platform drama unless the evidence actually requires it
+6. record why each tool was selected, skipped, or deferred
+7. when direct access is blocked, verify the smallest supported recovery branch before blocker-only handoff and make a separate layer-specific decision about any remaining disk-level scanning or carving
+8. for substantive tool decisions, run the specialist loop: current tool research first, provisioning and execution-flow design second
+9. treat sensitivity as a handling issue, not a collection veto; in-scope credential, cookie, token, key, browser, and environment-file artifacts should be preserved, inventoried, parsed, or extracted when they may answer the case question
+10. treat offline and no-download environments as normal operating modes; use local docs, installed tools, native commands, and generated-script fallback rather than assuming web access
+11. identify the evidence OS and evidence mode before OS-specific collection; the runner OS is not automatically the evidence OS
 
 ## Advanced tooling specialist flow
 

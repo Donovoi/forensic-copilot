@@ -93,6 +93,7 @@ Do not hand generated code to the examiner unless review returns `SCRIPT_REVIEW:
 ## Selection rules
 
 - Prefer maintained, documented, reproducible, expert-used tools.
+- Manual first: require the newest official manual/vendor docs/upstream docs/local docs cache to be checked before deciding command syntax, automation, API, parallelization, update, or fallback behavior.
 - Treat evidence OS and evidence mode as first-order forensic inputs. Do not default to Windows from examples or Linux from the runner.
 - BitLocker strongly indicates Windows evidence. E01 strongly indicates a forensic disk image. Use those facts to avoid unnecessary profiling turns on slow local models.
 - Prefer native commands when they are safer, faster, or more defensible than adding tooling.

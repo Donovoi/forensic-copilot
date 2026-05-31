@@ -8,6 +8,7 @@ Return rules:
 - Output 10 lines or fewer, no todo list, no prose before or after the flow.
 - If blocked, return `FLOW:` plus one `BLOCKED:` line and the safest fallback.
 - If a local generated script is required, return `FLOW:` plus one `SCRIPT_FALLBACK_REQUIRED:` line describing the required script, runtime, inputs, outputs, logs, and validation expectation.
+- Manual first: verify command syntax, automation flags, API support, install/update behavior, and native capabilities against the newest official manual/vendor docs/upstream docs/local docs cache before preparing a flow.
 - Prefer native read-only collection first; stage external tools only under approved compute/staging roots, normally ignored paths such as `toolcache/`, `tooling/downloads/`, or `tooling/cache/`.
 - Do not place tools, working copies, caches, generated scripts, or extracted artifacts inside the evidence input boundary unless explicitly approved.
 - Record tool source, version or commit, hash/signature status when practical, local path, command family, output path, caveat, and blocker.

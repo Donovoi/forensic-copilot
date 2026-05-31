@@ -13,8 +13,9 @@ All agents, prompts, instructions, and supporting documents in this repository m
 5. **Controlled secret extraction** — credential, token, cookie, key, password-store, and environment-file extraction is allowed when it is inside authority and needed to unlock evidence, identify additional victims, or prove access. Dump secret values only to approved controlled case outputs.
 6. **Secret-led evidence expansion** — extracted secrets become classified evidence leads. Identify the secret type, source artifact, likely program/site/service, account or owner when known, local or remote use, confidence, controlled output path, and the next allowed action.
 7. **Markdown record** — all analysis must ultimately support a Markdown report that a human can read and defend. Formal exports may be derived from that reviewed source, but they do not replace it.
-8. **Current guidance wins** — when authoritative guidance changes, update the workflow and cite the source.
-9. **Self-improvement must stay bounded** — any optimization or self-modification must preserve the forensic-analysis loop, not replace or weaken it.
+8. **Manual first** — before deciding how any program, tool, command family, API, or automation route should be used, check the newest available official manual, vendor documentation, maintained upstream docs, or approved local docs/cache. If current docs are unreachable, state the local/offline basis and review-date limitation.
+9. **Current guidance wins** — when authoritative guidance changes, update the workflow and cite the source.
+10. **Self-improvement must stay bounded** — any optimization or self-modification must preserve the forensic-analysis loop, not replace or weaken it.
 
 ## Writing and report-style rules
 
@@ -27,6 +28,7 @@ All agents, prompts, instructions, and supporting documents in this repository m
 ## Tooling rules
 
 - Prefer Linux-friendly, open, reproducible tooling where possible.
+- Consult the current manual or official docs before choosing a tool behavior, command syntax, parallelization mode, API path, or fallback. Do not rely on memory when the upstream documentation may already solve the problem.
 - Do not install every forensic utility by default; select only what advances the current evidence analysis.
 - Do not pretend Windows-only or proprietary tools are natively available on Linux.
 - If a tool requires Windows, a license, a container, or manual download, document that clearly.
@@ -103,6 +105,7 @@ When changing agent behavior or tool choices, also update the relevant docs:
 - Require the script reviewer to approve generated forensic code before use only after static review, syntax validation, dry-run or fixture validation, safe logging, and hashing where practical. Generated scripts that are not approved must not run against evidence.
 - For OpenCode Task tool calls, use `description`, `subagent_type`, and `prompt` exactly. Do not use `command` as a Task description field; OpenCode rejects that schema and the helper loop stalls.
 - Require the tool researcher to use current upstream or official sources when checking expert-used forensic tools, especially GitHub or GitLab projects and maintainer documentation.
+- Require the tool researcher to check the most current official manual, vendor docs, or maintained local documentation first for any named program before recommending workarounds, scripts, automation, or alternative tools.
 - Keep OpenCode local-model web research bounded: prefer local SearXNG with 3 or fewer results and do not follow a successful SearXNG search with OpenCode `websearch`. In this repo, the tooling researcher has OpenCode `websearch` denied; if local SearXNG is unavailable, it should return a blocker or use narrowly targeted `webfetch` on known official URLs.
 - Keep OpenCode local-model helper outputs bounded: researcher notes should be 8 lines or fewer, provisioner notes 10 lines or fewer, and senior handoffs 12 lines or fewer. The senior must call the researcher as its first emitted tool action, call the provisioner immediately after the researcher returns, and avoid todo lists or interim prose for focused helper requests.
 - Keep the examiner's first OpenCode Task prompt compact and JSON-safe: one semicolon-separated line under 30 words, no pasted full user request, and no newline in the `prompt` string. For local Gemma-style runs, emit the Task immediately, preserve the field order `description`, `subagent_type`, `prompt`, and never add a period after the final field. The local Gemma test model needs enough output budget to complete the Task JSON before it is truncated.
@@ -116,6 +119,7 @@ When changing agent behavior or tool choices, also update the relevant docs:
 - For time-bounded live triage, capture collection start once, compute the fixed investigation window, and reuse that absolute window across event-log, process, file, browser, and artifact queries.
 - Broad evidence queries should write full results to controlled files under `artifacts/` or `acquisitions/` and print only a small preview, count, and path so local-model context does not become the evidence store.
 - Require the tool provisioner to stage downloads, cloned repositories, rules, and caches only under ignored analyst-controlled paths unless a case explicitly authorizes another location.
+- Require the tool provisioner to verify command syntax, install/update behavior, API capabilities, and automation flags against the current manual or official docs before preparing execution flows.
 - Keep `Forensic Toolsmith` as a legacy compatibility helper; substantive tool work should route through the senior tooling specialist.
 - Require the peer reviewer to distinguish supported findings, challenged findings, missing corroboration, alternative explanations, and release readiness.
 - Require the maintainer path to justify every self-update with either observed workflow friction, validated lessons learned, or newer authoritative guidance.
