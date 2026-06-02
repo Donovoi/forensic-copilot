@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import shutil
 import subprocess
 import sys
+import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -26,6 +28,20 @@ def write_json(path: Path, data: Any) -> None:
 
 def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="replace")
+
+
+def file_digest(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def post_json(base_url: str, path: str, payload: dict[str, Any], timeout: int) -> Any:
+    request = urllib.request.Request(
+        base_url.rstrip("/") + path,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Accept": "application/json", "Content-Type": "application/json"},
+    )
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        return json.loads(response.read().decode("utf-8", errors="replace"))
 
 
 def run_command(
@@ -87,13 +103,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run a local OpenCode/Gemma forensic investigation regression.")
     parser.add_argument("--base-url", default=os.environ.get("LLAMACPP_BASE_URL", "http://localhost:8080"))
     parser.add_argument("--model", default=os.environ.get("LLAMACPP_MODEL", "gemma-heretic-bf16"))
+    parser.add_argument("--runner", choices=("opencode", "direct"), default="opencode")
     parser.add_argument("--opencode-model", default="llamacpp-local/gemma-heretic-bf16")
     parser.add_argument("--opencode-command", default="opencode")
     parser.add_argument("--prompt-file", required=True)
+    parser.add_argument("--context-file", action="append", default=[])
     parser.add_argument("--expected-json", default="")
     parser.add_argument("--output-root", default="reports/local-model-evals")
     parser.add_argument("--report-path", default="")
     parser.add_argument("--title", default="Local Gemma investigation regression")
+    parser.add_argument("--direct-max-tokens", type=int, default=2048)
     parser.add_argument("--skip-smoke", action="store_true")
     parser.add_argument("--timeout", type=int, default=3600)
     parser.add_argument("--dry-run", action="store_true")
@@ -147,6 +166,96 @@ def main() -> int:
         write_json(status_path, status)
         print(json.dumps({"status": status["status"], "blocker": status["blocker"], "status_path": str(status_path)}))
         return 1
+
+    if args.runner == "direct":
+        prompt_text = read_text(prompt_path)
+        context_sections: list[str] = []
+        context_records: list[dict[str, Any]] = []
+        for raw_context_path in args.context_file:
+            context_path = Path(raw_context_path).expanduser().resolve()
+            context_text = read_text(context_path)
+            context_sections.append(
+                f"\n\n## Local Context File: {context_path.name}\n\n"
+                "```text\n"
+                f"{context_text}\n"
+                "```"
+            )
+            context_records.append(
+                {
+                    "path": str(context_path),
+                    "bytes": context_path.stat().st_size,
+                    "sha256": file_digest(context_path),
+                }
+            )
+
+        direct_prompt = (
+            f"{prompt_text.rstrip()}\n\n"
+            "Write the final local regression report to this exact path after generation:\n"
+            f"{report_path}\n"
+            "Do not include raw case identifiers, credentials, evidence filenames, recovered filenames, "
+            "or case-sensitive paths in the report.\n"
+            f"{''.join(context_sections)}\n"
+        )
+        runtime_prompt_path = output_dir / "prompt.local.txt"
+        runtime_prompt_path.write_text(direct_prompt, encoding="utf-8")
+        status["steps"]["direct_plan"] = {
+            "ok": True,
+            "model": args.model,
+            "base_url": args.base_url,
+            "prompt_path": str(prompt_path),
+            "runtime_prompt_path": str(runtime_prompt_path),
+            "context_files": context_records,
+            "report_path": str(report_path),
+        }
+        if args.dry_run:
+            status["status"] = "dry_run"
+            write_json(status_path, status)
+            print(json.dumps({"status": status["status"], "status_path": str(status_path)}))
+            return 0
+
+        payload = {
+            "model": args.model,
+            "temperature": 0,
+            "max_tokens": args.direct_max_tokens,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a local forensic usage-pattern regression evaluator. "
+                        "Use only the supplied sanitized context. Return Markdown only."
+                    ),
+                },
+                {"role": "user", "content": direct_prompt},
+            ],
+        }
+        try:
+            response = post_json(args.base_url, "/v1/chat/completions", payload, timeout=args.timeout)
+            choices = response.get("choices") if isinstance(response, dict) else None
+            message = choices[0].get("message", {}) if choices and isinstance(choices[0], dict) else {}
+            report_text = str(message.get("content") or "").strip()
+            if not report_text:
+                raise RuntimeError("direct model response had no visible content")
+            report_path.parent.mkdir(parents=True, exist_ok=True)
+            report_path.write_text(report_text + "\n", encoding="utf-8")
+            status["steps"]["direct_run"] = {
+                "ok": True,
+                "report_path": str(report_path),
+                "response_usage": response.get("usage") if isinstance(response, dict) else None,
+            }
+        except Exception as exc:
+            status["steps"]["direct_run"] = {"ok": False, "error": type(exc).__name__, "message": str(exc)}
+            status["status"] = "blocked"
+            status["blocker"] = "direct llama.cpp run failed"
+            write_json(status_path, status)
+            print(json.dumps({"status": status["status"], "blocker": status["blocker"], "status_path": str(status_path)}))
+            return 1
+
+        comparison = compare_output(report_path, expected_path)
+        status["steps"]["comparison"] = comparison
+        status["status"] = "ok" if comparison["status"] in ("ok", "skipped") else "needs_harness_adjustment"
+        write_json(status_path, status)
+        print(json.dumps({"status": status["status"], "status_path": str(status_path)}))
+        return 0 if status["status"] == "ok" else 1
 
     opencode_path = shutil.which(args.opencode_command)
     status["steps"]["opencode_available"] = {

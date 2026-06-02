@@ -8,8 +8,8 @@ leaking case facts.
 
 1. llama.cpp backend health and model advertisement
 2. optional visible tool-call smoke test
-3. OpenCode command availability
-4. forensic-examiner run
+3. OpenCode command availability, when `--runner opencode`
+4. OpenCode forensic-examiner run or direct llama.cpp run
 5. comparison against a local expected-result JSON
 
 If any early gate fails, the eval records `blocked` and does not pretend a model
@@ -29,6 +29,7 @@ example, `commando-1` can serve `http://127.0.0.1:8080/v1` while using
 
 ```powershell
 python scripts\run_local_model_investigation_eval.py `
+  --runner opencode `
   --base-url http://127.0.0.1:8080 `
   --model gemma-heretic-q4_k_m `
   --opencode-model llamacpp-local/gemma-heretic-q4_k_m `
@@ -43,6 +44,24 @@ maps, or reports.
 The runner attaches a local prompt file to OpenCode instead of passing prompt
 text as a command-line argument. Status JSON records command shape, paths, exit
 codes, and comparison status, but not the raw prompt text.
+
+If the full OpenCode helper loop is too slow for the local model, use the direct
+runner to test Gemma's analytical conclusion from sanitized local artifacts:
+
+```powershell
+python scripts\run_local_model_investigation_eval.py `
+  --runner direct `
+  --base-url http://127.0.0.1:8080 `
+  --model gemma-heretic-q4_k_m `
+  --prompt-file <local-redacted-prompt.txt> `
+  --context-file <sanitized-report.md> `
+  --context-file <sanitized-structured.json> `
+  --expected-json <local-expected-summary.json>
+```
+
+The direct runner is not a substitute for OpenCode orchestration. It is a local
+regression fallback that answers whether the model can reach the same sanitized
+conclusion once tool-loop overhead is removed.
 
 ## Expected JSON
 
