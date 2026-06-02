@@ -19,6 +19,7 @@ venv/
 /artifacts/
 /exports/
 /acquisitions/
+/.local-case-inputs/
 *.log
 *.E01
 *.e01
