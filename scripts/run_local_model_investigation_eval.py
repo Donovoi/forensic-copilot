@@ -81,7 +81,16 @@ def compare_output(report_path: Path, expected_path: Path | None) -> dict:
     if not report_path.exists():
         return {"status": "blocked", "reason": "model report was not created", "report_path": str(report_path)}
 
-    expected = json.loads(read_text(expected_path))
+    try:
+        expected = json.loads(read_text(expected_path))
+    except json.JSONDecodeError as exc:
+        return {
+            "status": "blocked",
+            "reason": "expected JSON could not be parsed",
+            "expected_path": str(expected_path),
+            "error": f"{exc.msg} at line {exc.lineno}, column {exc.colno}",
+        }
+
     text = read_text(report_path)
     failures: list[dict[str, str]] = []
     for item in expected.get("required_substrings", []):
@@ -190,8 +199,7 @@ def main() -> int:
 
         direct_prompt = (
             f"{prompt_text.rstrip()}\n\n"
-            "Write the final local regression report to this exact path after generation:\n"
-            f"{report_path}\n"
+            "Return the final local regression report as Markdown only. The runner will save it locally.\n"
             "Do not include raw case identifiers, credentials, evidence filenames, recovered filenames, "
             "or case-sensitive paths in the report.\n"
             f"{''.join(context_sections)}\n"
