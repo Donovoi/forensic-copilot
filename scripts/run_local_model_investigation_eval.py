@@ -180,9 +180,9 @@ def main() -> int:
         args.opencode_model,
         "--title",
         args.title,
+        "Use the attached local prompt file for the investigation regression. Keep all case material local.",
         "--file",
         str(runtime_prompt_path),
-        "Use the attached local prompt file for the investigation regression. Keep all case material local.",
     ]
     opencode_command_record = [
         opencode_path,
@@ -193,9 +193,9 @@ def main() -> int:
         args.opencode_model,
         "--title",
         args.title,
+        "<generic-local-regression-message>",
         "--file",
         str(runtime_prompt_path),
-        "<generic-local-regression-message>",
     ]
     status["steps"]["opencode_plan"] = {
         "ok": True,
