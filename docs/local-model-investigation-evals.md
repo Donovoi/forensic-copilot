@@ -63,6 +63,31 @@ The direct runner is not a substitute for OpenCode orchestration. It is a local
 regression fallback that answers whether the model can reach the same sanitized
 conclusion once tool-loop overhead is removed.
 
+## Synthetic OpenCode Harness Probes
+
+Before running a full forensic-examiner chain, use small synthetic probes to
+verify one harness capability at a time:
+
+```powershell
+python scripts\run_synthetic_opencode_probe.py `
+  --mode isolated-platform-profiler `
+  --base-url http://127.0.0.1:8080 `
+  --model gemma-heretic-q4_k_m
+```
+
+```powershell
+python scripts\run_synthetic_opencode_probe.py `
+  --mode one-delegation-examiner-profiler `
+  --base-url http://127.0.0.1:8080 `
+  --model gemma-heretic-q4_k_m
+```
+
+These probes create temporary synthetic prompts and OpenCode configs under the
+ignored reports directory. They do not use case data, do not browse, and record
+status, command shape, event counts, and leak-check flags without echoing raw
+case prompts. Use them to validate one helper or one delegation before allowing
+the broader multi-agent workflow to run.
+
 ## Expected JSON
 
 The comparison file can stay simple:
