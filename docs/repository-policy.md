@@ -14,8 +14,9 @@ All agents, prompts, instructions, and supporting documents in this repository m
 6. **Secret-led evidence expansion** — extracted secrets become classified evidence leads. Identify the secret type, source artifact, likely program/site/service, account or owner when known, local or remote use, confidence, controlled output path, and the next allowed action.
 7. **Markdown record** — all analysis must ultimately support a Markdown report that a human can read and defend. Formal exports may be derived from that reviewed source, but they do not replace it.
 8. **Manual first** — before deciding how any program, tool, command family, API, or automation route should be used, check the newest available official manual, vendor documentation, maintained upstream docs, or approved local docs/cache. If current docs are unreachable, state the local/offline basis and review-date limitation.
-9. **Current guidance wins** — when authoritative guidance changes, update the workflow and cite the source.
-10. **Self-improvement must stay bounded** — any optimization or self-modification must preserve the forensic-analysis loop, not replace or weaken it.
+9. **Loose adapter coupling** — specialized tool adapters may extend the workflow, but they must remain optional providers selected by case fit, not required dependencies or product-specific default lanes.
+10. **Current guidance wins** — when authoritative guidance changes, update the workflow and cite the source.
+11. **Self-improvement must stay bounded** — any optimization or self-modification must preserve the forensic-analysis loop, not replace or weaken it.
 
 ## Writing and report-style rules
 
@@ -32,6 +33,8 @@ All agents, prompts, instructions, and supporting documents in this repository m
 - Do not install every forensic utility by default; select only what advances the current evidence analysis.
 - Do not pretend Windows-only or proprietary tools are natively available on Linux.
 - If a tool requires Windows, a license, a container, or manual download, document that clearly.
+- Treat specialized tool adapters, MCP servers, APIs, plug-ins, X-Tensions, and product-specific automation as optional execution providers. Select them through the senior tooling loop only when the current manual or approved local docs show they are suitable for the evidence, scope, privacy boundary, and environment.
+- Keep adapter interfaces file-in/file-out or manifest-based when practical. Return sanitized status, structured outputs, hashes, report paths, local alias-map paths, limitations, and contemporaneous-note references instead of raw case facts.
 - Record selected tools, versions, install paths, and blockers in Markdown.
 
 ## Scope-boundary and blocker rules
@@ -70,6 +73,7 @@ When changing agent behavior or tool choices, also update the relevant docs:
 - `docs/privacy-and-redaction.md` when privacy sweeps, publication checks, or redaction rules change
 - `docs/self-update-loop.md` when the improvement process or loop guardrails change
 - `docs/limitations.md` when scope boundaries, evidence limits, or reporting cautions change
+- `docs/specialized-tool-adapters.md` when adding or changing adapter patterns, contracts, or product-specific adapter examples
 - `docs/tooling-matrix.md` for tool-selection changes
 - `docs/sources.md` for new guidance or upstream references
 - `README.md` when the repo purpose or workflow changes materially
@@ -87,6 +91,7 @@ When changing agent behavior or tool choices, also update the relevant docs:
 - Require the examiner agent to distinguish observation, inference, and limitation.
 - Require OS-aware routing. The workflow must establish evidence OS, evidence mode, runner/evidence boundary, filesystem/logging architecture, and host role before broad collection or OS-specific tool selection.
 - Do not let examples make Windows the default, and do not treat the runner OS as the evidence OS without corroboration.
+- Do not make the examiner prompt product-specific just because an adapter exists. The examiner should route to the senior tooling specialist; the specialist may select an adapter such as X-Ways-MCP when the case and manual basis support it.
 - Require the examiner agent to establish input/read, compute/staging, and output/report/export boundaries. Missing boundary details should not stall a bare-path triage, but the report must record conservative assumptions and any unanswered questions.
 - Require the examiner agent to separate acquisition, examination, and reporting for sensitive artifacts: preserve, inventory, parse, or dump in-scope material as the case requires, avoid unnecessary plaintext disclosure outside controlled case outputs, and document the handling decision.
 - Require the examiner agent to route extracted secrets back through the loop as evidence leads before final reporting. Local in-scope unlock attempts should be logged with tool, time, source, result, and new artifacts collected.
@@ -95,6 +100,7 @@ When changing agent behavior or tool choices, also update the relevant docs:
 - Require the examiner agent to assist the non-technical investigator by asking high-value, non-blocking clarification questions when scope, interpretation, or prioritization would benefit.
 - Require the examiner agent to invoke case peer review before final handoff on substantial reports.
 - Require the senior tooling specialist to justify why each tool is selected, skipped, or deferred, and to call the research and provisioning subagents for every substantive tool loop.
+- Require the senior tooling specialist to evaluate specialized tool adapters through the same manual-first, privacy-first, loose-coupling rules as other tools.
 - Require the platform profiler to return evidence OS, confidence, runner boundary, evidence mode, host role, filesystem/logging architecture, OS-specific priority artifacts, and minimal safe discovery still needed.
 - Require the evidence collector to collect or prepare approved sources without analysis, write status files for empty or blocked sources, record hashes where practical, and label the collection depth as triage, targeted, or comprehensive.
 - Require the artifact router to select parser and specialist lanes without collecting or concluding.

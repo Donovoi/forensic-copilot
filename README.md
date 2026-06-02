@@ -31,6 +31,7 @@ A bare path is enough to begin. The examiner should infer preservation-first, sc
 - separates observation, inference, limitation, and confidence
 - picks tools through a senior tooling subagent instead of guessing
 - profiles the evidence OS before OS-specific collection or tool choice
+- can use optional specialized tool adapters through a loose local contract
 - supports quick triage and deeper comprehensive examination
 - works online, offline, or in enterprise environments with blocked downloads
 - creates local fallback scripts only when needed, and only after review
@@ -115,6 +116,16 @@ The internal loop is:
 
 The loop should not be bypassed. If a helper stalls or fails, retry the same helper path with a narrower prompt or restore the provider/backend before collecting evidence.
 
+## Specialized Tool Adapters
+
+Forensic Copilot can use specialized tool adapters when a case benefits from expert tooling, but those adapters are optional providers rather than hard dependencies.
+
+The senior tooling specialist decides whether an adapter fits the evidence, platform, scope, authority, manual guidance, and local environment. Adapters should use local manifests, sanitized file-in/file-out calls, documented headless or API routes where possible, and local-only alias maps for sensitive identifiers.
+
+X-Ways-MCP is the first documented example for X-Ways Forensics workflows such as E01 handling, case metadata triage, BitLocker-aware work, file carving, and X-Tension-based automation. It is not a required dependency and should not become a product-specific default lane. Other tools can follow the same adapter pattern when they add value.
+
+See [docs/specialized-tool-adapters.md](docs/specialized-tool-adapters.md).
+
 ## Triage vs Comprehensive Work
 
 Quick triage collects the minimum defensible source set needed to answer or prioritize the question.
@@ -166,6 +177,7 @@ Formal exports can be generated after review. See [docs/formal-report-output.md]
 - [docs/opencode-agents/](docs/opencode-agents/) - lean OpenCode prompts
 - [docs/interface-setup.md](docs/interface-setup.md) - setup by AI interface
 - [docs/offline-usage.md](docs/offline-usage.md) - offline and generated-script rules
+- [docs/specialized-tool-adapters.md](docs/specialized-tool-adapters.md) - loose adapter pattern for expert forensic tools
 - [docs/repository-policy.md](docs/repository-policy.md) - expanded policy
 - [docs/tooling-matrix.md](docs/tooling-matrix.md) - tool-selection starting point
 - [docs/privacy-and-redaction.md](docs/privacy-and-redaction.md) - publication hygiene

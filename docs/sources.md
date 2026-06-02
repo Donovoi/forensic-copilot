@@ -2,7 +2,7 @@
 
 This file records the external material that currently informs the repo. It is not meant to be exhaustive. It is meant to show what was actually checked, why it matters, and where that guidance enters the workflow.
 
-Last reviewed: `2026-05-30`
+Last reviewed: `2026-06-02`
 
 ## Process guidance checked directly
 
@@ -58,6 +58,13 @@ That is deliberate. This file should not imply a document was checked if it was 
 | `ForensicArtifacts/artifacts-kb`        | supporting context for artifact families and collection terminology                                                                              | Useful for coverage and naming consistency. <https://github.com/ForensicArtifacts/artifacts-kb>                                       |
 | Linux-forensics practitioner literature | high-level Linux-forensics themes such as service-aware interpretation, auth/session priority, timezone discipline, and conservative attribution | Used only at the level of practitioner themes in this environment; no copyrighted text is quoted or treated as direct authority here. |
 
+## Local adapter and integration references
+
+| Project or reference | How it informs the repo | Note |
+| --- | --- | --- |
+| Specialized tool adapter pattern | Keeps expert-product integrations loose, manifest-friendly, privacy-preserving, and replaceable | This is a workflow contract, not a tool by itself. See `docs/specialized-tool-adapters.md`. |
+| `X-Ways-MCP` | First optional example of a specialized adapter for X-Ways Forensics workflows | Treat as a local/project integration reference, not as authority for X-Ways behavior. The current X-Ways manual, vendor docs, or approved local manual cache must still be checked before action. <https://github.com/Donovoi/X-Ways-MCP> |
+
 ## AI interface and README references
 
 | Source | Used for | Link |
@@ -90,6 +97,8 @@ That is deliberate. This file should not imply a document was checked if it was 
 - Artifact-definition ecosystems can improve coverage and gap detection even when they are not the primary extraction mechanism.
 - High-level Linux-forensics practitioner guidance reinforces role-aware interpretation: a Linux web server should not be read as if every recovered URL or admin endpoint represents local browsing by a human user.
 - Platform profiling is now a first-class workflow step: establish evidence OS, evidence mode, runner/evidence boundary, filesystem/logging architecture, and host role before broad collection or OS-specific tool selection.
+- Specialized tool adapters are now tracked as optional providers that can add expert tooling without turning the examiner prompt into a product-specific lane.
+- X-Ways-MCP is the first documented adapter example. It can support X-Ways case and E01 workflows when licensed and suitable, but the current X-Ways manual or approved local manual cache remains the decision basis for commands, APIs, X-Tensions, headless routes, distributed processing, export behavior, and limits.
 
 ## How to use this file
 

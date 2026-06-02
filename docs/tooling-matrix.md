@@ -15,6 +15,7 @@ This matrix is the starting point for the `Forensic Senior Tooling Specialist` a
 9. treat sensitivity as a handling issue, not a collection veto; in-scope credential, cookie, token, key, browser, and environment-file artifacts should be preserved, inventoried, parsed, or extracted when they may answer the case question
 10. treat offline and no-download environments as normal operating modes; use local docs, installed tools, native commands, and generated-script fallback rather than assuming web access
 11. identify the evidence OS and evidence mode before OS-specific collection; the runner OS is not automatically the evidence OS
+12. treat specialized tool adapters as optional providers selected by evidence fit, manual support, privacy controls, and local availability, not as mandatory product lanes
 
 ## Advanced tooling specialist flow
 
@@ -31,6 +32,16 @@ The senior tooling specialist should not act as a one-person installer. For ever
 If a live-host case is still in its bounded first-response phase, the specialist may choose native commands first and defer downloads until scope and authority justify them. The deferral must be documented.
 
 If the environment is offline or cannot fetch tools, the fallback order is: installed trusted tools, native read-only commands, then generated standard-library scripts. Generated scripts must be logged, syntax-checked, dry-run or fixture-tested, hashed where practical, and approved by `Forensic Script Reviewer` before operational use.
+
+## Specialized tool adapters
+
+Specialized tool adapters are optional execution providers for expert tools, commercial suites, local MCP servers, plug-ins, APIs, and product-specific automation. The senior tooling specialist may select one when it is more defensible than generic tooling for the evidence and question.
+
+Adapters must stay loosely coupled. Forensic Copilot should pass a local manifest, scoped paths, privacy policy, and task objective when practical. The adapter should return sanitized status, structured output, report paths, hashes, local alias-map paths, limitations, and the manual or local-doc basis used. It should not require the examiner prompt to contain raw case facts or product-specific logic.
+
+Before selecting an adapter, check the current manual or approved local docs for native headless, batch, distributed, API, plug-in, extension, export, and read-only capabilities. Prefer documented headless/API routes first, then reviewed local scripts or extensions, and use UI automation only as a bounded fallback.
+
+`X-Ways-MCP` is the first example of this pattern for licensed X-Ways Forensics environments. It can be considered for E01 and X-Ways case work, BitLocker-aware workflows, file carving, X-Tensions, and X-Ways case metadata triage. It remains optional; if X-Ways is not available, not licensed, not supported by the current manual for the needed action, or not the best fit, use the normal matrix and specialist loop.
 
 ## OS-first routing
 
@@ -49,6 +60,7 @@ Before selecting tools, classify the evidence platform:
 | ------------------------------------ | ------------------------------------------------------------------------ | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `libewf` / EWF tools                 | EWF/E01 verification, metadata review, and read-only access              | High            | `E01` and segmented EWF inputs that need verification or a Linux-side access path                                                            | Foundational for Linux E01 readiness. Pair it with hashing and The Sleuth Kit rather than treating it as a full examiner on its own.                                                 |
 | `libbde` / `libbde-python`           | BitLocker metadata characterization and supported read-only access paths | Medium          | Windows volumes that appear BitLocker-protected and need protection confirmation, metadata inspection, or testing with valid unlock material | Signature confirmation alone is not equivalent to successful metadata access or decryption. Use it to characterize the barrier and a supported unlock path, not to overstate access. |
+| specialized tool adapters such as `X-Ways-MCP` | optional bridge to expert tool suites, APIs, plug-ins, MCP servers, and product-specific automation | Environment-specific | cases where a current manual-supported product capability is more defensible than generic tooling, such as licensed X-Ways E01/case metadata/carving workflows | Keep adapters loosely coupled. They should accept local manifests or paths, return sanitized structured outputs, and remain replaceable by another toolchain when unavailable or unsuitable. |
 | `bulk_extractor`                     | content scanning, feature extraction, carving support                    | High            | broad content extraction from images or mounted evidence                                                                                     | Good companion tool, not a full filesystem examiner; on Linux server user-activity cases it is usually corroborative rather than primary proof of logon or browsing.                 |
 | `The Sleuth Kit`                     | partition, volume, filesystem, deleted-file, and metadata analysis       | High            | raw/E01/AFF4/disk-image workflows and filesystem-level validation                                                                            | Official upstream: `sleuthkit/sleuthkit`. Foundational for disk and filesystem analysis.                                                                                             |
 | `Velociraptor`                       | endpoint collection, artifact-based DFIR, offline collectors             | Medium          | authorized endpoint collection, reusable artifact logic, enterprise-scale or offline Windows/Linux/macOS triage                               | Powerful but operationally heavier than simple commands. Use targeted artifacts and document collector configuration, output container handling, and live-host impact.               |
