@@ -74,6 +74,7 @@ When changing agent behavior or tool choices, also update the relevant docs:
 - `docs/self-update-loop.md` when the improvement process or loop guardrails change
 - `docs/limitations.md` when scope boundaries, evidence limits, or reporting cautions change
 - `docs/specialized-tool-adapters.md` when adding or changing adapter patterns, contracts, or product-specific adapter examples
+- `docs/local-model-investigation-evals.md` when local-model regression gates or comparison rules change
 - `docs/tooling-matrix.md` for tool-selection changes
 - `docs/sources.md` for new guidance or upstream references
 - `README.md` when the repo purpose or workflow changes materially

@@ -184,6 +184,7 @@ Formal exports can be generated after review. See [docs/formal-report-output.md]
 - [docs/assets/](docs/assets/) - README diagrams for the current platform-aware loop
 - [scripts/validate_repo_hygiene.py](scripts/validate_repo_hygiene.py) - repo hygiene check
 - [scripts/check_opencode_llamacpp_backend.py](scripts/check_opencode_llamacpp_backend.py) - local llama.cpp backend preflight for OpenCode tests
+- [scripts/run_local_model_investigation_eval.py](scripts/run_local_model_investigation_eval.py) - local OpenCode/llama.cpp investigation regression runner
 
 ## Privacy
 
