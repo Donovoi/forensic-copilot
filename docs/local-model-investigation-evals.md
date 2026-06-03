@@ -61,7 +61,9 @@ python scripts\run_local_model_investigation_eval.py `
 
 The direct runner is not a substitute for OpenCode orchestration. It is a local
 regression fallback that answers whether the model can reach the same sanitized
-conclusion once tool-loop overhead is removed.
+conclusion once tool-loop overhead is removed. Direct-run status records
+`opencode_delegation_proven: false` and applies the same coarse leak-pattern
+gate to the generated report before the comparison step.
 
 ## Synthetic OpenCode Harness Probes
 
@@ -98,6 +100,12 @@ tiny model response does not turn into an automatic summary/continuation loop.
 They also run OpenCode from an isolated temporary workdir with `--pure` by
 default, which avoids accidentally loading the full parent repository agent
 config or external plugins during a unit-sized harness probe.
+
+If a synthetic OpenCode probe repeatedly creates no stdout, stderr, or JSON
+events, but the direct llama.cpp lane can still answer a sanitized profiler
+prompt with leak checks passing, record that as an OpenCode orchestration
+blocker. The direct lane may continue model-reasoning regression work, but it
+does not prove Task delegation, helper sequencing, or OpenCode report handling.
 
 ## Expected JSON
 

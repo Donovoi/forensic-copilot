@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -15,6 +16,15 @@ from typing import Any
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+
+LEAK_PATTERNS = {
+    "windows_drive_path": re.compile(r"[A-Za-z]:\\|[A-Za-z]:/"),
+    "evidence_ext_or_format": re.compile(r"(?i)(?:\.e01\b|\bE01\b|\bRAW\b|\bVMDK\b)"),
+    "bitlocker": re.compile(r"(?i)bitlocker"),
+    "raw_users_path": re.compile(r"(?i)\bUsers\\[A-Za-z0-9_. -]+"),
+    "credential_word": re.compile(r"(?i)password|credential|secret"),
+    "home_path": re.compile(r"/home/[A-Za-z0-9_.-]+"),
+}
 
 
 def utc_stamp() -> str:
@@ -32,6 +42,10 @@ def read_text(path: Path) -> str:
 
 def file_digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def leak_check_text(text: str) -> dict[str, bool]:
+    return {name: bool(pattern.search(text)) for name, pattern in LEAK_PATTERNS.items()}
 
 
 def post_json(base_url: str, path: str, payload: dict[str, Any], timeout: int) -> Any:
@@ -208,6 +222,8 @@ def main() -> int:
         runtime_prompt_path.write_text(direct_prompt, encoding="utf-8")
         status["steps"]["direct_plan"] = {
             "ok": True,
+            "runner_scope": "direct_llamacpp_only",
+            "opencode_delegation_proven": False,
             "model": args.model,
             "base_url": args.base_url,
             "prompt_path": str(prompt_path),
@@ -245,11 +261,26 @@ def main() -> int:
                 raise RuntimeError("direct model response had no visible content")
             report_path.parent.mkdir(parents=True, exist_ok=True)
             report_path.write_text(report_text + "\n", encoding="utf-8")
+            leak_flags = leak_check_text(report_text)
             status["steps"]["direct_run"] = {
                 "ok": True,
                 "report_path": str(report_path),
                 "response_usage": response.get("usage") if isinstance(response, dict) else None,
             }
+            status["steps"]["direct_leak_check"] = {
+                "ok": not any(leak_flags.values()),
+                "leak_flags": leak_flags,
+            }
+            if any(leak_flags.values()):
+                status["status"] = "needs_harness_adjustment"
+                status["blocker"] = "direct llama.cpp report failed leak checks"
+                write_json(status_path, status)
+                print(
+                    json.dumps(
+                        {"status": status["status"], "blocker": status["blocker"], "status_path": str(status_path)}
+                    )
+                )
+                return 1
         except Exception as exc:
             status["steps"]["direct_run"] = {"ok": False, "error": type(exc).__name__, "message": str(exc)}
             status["status"] = "blocked"
