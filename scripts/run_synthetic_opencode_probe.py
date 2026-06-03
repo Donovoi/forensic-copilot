@@ -72,7 +72,21 @@ def post_models_preflight(base_url: str, model: str, timeout: int) -> dict[str, 
     return {"ok": model in advertised, "model": model, "advertised": advertised[:20]}
 
 
-def platform_profiler_prompt() -> str:
+def platform_profiler_prompt(profile: str = "full") -> str:
+    if profile == "tiny":
+        return """Return the template below for a synthetic Windows dead-box workstation image.
+No tools. No paths. No credentials. Do not mention image format names.
+
+PLATFORM:
+- evidence_os:
+- runner_boundary:
+- mode_role:
+- fs_logging:
+- priority_artifacts:
+- discovery_needed:
+- tooling:
+"""
+
     return """# OpenCode Forensic Platform Profiler
 
 Internal helper. Identify the evidence operating system and evidence mode before OS-specific collection or routing.
@@ -100,7 +114,14 @@ PLATFORM:
 """
 
 
-def one_delegation_prompt() -> str:
+def one_delegation_prompt(profile: str = "full") -> str:
+    if profile == "tiny":
+        return """Synthetic local-model harness test. Do not use shell, file, web, edit, or write tools.
+First do exactly one task delegation to `forensic-platform-profiler`.
+Then return TRACE, HELPER_RESULT, and HARNESS_VERDICT.
+Do not mention image format names, paths, credentials, or real case details.
+"""
+
     return """# Synthetic One-Delegation Forensic Examiner
 
 You are testing the OpenCode forensic harness with a local model.
@@ -321,6 +342,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--opencode-command", default="opencode")
     parser.add_argument("--output-root", default="reports/local-model-evals")
     parser.add_argument("--output-format", choices=("default", "json"), default="json")
+    parser.add_argument("--prompt-profile", choices=("full", "tiny"), default="full")
+    parser.add_argument("--model-variant", default="", help="Optional OpenCode model variant, for example minimal.")
     parser.add_argument(
         "--probe-workdir-root",
         default=os.environ.get("OPENCODE_PROBE_WORKDIR_ROOT", ""),
@@ -386,11 +409,19 @@ def main() -> int:
         print(json.dumps({"status": status["status"], "blocker": status["blocker"], "status_path": str(status_path)}))
         return 1
 
-    (output_dir / "forensic-platform-profiler.md").write_text(platform_profiler_prompt(), encoding="utf-8")
-    (probe_workdir / "forensic-platform-profiler.md").write_text(platform_profiler_prompt(), encoding="utf-8")
+    (output_dir / "forensic-platform-profiler.md").write_text(
+        platform_profiler_prompt(args.prompt_profile), encoding="utf-8"
+    )
+    (probe_workdir / "forensic-platform-profiler.md").write_text(
+        platform_profiler_prompt(args.prompt_profile), encoding="utf-8"
+    )
     if args.mode == "one-delegation-examiner-profiler":
-        (output_dir / "synthetic-one-delegation-examiner.md").write_text(one_delegation_prompt(), encoding="utf-8")
-        (probe_workdir / "synthetic-one-delegation-examiner.md").write_text(one_delegation_prompt(), encoding="utf-8")
+        (output_dir / "synthetic-one-delegation-examiner.md").write_text(
+            one_delegation_prompt(args.prompt_profile), encoding="utf-8"
+        )
+        (probe_workdir / "synthetic-one-delegation-examiner.md").write_text(
+            one_delegation_prompt(args.prompt_profile), encoding="utf-8"
+        )
     config = build_config(args.mode, args.base_url, args.model)
     write_json(output_dir / "opencode.json", config)
     write_json(probe_workdir / "opencode.json", config)
@@ -417,6 +448,8 @@ def main() -> int:
         f"synthetic {args.mode}",
         message,
     ]
+    if args.model_variant:
+        command[8:8] = ["--variant", args.model_variant]
     if not args.allow_plugins:
         command[2:2] = ["--pure"]
     if args.output_format == "json":
@@ -425,6 +458,8 @@ def main() -> int:
         "ok": True,
         "agent": agent,
         "output_format": args.output_format,
+        "prompt_profile": args.prompt_profile,
+        "model_variant": args.model_variant or None,
         "command_shape": [
             "opencode",
             "run",
@@ -434,6 +469,7 @@ def main() -> int:
             agent,
             "--model",
             f"llamacpp-local/{args.model}",
+            *([] if not args.model_variant else ["--variant", args.model_variant]),
             "<synthetic-message>",
         ],
     }
