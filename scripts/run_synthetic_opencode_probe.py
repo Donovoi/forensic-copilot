@@ -164,6 +164,10 @@ def build_config(mode: str, base_url: str, model: str) -> dict[str, Any]:
                 },
             }
         },
+        "compaction": {
+            "auto": False,
+            "prune": False,
+        },
         "tool_output": {"max_lines": 100, "max_bytes": 6000},
         "agent": agents,
     }

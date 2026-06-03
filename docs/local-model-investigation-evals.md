@@ -86,7 +86,8 @@ These probes create temporary synthetic prompts and OpenCode configs under the
 ignored reports directory. They do not use case data, do not browse, and record
 status, command shape, event counts, and leak-check flags without echoing raw
 case prompts. Use them to validate one helper or one delegation before allowing
-the broader multi-agent workflow to run.
+the broader multi-agent workflow to run. Probe configs disable compaction so a
+tiny model response does not turn into an automatic summary/continuation loop.
 
 ## Expected JSON
 
