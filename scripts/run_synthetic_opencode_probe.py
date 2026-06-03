@@ -8,6 +8,7 @@ import os
 import re
 import signal
 import shutil
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -259,6 +260,107 @@ def analyze_output(run_dir: Path) -> dict[str, Any]:
     }
 
 
+def opencode_db_path() -> Path | None:
+    candidates: list[Path] = []
+    if os.name == "nt":
+        local_appdata = os.environ.get("LOCALAPPDATA")
+        if local_appdata:
+            candidates.append(Path(local_appdata) / "opencode" / "opencode.db")
+    candidates.append(Path.home() / ".local" / "share" / "opencode" / "opencode.db")
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def extract_part_text(data: dict[str, Any]) -> str:
+    for key in ("text", "content"):
+        value = data.get(key)
+        if isinstance(value, str):
+            return value
+    part = data.get("part")
+    if isinstance(part, dict):
+        for key in ("text", "content"):
+            value = part.get(key)
+            if isinstance(value, str):
+                return value
+    return ""
+
+
+def analyze_opencode_db(title: str, agent: str) -> dict[str, Any]:
+    db_path = opencode_db_path()
+    if not db_path:
+        return {"available": False, "reason": "opencode database not found"}
+    connection: sqlite3.Connection | None = None
+    try:
+        connection = sqlite3.connect(str(db_path))
+        connection.row_factory = sqlite3.Row
+        session = connection.execute(
+            """
+            select id, title, agent, tokens_input, tokens_output, tokens_reasoning, time_created, time_updated
+            from session
+            where title = ? and agent = ?
+            order by time_created desc
+            limit 1
+            """,
+            (title, agent),
+        ).fetchone()
+        if not session:
+            return {"available": True, "session_found": False}
+
+        part_type_counts: dict[str, int] = {}
+        text_chunks: list[str] = []
+        serialized_parts: list[str] = []
+        for row in connection.execute("select data from part where session_id = ?", (session["id"],)):
+            try:
+                data = json.loads(row["data"] or "{}")
+            except json.JSONDecodeError:
+                part_type = "unparsed"
+                serialized = row["data"] or ""
+                text = ""
+            else:
+                nested_part = data.get("part")
+                nested_type = nested_part.get("type") if isinstance(nested_part, dict) else None
+                part_type = str(data.get("type") or nested_type or "unknown")
+                serialized = json.dumps(data, sort_keys=True)
+                text = extract_part_text(data)
+            part_type_counts[part_type] = part_type_counts.get(part_type, 0) + 1
+            serialized_parts.append(serialized)
+            if text:
+                text_chunks.append(text)
+
+        combined_text = "\n".join(text_chunks)
+        combined_serialized = "\n".join(serialized_parts)
+        leak_flags = {name: bool(pattern.search(combined_text)) for name, pattern in LEAK_PATTERNS.items()}
+        return {
+            "available": True,
+            "session_found": True,
+            "session_id_prefix": str(session["id"])[:12],
+            "tokens_input": session["tokens_input"],
+            "tokens_output": session["tokens_output"],
+            "tokens_reasoning": session["tokens_reasoning"],
+            "part_type_counts": part_type_counts,
+            "text_part_count": len(text_chunks),
+            "text_bytes": len(combined_text.encode("utf-8")),
+            "text_sha256_prefix": hashlib.sha256(combined_text.encode("utf-8")).hexdigest()[:16].upper()
+            if combined_text
+            else "",
+            "leak_flags": leak_flags,
+            "has_platform_output": "PLATFORM:" in combined_text,
+            "has_harness_verdict": "HARNESS_VERDICT" in combined_text,
+            "task_mention_count": combined_serialized.count("forensic-platform-profiler")
+            + combined_serialized.lower().count('"task"'),
+        }
+    except Exception as exc:
+        return {"available": True, "error": type(exc).__name__, "message": str(exc)}
+    finally:
+        if connection:
+            try:
+                connection.close()
+            except Exception:
+                pass
+
+
 def run_with_process_group(
     command: list[str],
     *,
@@ -489,20 +591,33 @@ def main() -> int:
 
     analysis = analyze_output(output_dir)
     status["steps"]["analysis"] = analysis
-    leaks_present = any(analysis["leak_flags"].values())
+    db_analysis = analyze_opencode_db(f"synthetic {args.mode}", agent)
+    status["steps"]["opencode_db_analysis"] = db_analysis
+    db_leak_flags = db_analysis.get("leak_flags") if isinstance(db_analysis, dict) else None
+    leaks_present = any(analysis["leak_flags"].values()) or any((db_leak_flags or {}).values())
     run_ok = bool(status["steps"]["opencode_run"].get("ok"))
     if not run_ok:
-        usable_output = analysis["has_platform_output"] or analysis["has_harness_verdict"] or analysis["has_minimal_ok"]
+        usable_output = (
+            analysis["has_platform_output"]
+            or analysis["has_harness_verdict"]
+            or analysis["has_minimal_ok"]
+            or bool(db_analysis.get("has_platform_output"))
+            or bool(db_analysis.get("has_harness_verdict"))
+        )
         if usable_output and not leaks_present:
             status["status"] = "partial_ok_process_timeout"
-            status["blocker"] = "OpenCode produced usable synthetic output but did not exit before timeout"
+            status["blocker"] = "OpenCode produced usable synthetic output but did not exit or flush CLI output before timeout"
         else:
             status["status"] = "blocked"
             status["blocker"] = "OpenCode probe failed or timed out"
     elif leaks_present:
         status["status"] = "needs_harness_adjustment"
         status["blocker"] = "synthetic probe output failed leak checks"
-    elif args.mode == "one-delegation-examiner-profiler" and analysis["task_mention_count"] == 0:
+    elif (
+        args.mode == "one-delegation-examiner-profiler"
+        and analysis["task_mention_count"] == 0
+        and int(db_analysis.get("task_mention_count") or 0) == 0
+    ):
         status["status"] = "needs_harness_adjustment"
         status["blocker"] = "no task delegation was visible in OpenCode JSON events"
     else:
