@@ -6,10 +6,12 @@ import hashlib
 import json
 import os
 import re
+import signal
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -236,6 +238,77 @@ def analyze_output(run_dir: Path) -> dict[str, Any]:
     }
 
 
+def run_with_process_group(
+    command: list[str],
+    *,
+    cwd: Path,
+    stdout_path: Path,
+    stderr_path: Path,
+    timeout_seconds: int,
+) -> dict[str, Any]:
+    popen_kwargs: dict[str, Any] = {
+        "cwd": str(cwd),
+        "stdout": None,
+        "stderr": None,
+        "text": True,
+    }
+    if os.name == "nt":
+        popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP  # type: ignore[attr-defined]
+    else:
+        popen_kwargs["start_new_session"] = True
+
+    with stdout_path.open("w", encoding="utf-8", errors="replace") as stdout, stderr_path.open(
+        "w", encoding="utf-8", errors="replace"
+    ) as stderr:
+        popen_kwargs["stdout"] = stdout
+        popen_kwargs["stderr"] = stderr
+        started = time.monotonic()
+        process = subprocess.Popen(command, **popen_kwargs)
+        timed_out = False
+        while True:
+            exit_code = process.poll()
+            if exit_code is not None:
+                return {
+                    "ok": exit_code == 0,
+                    "exit_code": exit_code,
+                    "timed_out": timed_out,
+                    "elapsed_seconds": round(time.monotonic() - started, 3),
+                }
+            if time.monotonic() - started >= timeout_seconds:
+                timed_out = True
+                break
+            time.sleep(0.5)
+
+        if os.name == "nt":
+            try:
+                process.send_signal(signal.CTRL_BREAK_EVENT)  # type: ignore[attr-defined]
+            except Exception:
+                process.terminate()
+        else:
+            os.killpg(process.pid, signal.SIGTERM)
+
+        try:
+            process.wait(timeout=15)
+        except subprocess.TimeoutExpired:
+            if os.name == "nt":
+                subprocess.run(
+                    ["taskkill", "/F", "/T", "/PID", str(process.pid)],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    check=False,
+                )
+            else:
+                os.killpg(process.pid, signal.SIGKILL)
+            process.wait(timeout=10)
+
+        return {
+            "ok": False,
+            "exit_code": 124,
+            "timed_out": True,
+            "elapsed_seconds": round(time.monotonic() - started, 3),
+        }
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run synthetic local OpenCode forensic harness probes.")
     parser.add_argument(
@@ -368,22 +441,13 @@ def main() -> int:
 
     stdout_path = output_dir / ("stdout.jsonl" if args.output_format == "json" else "stdout.txt")
     stderr_path = output_dir / "stderr.txt"
-    try:
-        with stdout_path.open("w", encoding="utf-8", errors="replace") as stdout, stderr_path.open(
-            "w", encoding="utf-8", errors="replace"
-        ) as stderr:
-            completed = subprocess.run(
-                command,
-                cwd=str(probe_workdir),
-                stdout=stdout,
-                stderr=stderr,
-                text=True,
-                timeout=args.timeout,
-                check=False,
-            )
-        status["steps"]["opencode_run"] = {"ok": completed.returncode == 0, "exit_code": completed.returncode}
-    except subprocess.TimeoutExpired:
-        status["steps"]["opencode_run"] = {"ok": False, "exit_code": 124, "error": "TimeoutExpired"}
+    status["steps"]["opencode_run"] = run_with_process_group(
+        command,
+        cwd=probe_workdir,
+        stdout_path=stdout_path,
+        stderr_path=stderr_path,
+        timeout_seconds=args.timeout,
+    )
 
     analysis = analyze_output(output_dir)
     status["steps"]["analysis"] = analysis
