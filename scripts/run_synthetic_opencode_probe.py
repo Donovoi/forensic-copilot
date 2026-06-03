@@ -482,11 +482,13 @@ def main() -> int:
     probe_workdir = workdir_root / output_dir.name
     probe_workdir.mkdir(parents=True, exist_ok=True)
     status_path = output_dir / "status.json"
+    run_title = f"synthetic {args.mode} {output_dir.name}"
 
     status: dict[str, Any] = {
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "status": "started",
         "mode": args.mode,
+        "run_title": run_title,
         "output_dir": str(output_dir),
         "probe_workdir": str(probe_workdir),
         "privacy": {
@@ -560,7 +562,7 @@ def main() -> int:
         "--model",
         f"llamacpp-local/{args.model}",
         "--title",
-        f"synthetic {args.mode}",
+        run_title,
         message,
     ]
     if args.model_variant:
@@ -603,7 +605,7 @@ def main() -> int:
 
     analysis = analyze_output(output_dir)
     status["steps"]["analysis"] = analysis
-    db_analysis = analyze_opencode_db(f"synthetic {args.mode}", agent)
+    db_analysis = analyze_opencode_db(run_title, agent)
     status["steps"]["opencode_db_analysis"] = db_analysis
     db_leak_flags = db_analysis.get("leak_flags") if isinstance(db_analysis, dict) else None
     leaks_present = any(analysis["leak_flags"].values()) or any((db_leak_flags or {}).values())
