@@ -308,10 +308,19 @@ def analyze_opencode_db(title: str, agent: str) -> dict[str, Any]:
         if not session:
             return {"available": True, "session_found": False}
 
+        message_roles: dict[str, str] = {}
+        for row in connection.execute("select id, data from message where session_id = ?", (session["id"],)):
+            try:
+                message_data = json.loads(row["data"] or "{}")
+            except json.JSONDecodeError:
+                message_data = {}
+            message_roles[str(row["id"])] = str(message_data.get("role") or "")
         part_type_counts: dict[str, int] = {}
+        assistant_part_type_counts: dict[str, int] = {}
         text_chunks: list[str] = []
         serialized_parts: list[str] = []
-        for row in connection.execute("select data from part where session_id = ?", (session["id"],)):
+        for row in connection.execute("select message_id, data from part where session_id = ?", (session["id"],)):
+            role = message_roles.get(str(row["message_id"]), "")
             try:
                 data = json.loads(row["data"] or "{}")
             except json.JSONDecodeError:
@@ -325,8 +334,10 @@ def analyze_opencode_db(title: str, agent: str) -> dict[str, Any]:
                 serialized = json.dumps(data, sort_keys=True)
                 text = extract_part_text(data)
             part_type_counts[part_type] = part_type_counts.get(part_type, 0) + 1
-            serialized_parts.append(serialized)
-            if text:
+            if role == "assistant":
+                assistant_part_type_counts[part_type] = assistant_part_type_counts.get(part_type, 0) + 1
+                serialized_parts.append(serialized)
+            if role == "assistant" and text:
                 text_chunks.append(text)
 
         combined_text = "\n".join(text_chunks)
@@ -340,6 +351,7 @@ def analyze_opencode_db(title: str, agent: str) -> dict[str, Any]:
             "tokens_output": session["tokens_output"],
             "tokens_reasoning": session["tokens_reasoning"],
             "part_type_counts": part_type_counts,
+            "assistant_part_type_counts": assistant_part_type_counts,
             "text_part_count": len(text_chunks),
             "text_bytes": len(combined_text.encode("utf-8")),
             "text_sha256_prefix": hashlib.sha256(combined_text.encode("utf-8")).hexdigest()[:16].upper()
