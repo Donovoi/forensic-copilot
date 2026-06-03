@@ -95,6 +95,9 @@ status, command shape, event counts, and leak-check flags without echoing raw
 case prompts. Use them to validate one helper or one delegation before allowing
 the broader multi-agent workflow to run. Probe configs disable compaction so a
 tiny model response does not turn into an automatic summary/continuation loop.
+They also run OpenCode from an isolated temporary workdir with `--pure` by
+default, which avoids accidentally loading the full parent repository agent
+config or external plugins during a unit-sized harness probe.
 
 ## Expected JSON
 

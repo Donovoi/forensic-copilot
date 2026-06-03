@@ -9,6 +9,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -247,6 +248,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--opencode-command", default="opencode")
     parser.add_argument("--output-root", default="reports/local-model-evals")
     parser.add_argument("--output-format", choices=("default", "json"), default="json")
+    parser.add_argument(
+        "--probe-workdir-root",
+        default=os.environ.get("OPENCODE_PROBE_WORKDIR_ROOT", ""),
+        help="Directory for temporary OpenCode config/workspace. Defaults to the system temp directory.",
+    )
+    parser.add_argument("--allow-plugins", action="store_true", help="Do not pass --pure to OpenCode.")
     parser.add_argument("--timeout", type=int, default=1800)
     parser.add_argument("--skip-preflight", action="store_true")
     return parser
@@ -256,6 +263,13 @@ def main() -> int:
     args = build_parser().parse_args()
     output_dir = (REPO_ROOT / args.output_root / f"{utc_stamp()}-{args.mode}").resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
+    workdir_root = (
+        Path(args.probe_workdir_root).expanduser().resolve()
+        if args.probe_workdir_root
+        else Path(tempfile.gettempdir()).resolve() / "forensic-copilot-opencode-probes"
+    )
+    probe_workdir = workdir_root / output_dir.name
+    probe_workdir.mkdir(parents=True, exist_ok=True)
     status_path = output_dir / "status.json"
 
     status: dict[str, Any] = {
@@ -263,6 +277,7 @@ def main() -> int:
         "status": "started",
         "mode": args.mode,
         "output_dir": str(output_dir),
+        "probe_workdir": str(probe_workdir),
         "privacy": {
             "synthetic_only": True,
             "case_data_used": False,
@@ -299,9 +314,13 @@ def main() -> int:
         return 1
 
     (output_dir / "forensic-platform-profiler.md").write_text(platform_profiler_prompt(), encoding="utf-8")
+    (probe_workdir / "forensic-platform-profiler.md").write_text(platform_profiler_prompt(), encoding="utf-8")
     if args.mode == "one-delegation-examiner-profiler":
         (output_dir / "synthetic-one-delegation-examiner.md").write_text(one_delegation_prompt(), encoding="utf-8")
-    write_json(output_dir / "opencode.json", build_config(args.mode, args.base_url, args.model))
+        (probe_workdir / "synthetic-one-delegation-examiner.md").write_text(one_delegation_prompt(), encoding="utf-8")
+    config = build_config(args.mode, args.base_url, args.model)
+    write_json(output_dir / "opencode.json", config)
+    write_json(probe_workdir / "opencode.json", config)
 
     agent = "forensic-platform-profiler" if args.mode == "isolated-platform-profiler" else "synthetic-one-delegation-examiner"
     message = (
@@ -325,6 +344,8 @@ def main() -> int:
         f"synthetic {args.mode}",
         message,
     ]
+    if not args.allow_plugins:
+        command[2:2] = ["--pure"]
     if args.output_format == "json":
         command[2:2] = ["--format", "json"]
     status["steps"]["opencode_plan"] = {
@@ -335,6 +356,7 @@ def main() -> int:
             "opencode",
             "run",
             *([] if args.output_format == "default" else ["--format", "json"]),
+            *([] if args.allow_plugins else ["--pure"]),
             "--agent",
             agent,
             "--model",
@@ -352,7 +374,7 @@ def main() -> int:
         ) as stderr:
             completed = subprocess.run(
                 command,
-                cwd=str(output_dir),
+                cwd=str(probe_workdir),
                 stdout=stdout,
                 stderr=stderr,
                 text=True,
