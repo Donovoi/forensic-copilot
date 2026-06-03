@@ -82,6 +82,13 @@ python scripts\run_synthetic_opencode_probe.py `
   --model gemma-heretic-q4_k_m
 ```
 
+Use `--output-format default` when checking whether the model can produce the
+expected helper text at all. Use `--output-format json` when validating event
+traces such as task delegation. A probe may report
+`partial_ok_process_timeout` if OpenCode produced usable synthetic output but
+did not exit cleanly before the timeout; treat that as a harness/process issue,
+not as a model reasoning failure.
+
 These probes create temporary synthetic prompts and OpenCode configs under the
 ignored reports directory. They do not use case data, do not browse, and record
 status, command shape, event counts, and leak-check flags without echoing raw

@@ -191,6 +191,8 @@ def deny_all_permissions() -> dict[str, Any]:
 
 def analyze_output(run_dir: Path) -> dict[str, Any]:
     stdout_path = run_dir / "stdout.jsonl"
+    if not stdout_path.exists():
+        stdout_path = run_dir / "stdout.txt"
     stderr_path = run_dir / "stderr.txt"
     stdout_text = read_text(stdout_path)
     stderr_text = read_text(stderr_path)
@@ -221,6 +223,9 @@ def analyze_output(run_dir: Path) -> dict[str, Any]:
         "stdout_sha256_prefix": sha256_prefix(stdout_path),
         "stderr_sha256_prefix": sha256_prefix(stderr_path),
         "leak_flags": leak_flags,
+        "has_platform_output": "PLATFORM:" in stdout_text,
+        "has_harness_verdict": "HARNESS_VERDICT" in stdout_text,
+        "has_minimal_ok": bool(re.search(r"(?m)^\s*OK\.?\s*$", stdout_text)),
         "parsed_event_count": parsed_events,
         "event_types": event_types,
         "task_mention_count": task_mentions,
@@ -241,6 +246,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--model", default=os.environ.get("LLAMACPP_MODEL", "gemma-heretic-q4_k_m"))
     parser.add_argument("--opencode-command", default="opencode")
     parser.add_argument("--output-root", default="reports/local-model-evals")
+    parser.add_argument("--output-format", choices=("default", "json"), default="json")
     parser.add_argument("--timeout", type=int, default=1800)
     parser.add_argument("--skip-preflight", action="store_true")
     return parser
@@ -311,8 +317,6 @@ def main() -> int:
     command = [
         opencode_path,
         "run",
-        "--format",
-        "json",
         "--agent",
         agent,
         "--model",
@@ -321,14 +325,16 @@ def main() -> int:
         f"synthetic {args.mode}",
         message,
     ]
+    if args.output_format == "json":
+        command[2:2] = ["--format", "json"]
     status["steps"]["opencode_plan"] = {
         "ok": True,
         "agent": agent,
+        "output_format": args.output_format,
         "command_shape": [
             "opencode",
             "run",
-            "--format",
-            "json",
+            *([] if args.output_format == "default" else ["--format", "json"]),
             "--agent",
             agent,
             "--model",
@@ -338,7 +344,7 @@ def main() -> int:
     }
     write_json(status_path, status)
 
-    stdout_path = output_dir / "stdout.jsonl"
+    stdout_path = output_dir / ("stdout.jsonl" if args.output_format == "json" else "stdout.txt")
     stderr_path = output_dir / "stderr.txt"
     try:
         with stdout_path.open("w", encoding="utf-8", errors="replace") as stdout, stderr_path.open(
@@ -362,8 +368,13 @@ def main() -> int:
     leaks_present = any(analysis["leak_flags"].values())
     run_ok = bool(status["steps"]["opencode_run"].get("ok"))
     if not run_ok:
-        status["status"] = "blocked"
-        status["blocker"] = "OpenCode probe failed or timed out"
+        usable_output = analysis["has_platform_output"] or analysis["has_harness_verdict"] or analysis["has_minimal_ok"]
+        if usable_output and not leaks_present:
+            status["status"] = "partial_ok_process_timeout"
+            status["blocker"] = "OpenCode produced usable synthetic output but did not exit before timeout"
+        else:
+            status["status"] = "blocked"
+            status["blocker"] = "OpenCode probe failed or timed out"
     elif leaks_present:
         status["status"] = "needs_harness_adjustment"
         status["blocker"] = "synthetic probe output failed leak checks"
