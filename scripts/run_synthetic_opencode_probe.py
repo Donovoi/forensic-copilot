@@ -137,7 +137,7 @@ Rules:
 """
 
 
-def build_config(mode: str, base_url: str, model: str) -> dict[str, Any]:
+def build_config(mode: str, base_url: str, model: str, output_limit: int) -> dict[str, Any]:
     agents: dict[str, Any] = {}
     if mode == "isolated-platform-profiler":
         default_agent = "forensic-platform-profiler"
@@ -183,7 +183,7 @@ def build_config(mode: str, base_url: str, model: str) -> dict[str, Any]:
                     model: {
                         "reasoning": False,
                         "options": {"textVerbosity": "low", "temperature": 0},
-                        "limit": {"context": 16384, "output": 1536},
+                        "limit": {"context": 16384, "output": output_limit},
                     }
                 },
             }
@@ -344,6 +344,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--output-format", choices=("default", "json"), default="json")
     parser.add_argument("--prompt-profile", choices=("full", "tiny"), default="full")
     parser.add_argument("--model-variant", default="", help="Optional OpenCode model variant, for example minimal.")
+    parser.add_argument("--model-output-limit", type=int, default=1536)
     parser.add_argument(
         "--probe-workdir-root",
         default=os.environ.get("OPENCODE_PROBE_WORKDIR_ROOT", ""),
@@ -422,7 +423,7 @@ def main() -> int:
         (probe_workdir / "synthetic-one-delegation-examiner.md").write_text(
             one_delegation_prompt(args.prompt_profile), encoding="utf-8"
         )
-    config = build_config(args.mode, args.base_url, args.model)
+    config = build_config(args.mode, args.base_url, args.model, args.model_output_limit)
     write_json(output_dir / "opencode.json", config)
     write_json(probe_workdir / "opencode.json", config)
 
@@ -460,6 +461,7 @@ def main() -> int:
         "output_format": args.output_format,
         "prompt_profile": args.prompt_profile,
         "model_variant": args.model_variant or None,
+        "model_output_limit": args.model_output_limit,
         "command_shape": [
             "opencode",
             "run",
