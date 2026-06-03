@@ -65,6 +65,23 @@ conclusion once tool-loop overhead is removed. Direct-run status records
 `opencode_delegation_proven: false` and applies the same coarse leak-pattern
 gate to the generated report before the comparison step.
 
+## Direct Runner With Specialized Adapter Context
+
+When testing a local model against X-Ways-MCP outputs, prefer sanitized plan and
+status documents from the adapter rather than raw case exports. A good synthetic
+or redacted context bundle can include:
+
+- a query-first usage-pattern plan from `New-XwfQueryFirstUsagePatternPlan`
+- manual and action gate summaries
+- contemporaneous-note summaries
+- structured status counts and limitations
+- redacted report excerpts
+
+Do not include raw X-Ways case database text, evidence names, recovered
+filenames, keys, local alias maps, or sensitive paths in direct model prompts.
+Direct mode remains `direct_llamacpp_only`; it can test reasoning over sanitized
+adapter outputs, but it does not prove OpenCode delegation or X-Ways execution.
+
 ## Synthetic OpenCode Harness Probes
 
 Before running a full forensic-examiner chain, use small synthetic probes to

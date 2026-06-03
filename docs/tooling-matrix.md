@@ -43,6 +43,8 @@ Before selecting an adapter, check the current manual or approved local docs for
 
 `X-Ways-MCP` is the first example of this pattern for licensed X-Ways Forensics environments. It can be considered for E01 and X-Ways case work, BitLocker-aware workflows, file carving, X-Tensions, and X-Ways case metadata triage. It remains optional; if X-Ways is not available, not licensed, not supported by the current manual for the needed action, or not the best fit, use the normal matrix and specialist loop.
 
+For per-machine and per-user usage analysis through X-Ways-MCP, prefer the adapter's query-first PowerShell plan (`New-XwfQueryFirstUsagePatternPlan`) before any materialized export. Move to `New-XwfContainerExportPlan` or `New-XwfUsagePatternPlan` only when query-only outputs are insufficient, manual and action gates allow it, and the controlled container/output boundary is documented.
+
 ## OS-first routing
 
 Before selecting tools, classify the evidence platform:

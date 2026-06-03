@@ -80,4 +80,16 @@ When X-Ways-MCP is selected, prefer:
 - parallel processing only where the manual, case state, and evidence handling support it
 - contemporaneous notes for every action, including SOP basis and deviations
 
+### X-Ways PowerShell Workflow Surface
+
+When the X-Ways MCP PowerShell module is available, the preferred handoff is a local plan/status workflow, not raw case material in prompts:
+
+1. `New-XwfForensicRun` creates the local run workspace, contemporaneous notes, plans, containers, derived output, reports, manual-cache pointer, safety policy, and initial best-practice note.
+2. `New-XwfQueryFirstUsagePatternPlan` is the first choice for per-machine/per-user usage questions because it plans X-Ways query surfaces before materializing file contents.
+3. `New-XwfContainerExportPlan` is used only when query output is insufficient and export is justified; exported file content must go to an approved forensic container or controlled case output.
+4. `New-XwfUsagePatternPlan` plans derived analysis from an approved container path.
+5. `Add-XwfContemporaneousNote`, `Select-XwfBestPractice`, `Test-XwfManualGate`, and `Test-XwfForensicAction` keep every decision tied to manual/source basis, SOP or best-practice basis, and soundness gates.
+
+For direct local-model regressions, feed Gemma only sanitized plan, status, and summary outputs from these functions. Keep raw case names, user names, recovered filenames, evidence names, keys, and alias maps local and outside prompts.
+
 The same pattern should apply to future adapters for other products. Add the adapter as a documented provider with a manifest-compatible interface, privacy boundary, manual-first gate, tests, and failure-mode notes rather than embedding product-specific behavior into the examiner prompt.
