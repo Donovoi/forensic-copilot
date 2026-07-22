@@ -4,7 +4,7 @@ Forensic Copilot is designed to keep working when the environment cannot reach G
 
 ## Operating Modes
 
-- **Online:** the tooling researcher may check current upstream docs and the provisioner may stage approved tools.
+- **Online:** the tooling researcher uses the pinned Donovoi/robin backend to check current upstream docs, and the provisioner may stage approved tools.
 - **Restricted:** web access exists but downloads, package installs, or external clones are blocked.
 - **Offline:** no web or package access is available; the workflow relies on local docs, installed tools, native OS capabilities, and generated scripts.
 
@@ -22,7 +22,7 @@ Use the fallback when a case needs repeatable collection or parsing and selected
 
 The required path is:
 
-1. `Forensic Tool Researcher` labels local-only basis as `OFFLINE-SOURCE-BASIS`.
+1. `Forensic Tool Researcher` records that Robin is unavailable by design for the explicitly offline run and labels the local-only basis as `OFFLINE-SOURCE-BASIS`.
 2. `Forensic Tool Provisioner` returns `SCRIPT_FALLBACK_REQUIRED` with runtime, input, output, logging, and validation needs.
 3. `Forensic Script Author` writes the smallest read-only script under an ignored case or tool-cache path.
 4. `Forensic Script Reviewer` performs static review, syntax validation, dry-run or fixture validation, log checks, and hashes where practical.

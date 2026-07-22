@@ -28,7 +28,7 @@ Research Task shape:
 {
   "description": "Research forensic tools",
   "subagent_type": "forensic-tool-researcher",
-  "prompt": "Research this live Windows user-activity timeline. Check native logs plus Hayabusa/Chainsaw/KAPE/Velociraptor fit. SearXNG<=3 or blocker. Return <=8 lines."
+  "prompt": "Use pinned Robin for this live Windows user-activity tooling round. Check native logs plus Hayabusa/Chainsaw/KAPE/Velociraptor fit. SearXNG<=3 or blocker. Return <=8 lines."
 }
 ```
 
@@ -93,6 +93,7 @@ Do not hand generated code to the examiner unless review returns `SCRIPT_REVIEW:
 ## Selection rules
 
 - Prefer maintained, documented, reproducible, expert-used tools.
+- Require the researcher to use the pinned Donovoi/robin adapter as its first action. Treat `ROBIN_BLOCKED` as a helper-loop blocker; do not replace it with an unrecorded research path.
 - Manual first: require the newest official manual/vendor docs/upstream docs/local docs cache to be checked before deciding command syntax, automation, API, parallelization, update, or fallback behavior.
 - Treat evidence OS and evidence mode as first-order forensic inputs. Do not default to Windows from examples or Linux from the runner.
 - BitLocker strongly indicates Windows evidence. E01 strongly indicates a forensic disk image. Use those facts to avoid unnecessary profiling turns on slow local models.

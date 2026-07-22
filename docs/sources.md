@@ -86,6 +86,7 @@ That is deliberate. This file should not imply a document was checked if it was 
 | Open WebUI knowledge | Knowledge-base setup for loading repository guidance into Open WebUI. | <https://docs.openwebui.com/features/workspace/knowledge/> |
 | Open WebUI models | Model preset setup for custom system prompts, tools, and knowledge. | <https://docs.openwebui.com/features/workspace/models/> |
 | OpenCode agents | `opencode.json` agent and subagent configuration shape. | <https://dev.opencode.ai/docs/agents/> |
+| Donovoi/robin | Revision-pinned OpenCode research adapter and SearXNG-aware research behavior; checked 2026-07-22. | <https://github.com/Donovoi/robin> |
 
 ## Current working observations
 

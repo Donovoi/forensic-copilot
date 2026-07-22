@@ -16,6 +16,7 @@ This matrix is the starting point for the `Forensic Senior Tooling Specialist` a
 10. treat offline and no-download environments as normal operating modes; use local docs, installed tools, native commands, and generated-script fallback rather than assuming web access
 11. identify the evidence OS and evidence mode before OS-specific collection; the runner OS is not automatically the evidence OS
 12. treat specialized tool adapters as optional providers selected by evidence fit, manual support, privacy controls, and local availability, not as mandatory product lanes
+13. route online tooling research through the exact Donovoi/robin revision pinned by `scripts/robin_research.py`; do not silently substitute another online research path if the pin or adapter fails
 
 ## Advanced tooling specialist flow
 
@@ -23,7 +24,7 @@ The senior tooling specialist should not act as a one-person installer. For ever
 
 1. map the case question to artifact classes and platform constraints
 2. invoke `Forensic Platform Profiler` when OS, evidence mode, host role, filesystem/logging, or runner boundary is unclear
-3. invoke `Forensic Tool Researcher` to check current upstream or official sources for the profiled platform
+3. invoke the pinned Donovoi/robin-backed `Forensic Tool Researcher` to check current upstream or official sources for the profiled platform
 4. select the smallest justified toolchain
 5. invoke `Forensic Tool Provisioner` to stage, update, verify, or document the execution flow under ignored local paths such as `toolcache/`, `tooling/downloads/`, or `tooling/cache/`
 6. when downloads or selected tools are blocked, invoke the script-author and script-reviewer fallback before any generated code is used

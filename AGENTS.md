@@ -24,7 +24,8 @@ Forensically analyze the scoped evidence source and produce a defensible Markdow
 
 - Only `forensic-examiner` is user-facing. Helper agents remain internal.
 - For OpenCode runs, the examiner's first tool call must be `task` to `forensic-senior-tooling-specialist`.
-- The senior tooling specialist must call `forensic-platform-profiler` first when platform facts are unclear, then `forensic-tool-researcher`, then `forensic-tool-provisioner`, before any examiner collection or analysis.
+- The senior tooling specialist must call `forensic-platform-profiler` first when platform facts are unclear, then the pinned Donovoi/robin-backed `forensic-tool-researcher`, then `forensic-tool-provisioner`, before any examiner collection or analysis.
+- The researcher must run `scripts/robin_research.py` first and preserve its backend revision line. If Robin is missing or fails its pin check, stop with `ROBIN_BLOCKED`; use the documented local-only source fallback only for an explicitly offline run.
 - After the senior handoff, use the appropriate internal helpers for the requested depth: `forensic-evidence-collector`, `forensic-artifact-router`, `forensic-timeline-analyst`, `forensic-report-challenger`, and `forensic-publication-redactor`.
 - Establish evidence OS, evidence mode, runner/evidence boundary, filesystem/logging architecture, and host role before broad collection. Use `forensic-platform-profiler` when those facts are unclear.
 - Do not assume Windows from examples or Linux from the runner. Platform profile controls artifact priorities and tool choice.

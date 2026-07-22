@@ -6,6 +6,7 @@ They complement `docs/self-update-loop.md` by leaving a short, reviewable ration
 
 ## Index
 
+- `2026-07-22-robin-research-backend.md` - route online tooling research through a constrained, revision-pinned Donovoi/robin adapter
 - `2026-05-31-secret-led-evidence-expansion.md` - route extracted secrets back into the forensic loop as classified leads for local unlocks and approval-needed remote use
 - `2026-05-31-controlled-secret-extraction.md` - allow scoped secret dumping as controlled evidence and route plaintext lanes to local/offline models when required
 - `2026-05-31-manual-first-tooling.md` - check current manuals or official docs before program, API, automation, update, parallelization, or fallback decisions

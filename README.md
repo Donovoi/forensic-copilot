@@ -6,6 +6,8 @@ Forensic Copilot is a portable agent workflow for digital forensic triage, host 
 
 It gives you one visible agent, **Forensic Examiner**, plus internal helper agents for platform profiling, tool research, provisioning, evidence collection, timeline analysis, report challenge, redaction, and offline script fallback.
 
+The online tooling-research round runs through a revision-pinned [Donovoi/robin](https://github.com/Donovoi/robin) adapter. The adapter launches a separate locked-down OpenCode researcher, permits only narrow official-page fetching, bounds the note to eight lines including backend provenance, and refuses a different fork or revision.
+
 Use it with real examiner judgment, your legal authority, and your local SOPs. It helps structure the work; it does not replace validation, chain of custody, or human review.
 
 ## Fast Start
@@ -23,6 +25,13 @@ Analyze this authorized Windows host for user activity during the last two hours
 ```
 
 A bare path is enough to begin. The examiner should infer preservation-first, scope-limited triage, start a Markdown case record, and ask only the clarification questions that could materially change the result.
+
+Before the first online research round, stage the pinned Robin checkout under the ignored tool cache:
+
+```bash
+python scripts/robin_research.py setup
+python scripts/robin_research.py verify
+```
 
 ## Paired VM disk and memory cases
 
