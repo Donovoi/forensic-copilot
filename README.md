@@ -44,7 +44,28 @@ python scripts/paired_vm_case.py verify \
   --prepare-working-disks
 python scripts/paired_vm_case.py build-tools --case-root /cases/CASE-001
 python scripts/paired_vm_case.py memory --case-root /cases/CASE-001 --info-only
+python scripts/paired_vm_case.py memory-convert \
+  --case-root /cases/CASE-001 --source HOST-A --allow-network
+python scripts/paired_vm_case.py memory \
+  --case-root /cases/CASE-001 --source HOST-A --input converted --info-only
+python scripts/paired_vm_case.py memory \
+  --case-root /cases/CASE-001 --source HOST-A --input converted --extended
 python scripts/paired_vm_case.py disk-layout --case-root /cases/CASE-001
+python scripts/paired_vm_case.py disk-filesystems --case-root /cases/CASE-001
+python scripts/paired_vm_case.py timeline --case-root /cases/CASE-001 --source HOST-A
+python scripts/paired_vm_case.py disk-recover \
+  --case-root /cases/CASE-001 --source HOST-A --offset 206848 \
+  --directory-inum 12345
+python scripts/paired_vm_case.py timeline-recovered \
+  --case-root /cases/CASE-001 --source HOST-A --offset 206848 \
+  --directory-inum 12345 \
+  --file-filter /cases/CASE-001/config/windows-triage.filter
+python scripts/paired_vm_case.py timeline-slice \
+  --case-root /cases/CASE-001 --source HOST-A \
+  --slice 2026-05-21T16:08:42+00:00 --slice-size 10
+python scripts/paired_vm_case.py timeline-query \
+  --case-root /cases/CASE-001 --source HOST-A \
+  --filter 'filename contains "server.ps1"' --name server-ps1
 ```
 
 Network access is disabled for analysis containers by default. Add

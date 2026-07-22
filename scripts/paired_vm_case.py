@@ -24,6 +24,11 @@ SHA256_RE = re.compile(r"(?i)(?<![0-9a-f])([0-9a-f]{64})(?![0-9a-f])")
 SAFE_NAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
 DEFAULT_VOLATILITY_IMAGE = "forensic-copilot/volatility:2.28.0"
 DEFAULT_TSK_IMAGE = "forensic-copilot/tsk:ubuntu24.04"
+DEFAULT_ELF2DMP_IMAGE = "forensic-copilot/elf2dmp:11.0.2"
+DEFAULT_PLASO_IMAGE = (
+    "log2timeline/plaso:20260512@"
+    "sha256:16baaa7645e03381b0b246315d6ded08ff28f78f0a5b1c2f062bba42714852c8"
+)
 DEFAULT_MEMORY_PLUGINS = (
     "windows.info",
     "windows.pslist",
@@ -36,10 +41,23 @@ DEFAULT_MEMORY_PLUGINS = (
     "windows.getsids",
     "windows.modules",
     "windows.driverscan",
-    "windows.malfind",
+    "windows.malware.malfind",
     "windows.handles",
     "windows.filescan",
     "windows.registry.hivelist",
+)
+EXTENDED_MEMORY_PLUGINS = (
+    "windows.malware.psxview",
+    "windows.cmdscan",
+    "windows.consoles",
+    "windows.envars",
+    "windows.privileges",
+    "windows.malware.suspicious_threads",
+    "windows.malware.hollowprocesses",
+    "windows.malware.processghosting",
+    "windows.registry.scheduled_tasks",
+    "windows.registry.userassist",
+    "windows.shimcachemem",
 )
 
 
@@ -708,6 +726,20 @@ def require_command(name: str) -> str:
     return path
 
 
+def require_docker_image(image: str) -> None:
+    completed = subprocess.run(
+        ["docker", "image", "inspect", image],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise CaseError(
+            f"Required Docker image is not prepared locally: {image}; run build-tools first"
+        )
+
+
 def build_tools(args: argparse.Namespace) -> int:
     case_root, _, _ = load_case(args.case_root)
     require_command("docker")
@@ -719,6 +751,11 @@ def build_tools(args: argparse.Namespace) -> int:
             repo_root / "tooling" / "paired-vm" / "Dockerfile.volatility",
         ),
         ("tsk", args.tsk_image, repo_root / "tooling" / "paired-vm" / "Dockerfile.tsk"),
+        (
+            "elf2dmp",
+            args.elf2dmp_image,
+            repo_root / "tooling" / "paired-vm" / "Dockerfile.elf2dmp",
+        ),
     )
     results = []
     for name, tag, dockerfile in definitions:
@@ -737,8 +774,28 @@ def build_tools(args: argparse.Namespace) -> int:
         if record["exit_code"] != 0:
             raise CaseError(f"Docker build failed for {name}; see {record['stderr_path']}")
 
+    print(f"Pulling digest-pinned Plaso image {args.plaso_image}")
+    plaso_pull = run_recorded(
+        case_root,
+        "pull-plaso",
+        ["docker", "pull", args.plaso_image],
+        case_root / "tooling" / "pull-plaso.stdout.log",
+        case_root / "tooling" / "pull-plaso.stderr.log",
+    )
+    results.append(plaso_pull)
+    if plaso_pull["exit_code"] != 0:
+        raise CaseError(f"Docker pull failed for Plaso; see {plaso_pull['stderr_path']}")
+
     inspect = subprocess.run(
-        ["docker", "image", "inspect", args.volatility_image, args.tsk_image],
+        [
+            "docker",
+            "image",
+            "inspect",
+            args.volatility_image,
+            args.tsk_image,
+            args.elf2dmp_image,
+            args.plaso_image,
+        ],
         capture_output=True,
         text=True,
         check=False,
@@ -770,6 +827,24 @@ def build_tools(args: argparse.Namespace) -> int:
             "--all",
         ],
         "sleuthkit": ["docker", "run", "--rm", args.tsk_image, "mmls", "-V"],
+        "elf2dmp-source": [
+            "docker",
+            "image",
+            "inspect",
+            "--format",
+            '{{ index .Config.Labels "org.opencontainers.image.version" }}',
+            args.elf2dmp_image,
+        ],
+        "plaso": [
+            "docker",
+            "run",
+            "--rm",
+            "--network",
+            "none",
+            args.plaso_image,
+            "log2timeline",
+            "--version",
+        ],
     }
     versions: dict[str, Any] = {}
     for name, command in version_commands.items():
@@ -791,7 +866,7 @@ def build_tools(args: argparse.Namespace) -> int:
             "builds": results,
         },
     )
-    print(f"Built and recorded {len(results)} tool image(s)")
+    print(f"Prepared and recorded {len(results)} tool image operation(s)")
     return 0
 
 
@@ -807,6 +882,7 @@ def volatility_command(
     memory_name: str,
     output_directory: Path,
     cache_directory: Path,
+    symbol_directory: Path,
     plugin: str,
     allow_network: bool,
     parallelism: str,
@@ -828,8 +904,12 @@ def volatility_command(
             f"{output_directory}:/output:rw",
             "-v",
             f"{cache_directory}:/home/ANALYST/.cache/volatility3:rw",
+            "-v",
+            f"{symbol_directory}:/symbols:rw",
             image,
             "-q",
+            "-s",
+            "/symbols",
             "--parallelism",
             parallelism,
             "-f",
@@ -846,20 +926,169 @@ def volatility_command(
     return command
 
 
+def validated_converted_memory_metadata(
+    case_root: Path, source: dict[str, Any]
+) -> tuple[Path, dict[str, Any]]:
+    conversion_root = source_work_root(case_root, source) / "memory" / "converted"
+    dump_path = conversion_root / "windows.dmp"
+    metadata_path = conversion_root / "windows.dmp.json"
+    if not dump_path.is_file() or not metadata_path.is_file():
+        raise CaseError(
+            f"Converted Windows dump is missing; run memory-convert first: {dump_path}"
+        )
+    try:
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        raise CaseError(f"Converted dump metadata cannot be read: {metadata_path}: {exc}") from exc
+    if metadata.get("source_relative_path") != source["memory_dump"]["relative_path"]:
+        raise CaseError(f"Converted dump source mismatch: {metadata_path}")
+    if resolved(metadata.get("converted_path", "")) != dump_path.resolve():
+        raise CaseError(f"Converted dump path mismatch: {metadata_path}")
+    if metadata.get("size_bytes") != dump_path.stat().st_size:
+        raise CaseError(f"Converted dump size does not match its metadata: {dump_path}")
+    if not metadata.get("atomic_completion"):
+        raise CaseError(f"Converted dump metadata lacks atomic completion: {metadata_path}")
+    if not SHA256_RE.fullmatch(str(metadata.get("sha256", ""))):
+        raise CaseError(f"Converted dump metadata lacks a valid SHA-256: {metadata_path}")
+    return dump_path, metadata
+
+
+def elf2dmp_command(
+    image: str, evidence_path: Path, conversion_root: Path, partial_name: str
+) -> list[str]:
+    command = ["docker", "run", "--rm", "--read-only"]
+    command.extend(docker_user_args())
+    command.extend(
+        [
+            "--tmpfs",
+            "/tmp:rw,noexec,nosuid,size=1g",
+            "-e",
+            "HOME=/tmp",
+            "-v",
+            f"{evidence_path.parent}:/evidence:ro",
+            "-v",
+            f"{conversion_root}:/output:rw",
+            "-w",
+            "/output",
+            image,
+            f"/evidence/{evidence_path.name}",
+            f"/output/{partial_name}",
+        ]
+    )
+    return command
+
+
+def convert_memory(args: argparse.Namespace) -> int:
+    case_root, evidence_root, state = load_case(args.case_root)
+    require_command("docker")
+    require_docker_image(args.elf2dmp_image)
+    selected = select_sources(state, args.source)
+    integrity = require_verified_integrity(case_root, selected)
+    if not args.allow_network:
+        raise CaseError(
+            "QEMU elf2dmp requires Microsoft symbol access; rerun with explicit --allow-network"
+        )
+    integrity_by_name = {item["source_name"]: item for item in integrity["sources"]}
+    any_failure = False
+    for source in selected:
+        source_path, _ = validated_evidence_path(evidence_root, source["memory_dump"])
+        source_integrity = integrity_by_name[source["source_name"]]
+        memory_integrity = next(
+            item for item in source_integrity["items"] if item.get("role") == "memory_dump"
+        )
+        conversion_root = source_work_root(case_root, source) / "memory" / "converted"
+        conversion_root.mkdir(parents=True, exist_ok=True)
+        destination = conversion_root / "windows.dmp"
+        partial = conversion_root / "windows.dmp.partial"
+        metadata_path = conversion_root / "windows.dmp.json"
+        if destination.exists() and not args.force:
+            validated_converted_memory_metadata(case_root, source)
+            print(f"Converted dump already exists; skipping {source['source_name']}: {destination}")
+            continue
+        if partial.exists():
+            if not args.restart:
+                raise CaseError(
+                    f"Interrupted conversion output exists: {partial}; use --restart to remove only it"
+                )
+            partial.unlink()
+        command = elf2dmp_command(
+            args.elf2dmp_image, source_path, conversion_root, partial.name
+        )
+        print(f"Converting verified QEMU ELF memory for {source['source_name']}")
+        record = run_recorded(
+            case_root,
+            f"{source['case_key']}-elf2dmp",
+            command,
+            conversion_root / "elf2dmp.stdout.log",
+            conversion_root / "elf2dmp.stderr.log",
+        )
+        if record["exit_code"] != 0 or not partial.is_file():
+            any_failure = True
+            print(f"  conversion failed with exit {record['exit_code']}; partial retained if present")
+            continue
+        print(f"Hashing derived Windows dump for {source['source_name']}")
+        digest = file_sha256(partial)
+        size_bytes = partial.stat().st_size
+        os.replace(partial, destination)
+        atomic_write_json(
+            metadata_path,
+            {
+                "created_utc": utc_now(),
+                "source_relative_path": source["memory_dump"]["relative_path"],
+                "source_sha256": memory_integrity["sha256"],
+                "converted_path": str(destination),
+                "size_bytes": size_bytes,
+                "sha256": digest,
+                "image": args.elf2dmp_image,
+                "network_allowed_for_microsoft_symbol_resolution": True,
+                "atomic_completion": True,
+                "run": record,
+            },
+        )
+        print(f"Prepared {destination} ({size_bytes} bytes, SHA-256 {digest})")
+    return 2 if any_failure else 0
+
+
+def memory_run_kind(args: argparse.Namespace) -> str:
+    if args.plugin:
+        plugin_key = "\n".join(args.plugin).encode("utf-8")
+        return f"custom-{len(args.plugin)}-{hashlib.sha256(plugin_key).hexdigest()[:12]}"
+    if args.info_only:
+        return "info"
+    if args.extended:
+        return "extended"
+    return "baseline"
+
+
 def run_memory_plugins(args: argparse.Namespace) -> int:
     case_root, evidence_root, state = load_case(args.case_root)
     require_command("docker")
+    require_docker_image(args.volatility_image)
     selected = select_sources(state, args.source)
     require_verified_integrity(case_root, selected)
-    plugins = args.plugin or (["windows.info"] if args.info_only else list(DEFAULT_MEMORY_PLUGINS))
+    if args.plugin:
+        plugins = args.plugin
+    elif args.info_only:
+        plugins = ["windows.info"]
+    elif args.extended:
+        plugins = list(DEFAULT_MEMORY_PLUGINS + EXTENDED_MEMORY_PLUGINS)
+    else:
+        plugins = list(DEFAULT_MEMORY_PLUGINS)
+    run_kind = memory_run_kind(args)
     any_failure = False
     for source in selected:
-        evidence_record = source["memory_dump"]
-        evidence_path = evidence_root / evidence_record["relative_path"]
-        output_root = source_work_root(case_root, source) / "memory"
+        if args.input == "converted":
+            evidence_path, _ = validated_converted_memory_metadata(case_root, source)
+        else:
+            evidence_record = source["memory_dump"]
+            evidence_path, _ = validated_evidence_path(evidence_root, evidence_record)
+        output_root = source_work_root(case_root, source) / "memory" / f"analysis-{args.input}"
         cache_root = case_root / "tool-cache" / "volatility3"
+        symbol_root = cache_root / "symbols"
         output_root.mkdir(parents=True, exist_ok=True)
         cache_root.mkdir(parents=True, exist_ok=True)
+        symbol_root.mkdir(parents=True, exist_ok=True)
+        (symbol_root / "windows").mkdir(parents=True, exist_ok=True)
         source_runs = []
         for plugin in plugins:
             slug = safe_name(plugin)
@@ -869,6 +1098,7 @@ def run_memory_plugins(args: argparse.Namespace) -> int:
                 evidence_path.name,
                 output_root,
                 cache_root,
+                symbol_root,
                 plugin,
                 args.allow_network,
                 args.parallelism,
@@ -885,22 +1115,25 @@ def run_memory_plugins(args: argparse.Namespace) -> int:
             if record["exit_code"] != 0:
                 any_failure = True
                 print(f"  failed with exit {record['exit_code']}; continuing independent plugins")
-        atomic_write_json(
-            output_root / "run-summary.json",
-            {
-                "completed_utc": utc_now(),
-                "source_name": source["source_name"],
-                "image": args.volatility_image,
-                "network_allowed_for_symbol_resolution": args.allow_network,
-                "runs": source_runs,
-            },
-        )
+        summary = {
+            "completed_utc": utc_now(),
+            "source_name": source["source_name"],
+            "image": args.volatility_image,
+            "input_kind": args.input,
+            "input_path": str(evidence_path),
+            "run_kind": run_kind,
+            "network_allowed_for_symbol_resolution": args.allow_network,
+            "runs": source_runs,
+        }
+        atomic_write_json(output_root / f"run-summary-{run_kind}.json", summary)
+        atomic_write_json(output_root / "run-summary.json", summary)
     return 2 if any_failure else 0
 
 
 def disk_layout(args: argparse.Namespace) -> int:
     case_root, _, state = load_case(args.case_root)
     require_command("docker")
+    require_docker_image(args.tsk_image)
     selected = select_sources(state, args.source)
     require_verified_integrity(case_root, selected)
     any_failure = False
@@ -934,6 +1167,816 @@ def disk_layout(args: argparse.Namespace) -> int:
         atomic_write_json(metadata_root / "mmls.run.json", record)
         if record["exit_code"] != 0:
             any_failure = True
+    return 2 if any_failure else 0
+
+
+MMLS_PARTITION_RE = re.compile(
+    r"^\d+:\s+\d+:\d+\s+(\d+)\s+(\d+)\s+(\d+)\s+\S+\s+(.+?)\s*$"
+)
+
+
+def parse_mmls_partitions(text: str) -> list[dict[str, Any]]:
+    partitions = []
+    for line in text.splitlines():
+        match = MMLS_PARTITION_RE.match(line)
+        if not match:
+            continue
+        start, end, length, description = match.groups()
+        partitions.append(
+            {
+                "start_sector": int(start),
+                "end_sector": int(end),
+                "length_sectors": int(length),
+                "description": description,
+            }
+        )
+    return partitions
+
+
+def disk_filesystems(args: argparse.Namespace) -> int:
+    case_root, _, state = load_case(args.case_root)
+    require_command("docker")
+    require_docker_image(args.tsk_image)
+    selected = select_sources(state, args.source)
+    require_verified_integrity(case_root, selected)
+    any_failure = False
+    for source in selected:
+        source_root = source_work_root(case_root, source)
+        validated_working_disk_metadata(case_root, source)
+        disk_path = source_root / "disk" / "working" / "disk.raw"
+        metadata_root = source_root / "disk" / "metadata"
+        mmls_path = metadata_root / "mmls.txt"
+        if not mmls_path.is_file():
+            raise CaseError(f"Partition layout is missing; run disk-layout first: {mmls_path}")
+        partitions = parse_mmls_partitions(mmls_path.read_text(encoding="utf-8", errors="replace"))
+        if not partitions:
+            raise CaseError(f"No allocated partitions parsed from: {mmls_path}")
+        runs = []
+        for partition in partitions:
+            offset = partition["start_sector"]
+            command = ["docker", "run", "--rm", "--network", "none", "--read-only"]
+            command.extend(docker_user_args())
+            command.extend(
+                [
+                    "-v",
+                    f"{disk_path.parent}:/evidence:ro",
+                    args.tsk_image,
+                    "fsstat",
+                    "-i",
+                    "raw",
+                    "-o",
+                    str(offset),
+                    "/evidence/disk.raw",
+                ]
+            )
+            print(f"Reading filesystem metadata for {source['source_name']} at sector {offset}")
+            record = run_recorded(
+                case_root,
+                f"{source['case_key']}-fsstat-{offset}",
+                command,
+                metadata_root / f"fsstat-offset-{offset}.txt",
+                metadata_root / f"fsstat-offset-{offset}.stderr.log",
+            )
+            record["partition"] = partition
+            runs.append(record)
+            if record["exit_code"] != 0:
+                any_failure = True
+        atomic_write_json(
+            metadata_root / "fsstat.run.json",
+            {"completed_utc": utc_now(), "source_name": source["source_name"], "runs": runs},
+        )
+    return 2 if any_failure else 0
+
+
+def tsk_recover_command(
+    image: str,
+    disk_directory: Path,
+    output_directory: Path,
+    partial_name: str,
+    offset: int,
+    directory_inum: int | None = None,
+) -> list[str]:
+    command = ["docker", "run", "--rm", "--network", "none", "--read-only"]
+    command.extend(docker_user_args())
+    command.extend(
+        [
+            "-v",
+            f"{disk_directory}:/evidence:ro",
+            "-v",
+            f"{output_directory}:/output:rw",
+            image,
+            "tsk_recover",
+            "-a",
+            "-i",
+            "raw",
+            "-o",
+            str(offset),
+        ]
+    )
+    if directory_inum is not None:
+        command.extend(["-d", str(directory_inum)])
+    command.extend(["/evidence/disk.raw", f"/output/{partial_name}"])
+    return command
+
+
+def directory_tree_stats(root: Path) -> tuple[int, int]:
+    file_count = 0
+    size_bytes = 0
+    for directory, directory_names, file_names in os.walk(root, followlinks=False):
+        directory_path = Path(directory)
+        for name in directory_names:
+            if (directory_path / name).is_symlink():
+                raise CaseError(f"Recovered tree contains a symlink: {directory_path / name}")
+        for name in file_names:
+            path = directory_path / name
+            if path.is_symlink():
+                raise CaseError(f"Recovered tree contains a symlink: {path}")
+            file_count += 1
+            size_bytes += path.stat().st_size
+    return file_count, size_bytes
+
+
+def recovery_basename(offset: int, directory_inum: int | None = None) -> str:
+    basename = f"offset-{offset}"
+    if directory_inum is not None:
+        basename = f"{basename}-dir-{directory_inum}"
+    return basename
+
+
+def validated_recovered_directory_metadata(
+    case_root: Path,
+    source: dict[str, Any],
+    offset: int,
+    directory_inum: int | None = None,
+) -> tuple[Path, dict[str, Any]]:
+    recovery_root = source_work_root(case_root, source) / "disk" / "recovered"
+    basename = recovery_basename(offset, directory_inum)
+    destination = recovery_root / basename
+    metadata_path = recovery_root / f"{basename}.json"
+    if not destination.is_dir() or not metadata_path.is_file():
+        raise CaseError(f"Completed TSK recovery is missing; run disk-recover first: {destination}")
+    try:
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        raise CaseError(f"Recovery metadata cannot be read: {metadata_path}: {exc}") from exc
+    if resolved(metadata.get("recovered_path", "")) != destination.resolve():
+        raise CaseError(f"Recovered directory path mismatch: {metadata_path}")
+    if metadata.get("offset_sector") != offset:
+        raise CaseError(f"Recovered directory offset mismatch: {metadata_path}")
+    if metadata.get("directory_inum") != directory_inum:
+        raise CaseError(f"Recovered directory inode mismatch: {metadata_path}")
+    if not metadata.get("atomic_completion"):
+        raise CaseError(f"Recovery metadata lacks atomic completion: {metadata_path}")
+    return destination, metadata
+
+
+def recover_disk_files(args: argparse.Namespace) -> int:
+    case_root, _, state = load_case(args.case_root)
+    require_command("docker")
+    require_docker_image(args.tsk_image)
+    selected = select_sources(state, args.source)
+    require_verified_integrity(case_root, selected)
+    any_failure = False
+    for source in selected:
+        source_root = source_work_root(case_root, source)
+        disk_metadata = validated_working_disk_metadata(case_root, source)
+        disk_directory = source_root / "disk" / "working"
+        recovery_root = source_root / "disk" / "recovered"
+        recovery_root.mkdir(parents=True, exist_ok=True)
+        basename = recovery_basename(args.offset, args.directory_inum)
+        destination = recovery_root / basename
+        partial = recovery_root / f"{basename}.partial"
+        metadata_path = recovery_root / f"{basename}.json"
+        if destination.exists():
+            validated_recovered_directory_metadata(
+                case_root, source, args.offset, args.directory_inum
+            )
+            print(f"Recovered directory already exists; skipping {source['source_name']}: {destination}")
+            continue
+        if partial.exists():
+            if not args.restart:
+                raise CaseError(
+                    f"Interrupted recovery directory exists: {partial}; use --restart to remove only it"
+                )
+            shutil.rmtree(partial)
+        command = tsk_recover_command(
+            args.tsk_image,
+            disk_directory,
+            recovery_root,
+            partial.name,
+            args.offset,
+            args.directory_inum,
+        )
+        scope = f"directory inode {args.directory_inum}" if args.directory_inum else "volume"
+        print(
+            f"Recovering allocated files for {source['source_name']} at sector "
+            f"{args.offset} ({scope})"
+        )
+        record = run_recorded(
+            case_root,
+            f"{source['case_key']}-tsk-recover-{basename}",
+            command,
+            recovery_root / f"{basename}.stdout.log",
+            recovery_root / f"{basename}.stderr.log",
+        )
+        if record["exit_code"] != 0 or not partial.is_dir():
+            any_failure = True
+            print(f"  recovery failed with exit {record['exit_code']}; partial retained if present")
+            continue
+        file_count, size_bytes = directory_tree_stats(partial)
+        os.replace(partial, destination)
+        atomic_write_json(
+            metadata_path,
+            {
+                "created_utc": utc_now(),
+                "source_working_disk": str(disk_directory / "disk.raw"),
+                "source_working_disk_sha256": disk_metadata["sha256"],
+                "offset_sector": args.offset,
+                "directory_inum": args.directory_inum,
+                "recovered_path": str(destination),
+                "allocated_files_only": True,
+                "file_count": file_count,
+                "logical_size_bytes": size_bytes,
+                "image": args.tsk_image,
+                "atomic_completion": True,
+                "run": record,
+            },
+        )
+        print(f"Prepared {destination} ({file_count} files, {size_bytes} logical bytes)")
+    return 2 if any_failure else 0
+
+
+def plaso_command(
+    image: str,
+    disk_directory: Path,
+    output_directory: Path,
+    storage_name: str,
+    partitions: str,
+    vss_stores: str,
+) -> list[str]:
+    command = ["docker", "run", "--rm", "--network", "none", "--read-only"]
+    command.extend(docker_user_args())
+    command.extend(
+        [
+            "--tmpfs",
+            "/tmp:rw,nosuid,size=8g",
+            "--shm-size",
+            "2g",
+            "-e",
+            "HOME=/tmp",
+            "-v",
+            f"{disk_directory}:/evidence:ro",
+            "-v",
+            f"{output_directory}:/output:rw",
+            image,
+            "log2timeline",
+            "--storage-file",
+            f"/output/{storage_name}",
+            "--logfile",
+            f"/output/{storage_name}.log.gz",
+            "--unattended",
+            "--partitions",
+            partitions,
+            "--vss_stores",
+            vss_stores,
+            "/evidence/disk.raw",
+        ]
+    )
+    return command
+
+
+def plaso_completion_errors(stdout_path: Path, internal_log_path: Path) -> list[str]:
+    indicators = []
+    stdout_text = stdout_path.read_text(encoding="utf-8", errors="replace")
+    if "Processing completed with errors." in stdout_text:
+        indicators.append("processing_completed_with_errors")
+    if "Path specifications that could not be processed:" in stdout_text:
+        indicators.append("unprocessed_path_specifications")
+    if internal_log_path.is_file():
+        try:
+            with gzip.open(internal_log_path, "rt", encoding="utf-8", errors="replace") as stream:
+                internal_log_text = stream.read()
+        except (gzip.BadGzipFile, OSError) as exc:
+            indicators.append(f"internal_log_unreadable:{type(exc).__name__}")
+        else:
+            if "[ERROR]" in internal_log_text:
+                indicators.append("internal_log_error")
+    return indicators
+
+
+def disk_timeline(args: argparse.Namespace) -> int:
+    case_root, _, state = load_case(args.case_root)
+    require_command("docker")
+    require_docker_image(args.plaso_image)
+    selected = select_sources(state, args.source)
+    require_verified_integrity(case_root, selected)
+    any_failure = False
+    for source in selected:
+        source_root = source_work_root(case_root, source)
+        validated_working_disk_metadata(case_root, source)
+        disk_directory = source_root / "disk" / "working"
+        output_root = source_root / "timeline"
+        output_root.mkdir(parents=True, exist_ok=True)
+        destination = output_root / "timeline.plaso"
+        partial = output_root / "timeline.plaso.partial"
+        metadata_path = output_root / "timeline.plaso.json"
+        if destination.exists():
+            if not args.force:
+                print(f"Timeline already exists; skipping {source['source_name']}: {destination}")
+                continue
+        if partial.exists():
+            if not args.restart:
+                raise CaseError(
+                    f"Interrupted timeline output exists: {partial}; use --restart to remove only it"
+                )
+            partial.unlink()
+        command = plaso_command(
+            args.plaso_image,
+            disk_directory,
+            output_root,
+            partial.name,
+            args.partitions,
+            args.vss_stores,
+        )
+        print(f"Building Plaso timeline for {source['source_name']}")
+        record = run_recorded(
+            case_root,
+            f"{source['case_key']}-log2timeline",
+            command,
+            output_root / "log2timeline.stdout.log",
+            output_root / "log2timeline.stderr.log",
+        )
+        internal_log_path = output_root / f"{partial.name}.log.gz"
+        if record["exit_code"] != 0:
+            any_failure = True
+            print(f"  failed with exit {record['exit_code']}; partial output retained if present")
+            continue
+        if not partial.is_file():
+            any_failure = True
+            print("  command succeeded but produced no Plaso storage file")
+            continue
+        completion_errors = plaso_completion_errors(
+            Path(record["stdout_path"]), internal_log_path
+        )
+        if completion_errors:
+            any_failure = True
+            atomic_write_json(
+                output_root / "timeline.plaso.partial.json",
+                {
+                    "created_utc": utc_now(),
+                    "status": "incomplete",
+                    "source_working_disk": str(disk_directory / "disk.raw"),
+                    "storage_path": str(partial),
+                    "image": args.plaso_image,
+                    "partitions": args.partitions,
+                    "vss_stores": args.vss_stores,
+                    "completion_errors": completion_errors,
+                    "atomic_completion": False,
+                    "run": record,
+                },
+            )
+            print(
+                "  Plaso reported incomplete processing; partial retained: "
+                + ", ".join(completion_errors)
+            )
+            continue
+        print(f"Hashing derived timeline for {source['source_name']}")
+        digest = file_sha256(partial)
+        size_bytes = partial.stat().st_size
+        os.replace(partial, destination)
+        atomic_write_json(
+            metadata_path,
+            {
+                "created_utc": utc_now(),
+                "source_working_disk": str(disk_directory / "disk.raw"),
+                "storage_path": str(destination),
+                "size_bytes": size_bytes,
+                "sha256": digest,
+                "image": args.plaso_image,
+                "partitions": args.partitions,
+                "vss_stores": args.vss_stores,
+                "completion_errors": [],
+                "atomic_completion": True,
+                "run": record,
+            },
+        )
+        print(f"Prepared {destination} ({size_bytes} bytes, SHA-256 {digest})")
+    return 2 if any_failure else 0
+
+
+def plaso_recovered_command(
+    image: str,
+    recovered_directory: Path,
+    output_directory: Path,
+    storage_name: str,
+    file_filter: Path | None = None,
+) -> list[str]:
+    command = ["docker", "run", "--rm", "--network", "none", "--read-only"]
+    command.extend(docker_user_args())
+    command.extend(
+        [
+            "--tmpfs",
+            "/tmp:rw,nosuid,size=8g",
+            "--shm-size",
+            "2g",
+            "-e",
+            "HOME=/tmp",
+            "-v",
+            f"{recovered_directory}:/evidence:ro",
+            "-v",
+            f"{output_directory}:/output:rw",
+            image,
+            "log2timeline",
+        ]
+    )
+    if file_filter is not None:
+        command[command.index(image) : command.index(image)] = [
+            "-v",
+            f"{file_filter}:/config/file-filter.txt:ro",
+        ]
+        command.extend(["--filter-file", "/config/file-filter.txt"])
+    command.extend(
+        [
+            "--storage-file",
+            f"/output/{storage_name}",
+            "--logfile",
+            f"/output/{storage_name}.log.gz",
+            "--unattended",
+            "/evidence",
+        ]
+    )
+    return command
+
+
+def recovered_disk_timeline(args: argparse.Namespace) -> int:
+    case_root, _, state = load_case(args.case_root)
+    require_command("docker")
+    require_docker_image(args.plaso_image)
+    selected = select_sources(state, args.source)
+    require_verified_integrity(case_root, selected)
+    any_failure = False
+    file_filter = None
+    file_filter_sha256 = None
+    if args.file_filter:
+        candidate = Path(args.file_filter).expanduser()
+        if candidate.is_symlink() or not candidate.is_file():
+            raise CaseError(f"Plaso file filter must be a regular, non-symlink file: {candidate}")
+        file_filter = candidate.resolve()
+        file_filter_sha256 = file_sha256(file_filter)
+    for source in selected:
+        recovered_directory, recovery_metadata = validated_recovered_directory_metadata(
+            case_root, source, args.offset, args.directory_inum
+        )
+        output_root = source_work_root(case_root, source) / "timeline"
+        output_root.mkdir(parents=True, exist_ok=True)
+        recovery_name = recovery_basename(args.offset, args.directory_inum)
+        storage_basename = f"recovered-{recovery_name}.plaso"
+        destination = output_root / storage_basename
+        partial = output_root / f"{storage_basename}.partial"
+        metadata_path = output_root / f"{storage_basename}.json"
+        if destination.exists() and not args.force:
+            print(f"Recovered-files timeline already exists; skipping {source['source_name']}")
+            continue
+        if partial.exists():
+            if not args.restart:
+                raise CaseError(
+                    f"Interrupted recovered-files timeline exists: {partial}; use --restart"
+                )
+            partial.unlink()
+        command = plaso_recovered_command(
+            args.plaso_image, recovered_directory, output_root, partial.name, file_filter
+        )
+        print(f"Building recovered-files Plaso timeline for {source['source_name']}")
+        record = run_recorded(
+            case_root,
+            f"{source['case_key']}-log2timeline-{recovery_name}",
+            command,
+            output_root / f"{storage_basename}.stdout.log",
+            output_root / f"{storage_basename}.stderr.log",
+        )
+        internal_log_path = output_root / f"{partial.name}.log.gz"
+        if record["exit_code"] != 0 or not partial.is_file():
+            any_failure = True
+            print(f"  failed with exit {record['exit_code']}; partial retained if present")
+            continue
+        completion_errors = plaso_completion_errors(
+            Path(record["stdout_path"]), internal_log_path
+        )
+        if completion_errors:
+            any_failure = True
+            atomic_write_json(
+                output_root / f"{storage_basename}.partial.json",
+                {
+                    "created_utc": utc_now(),
+                    "status": "incomplete",
+                    "recovered_path": str(recovered_directory),
+                    "storage_path": str(partial),
+                    "file_filter_path": str(file_filter) if file_filter else None,
+                    "file_filter_sha256": file_filter_sha256,
+                    "completion_errors": completion_errors,
+                    "atomic_completion": False,
+                    "run": record,
+                },
+            )
+            print(
+                "  Plaso reported incomplete recovered-file processing; partial retained: "
+                + ", ".join(completion_errors)
+            )
+            continue
+        digest = file_sha256(partial)
+        size_bytes = partial.stat().st_size
+        os.replace(partial, destination)
+        atomic_write_json(
+            metadata_path,
+            {
+                "created_utc": utc_now(),
+                "input_kind": "tsk_recovered_allocated_files",
+                "recovered_path": str(recovered_directory),
+                "recovery_offset_sector": args.offset,
+                "recovery_directory_inum": args.directory_inum,
+                "source_working_disk_sha256": recovery_metadata["source_working_disk_sha256"],
+                "storage_path": str(destination),
+                "size_bytes": size_bytes,
+                "sha256": digest,
+                "image": args.plaso_image,
+                "file_filter_path": str(file_filter) if file_filter else None,
+                "file_filter_sha256": file_filter_sha256,
+                "completion_errors": [],
+                "atomic_completion": True,
+                "run": record,
+            },
+        )
+        print(f"Prepared {destination} ({size_bytes} bytes, SHA-256 {digest})")
+    return 2 if any_failure else 0
+
+
+def validated_timeline_metadata(
+    case_root: Path, source: dict[str, Any], storage_name: str = "timeline.plaso"
+) -> tuple[Path, dict[str, Any]]:
+    timeline_root = source_work_root(case_root, source) / "timeline"
+    storage_path = timeline_root / storage_name
+    metadata_path = timeline_root / f"{storage_name}.json"
+    if not storage_path.is_file() or not metadata_path.is_file():
+        raise CaseError(f"Completed Plaso timeline is missing; run timeline first: {storage_path}")
+    try:
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        raise CaseError(f"Timeline metadata cannot be read: {metadata_path}: {exc}") from exc
+    if resolved(metadata.get("storage_path", "")) != storage_path.resolve():
+        raise CaseError(f"Timeline storage path mismatch: {metadata_path}")
+    if metadata.get("size_bytes") != storage_path.stat().st_size:
+        raise CaseError(f"Timeline size does not match its metadata: {storage_path}")
+    if not metadata.get("atomic_completion"):
+        raise CaseError(f"Timeline metadata lacks atomic completion: {metadata_path}")
+    if not SHA256_RE.fullmatch(str(metadata.get("sha256", ""))):
+        raise CaseError(f"Timeline metadata lacks a valid SHA-256: {metadata_path}")
+    return storage_path, metadata
+
+
+def psort_slice_command(
+    image: str,
+    timeline_directory: Path,
+    storage_name: str,
+    output_directory: Path,
+    output_name: str,
+    slice_time: str,
+    slice_size: int,
+    output_time_zone: str,
+) -> list[str]:
+    command = ["docker", "run", "--rm", "--network", "none", "--read-only"]
+    command.extend(docker_user_args())
+    command.extend(
+        [
+            "--tmpfs",
+            "/tmp:rw,nosuid,size=2g",
+            "-e",
+            "HOME=/tmp",
+            "-v",
+            f"{timeline_directory}:/timeline:ro",
+            "-v",
+            f"{output_directory}:/output:rw",
+            image,
+            "psort",
+            "--unattended",
+            "--status_view",
+            "linear",
+            "--logfile",
+            f"/output/{output_name}.psort.log.gz",
+            "--output_format",
+            "dynamic",
+            "--dynamic_time",
+            "--output_time_zone",
+            output_time_zone,
+            "--slice",
+            slice_time,
+            "--slice_size",
+            str(slice_size),
+            "--write",
+            f"/output/{output_name}",
+            f"/timeline/{storage_name}",
+        ]
+    )
+    return command
+
+
+def psort_query_command(
+    image: str,
+    timeline_directory: Path,
+    storage_name: str,
+    output_directory: Path,
+    output_name: str,
+    event_filter: str,
+    output_time_zone: str,
+) -> list[str]:
+    command = ["docker", "run", "--rm", "--network", "none", "--read-only"]
+    command.extend(docker_user_args())
+    command.extend(
+        [
+            "--tmpfs",
+            "/tmp:rw,nosuid,size=2g",
+            "-e",
+            "HOME=/tmp",
+            "-v",
+            f"{timeline_directory}:/timeline:ro",
+            "-v",
+            f"{output_directory}:/output:rw",
+            image,
+            "psort",
+            "--unattended",
+            "--status_view",
+            "linear",
+            "--include_all",
+            "--logfile",
+            f"/output/{output_name}.psort.log.gz",
+            "--output_format",
+            "dynamic",
+            "--dynamic_time",
+            "--output_time_zone",
+            output_time_zone,
+            "--write",
+            f"/output/{output_name}",
+            f"/timeline/{storage_name}",
+            event_filter,
+        ]
+    )
+    return command
+
+
+def timeline_query(args: argparse.Namespace) -> int:
+    case_root, _, state = load_case(args.case_root)
+    require_command("docker")
+    require_docker_image(args.plaso_image)
+    selected = select_sources(state, args.source)
+    require_verified_integrity(case_root, selected)
+    if Path(args.storage_name).name != args.storage_name or safe_name(args.storage_name) != args.storage_name:
+        raise CaseError("--storage-name must be a safe filename within the timeline directory")
+    basename = safe_name(args.name)
+    if not basename or basename != args.name:
+        raise CaseError("--name must be a safe output basename")
+    if not args.filter.strip():
+        raise CaseError("--filter cannot be empty")
+    any_failure = False
+    for source in selected:
+        storage_path, timeline_metadata = validated_timeline_metadata(
+            case_root, source, args.storage_name
+        )
+        timeline_root = storage_path.parent
+        output_root = source_work_root(case_root, source) / "reports" / "timeline-queries"
+        output_root.mkdir(parents=True, exist_ok=True)
+        destination = output_root / f"{basename}.csv"
+        partial = output_root / f"{basename}.csv.partial"
+        metadata_path = output_root / f"{basename}.csv.json"
+        if destination.exists() and not args.force:
+            print(f"Timeline query already exists; skipping {source['source_name']}: {destination}")
+            continue
+        if partial.exists():
+            if not args.restart:
+                raise CaseError(
+                    f"Interrupted timeline query exists: {partial}; use --restart to remove only it"
+                )
+            partial.unlink()
+        command = psort_query_command(
+            args.plaso_image,
+            timeline_root,
+            args.storage_name,
+            output_root,
+            partial.name,
+            args.filter,
+            args.output_time_zone,
+        )
+        print(f"Querying Plaso timeline for {source['source_name']}: {args.filter}")
+        record = run_recorded(
+            case_root,
+            f"{source['case_key']}-psort-query-{basename}",
+            command,
+            output_root / f"{basename}.stdout.log",
+            output_root / f"{basename}.stderr.log",
+        )
+        if record["exit_code"] != 0 or not partial.is_file():
+            any_failure = True
+            print(f"  query failed with exit {record['exit_code']}; partial retained if present")
+            continue
+        digest = file_sha256(partial)
+        size_bytes = partial.stat().st_size
+        os.replace(partial, destination)
+        atomic_write_json(
+            metadata_path,
+            {
+                "created_utc": utc_now(),
+                "timeline_storage_path": str(storage_path),
+                "timeline_storage_sha256": timeline_metadata["sha256"],
+                "output_path": str(destination),
+                "size_bytes": size_bytes,
+                "sha256": digest,
+                "image": args.plaso_image,
+                "event_filter": args.filter,
+                "include_all_events": True,
+                "output_time_zone": args.output_time_zone,
+                "atomic_completion": True,
+                "run": record,
+            },
+        )
+        print(f"Prepared {destination} ({size_bytes} bytes, SHA-256 {digest})")
+    return 2 if any_failure else 0
+
+
+def timeline_slice(args: argparse.Namespace) -> int:
+    case_root, _, state = load_case(args.case_root)
+    require_command("docker")
+    require_docker_image(args.plaso_image)
+    selected = select_sources(state, args.source)
+    require_verified_integrity(case_root, selected)
+    if args.slice_size < 0:
+        raise CaseError("--slice-size must be zero or greater")
+    if Path(args.storage_name).name != args.storage_name or safe_name(args.storage_name) != args.storage_name:
+        raise CaseError("--storage-name must be a safe filename within the timeline directory")
+    any_failure = False
+    for source in selected:
+        storage_path, timeline_metadata = validated_timeline_metadata(
+            case_root, source, args.storage_name
+        )
+        timeline_root = storage_path.parent
+        output_root = source_work_root(case_root, source) / "reports" / "timeline-slices"
+        output_root.mkdir(parents=True, exist_ok=True)
+        basename = args.name or f"slice-{safe_name(args.slice)}-{args.slice_size}m"
+        basename = safe_name(basename)
+        if not basename:
+            raise CaseError("Timeline slice output name is empty after sanitization")
+        destination = output_root / f"{basename}.csv"
+        partial = output_root / f"{basename}.csv.partial"
+        metadata_path = output_root / f"{basename}.csv.json"
+        if destination.exists() and not args.force:
+            print(f"Timeline slice already exists; skipping {source['source_name']}: {destination}")
+            continue
+        if partial.exists():
+            if not args.restart:
+                raise CaseError(
+                    f"Interrupted timeline slice exists: {partial}; use --restart to remove only it"
+                )
+            partial.unlink()
+        command = psort_slice_command(
+            args.plaso_image,
+            timeline_root,
+            args.storage_name,
+            output_root,
+            partial.name,
+            args.slice,
+            args.slice_size,
+            args.output_time_zone,
+        )
+        print(f"Exporting Plaso time slice for {source['source_name']} around {args.slice}")
+        record = run_recorded(
+            case_root,
+            f"{source['case_key']}-psort-{basename}",
+            command,
+            output_root / f"{basename}.stdout.log",
+            output_root / f"{basename}.stderr.log",
+        )
+        if record["exit_code"] != 0 or not partial.is_file():
+            any_failure = True
+            print(f"  export failed with exit {record['exit_code']}; partial retained if present")
+            continue
+        digest = file_sha256(partial)
+        size_bytes = partial.stat().st_size
+        os.replace(partial, destination)
+        atomic_write_json(
+            metadata_path,
+            {
+                "created_utc": utc_now(),
+                "timeline_storage_path": str(storage_path),
+                "timeline_storage_sha256": timeline_metadata["sha256"],
+                "output_path": str(destination),
+                "size_bytes": size_bytes,
+                "sha256": digest,
+                "image": args.plaso_image,
+                "slice": args.slice,
+                "slice_size_minutes": args.slice_size,
+                "output_time_zone": args.output_time_zone,
+                "atomic_completion": True,
+                "run": record,
+            },
+        )
+        print(f"Prepared {destination} ({size_bytes} bytes, SHA-256 {digest})")
     return 2 if any_failure else 0
 
 
@@ -980,6 +2023,8 @@ def build_parser() -> argparse.ArgumentParser:
     build.add_argument("--repo-root", default=str(Path(__file__).resolve().parent.parent))
     build.add_argument("--volatility-image", default=DEFAULT_VOLATILITY_IMAGE)
     build.add_argument("--tsk-image", default=DEFAULT_TSK_IMAGE)
+    build.add_argument("--elf2dmp-image", default=DEFAULT_ELF2DMP_IMAGE)
+    build.add_argument("--plaso-image", default=DEFAULT_PLASO_IMAGE)
     build.set_defaults(func=build_tools)
 
     memory = subparsers.add_parser("memory", help="Run Volatility information or baseline plugins")
@@ -988,24 +2033,131 @@ def build_parser() -> argparse.ArgumentParser:
     memory.add_argument("--plugin", action="append", help="Override plugin list; repeat as needed")
     memory.add_argument("--info-only", action="store_true", help="Run only windows.info")
     memory.add_argument(
+        "--extended",
+        action="store_true",
+        help="Add cross-view, console, persistence, and process-tampering plugins",
+    )
+    memory.add_argument(
         "--allow-network",
         action="store_true",
         help="Allow outbound access for symbol resolution; evidence remains mounted read-only",
     )
     memory.add_argument("--volatility-image", default=DEFAULT_VOLATILITY_IMAGE)
+    memory.add_argument("--input", choices=("original", "converted"), default="original")
     memory.add_argument(
         "--parallelism",
         choices=("off", "threads", "processes"),
-        default="processes",
+        default="off",
         help="Volatility parallelism mode",
     )
     memory.set_defaults(func=run_memory_plugins)
+
+    convert = subparsers.add_parser(
+        "memory-convert", help="Convert verified QEMU ELF memory to a derived Windows dump"
+    )
+    convert.add_argument("--case-root", required=True)
+    convert.add_argument("--source", action="append", help="Source name or key; repeat as needed")
+    convert.add_argument("--elf2dmp-image", default=DEFAULT_ELF2DMP_IMAGE)
+    convert.add_argument(
+        "--allow-network",
+        action="store_true",
+        help="Allow QEMU elf2dmp to retrieve the required Microsoft PDB",
+    )
+    convert.add_argument("--restart", action="store_true", help="Remove only an interrupted conversion")
+    convert.add_argument("--force", action="store_true", help="Atomically replace a completed conversion")
+    convert.set_defaults(func=convert_memory)
 
     layout = subparsers.add_parser("disk-layout", help="Record partition layouts with The Sleuth Kit")
     layout.add_argument("--case-root", required=True)
     layout.add_argument("--source", action="append", help="Source name or key; repeat as needed")
     layout.add_argument("--tsk-image", default=DEFAULT_TSK_IMAGE)
     layout.set_defaults(func=disk_layout)
+
+    filesystems = subparsers.add_parser(
+        "disk-filesystems", help="Record filesystem metadata for allocated partitions"
+    )
+    filesystems.add_argument("--case-root", required=True)
+    filesystems.add_argument("--source", action="append", help="Source name or key; repeat as needed")
+    filesystems.add_argument("--tsk-image", default=DEFAULT_TSK_IMAGE)
+    filesystems.set_defaults(func=disk_filesystems)
+
+    recover = subparsers.add_parser(
+        "disk-recover", help="Recover allocated files from a partition with The Sleuth Kit"
+    )
+    recover.add_argument("--case-root", required=True)
+    recover.add_argument("--source", action="append", help="Source name or key; repeat as needed")
+    recover.add_argument("--offset", required=True, type=int, help="Partition start sector")
+    recover.add_argument(
+        "--directory-inum",
+        type=int,
+        help="Recover only this directory inode and its descendants",
+    )
+    recover.add_argument("--tsk-image", default=DEFAULT_TSK_IMAGE)
+    recover.add_argument("--restart", action="store_true", help="Remove only an interrupted recovery")
+    recover.set_defaults(func=recover_disk_files)
+
+    timeline = subparsers.add_parser("timeline", help="Build an atomic Plaso disk timeline")
+    timeline.add_argument("--case-root", required=True)
+    timeline.add_argument("--source", action="append", help="Source name or key; repeat as needed")
+    timeline.add_argument("--plaso-image", default=DEFAULT_PLASO_IMAGE)
+    timeline.add_argument("--partitions", default="all")
+    timeline.add_argument("--vss-stores", default="none")
+    timeline.add_argument("--restart", action="store_true", help="Remove only an interrupted timeline")
+    timeline.add_argument("--force", action="store_true", help="Replace a completed derived timeline")
+    timeline.set_defaults(func=disk_timeline)
+
+    recovered_timeline = subparsers.add_parser(
+        "timeline-recovered", help="Build Plaso storage from an atomic TSK recovery directory"
+    )
+    recovered_timeline.add_argument("--case-root", required=True)
+    recovered_timeline.add_argument(
+        "--source", action="append", help="Source name or key; repeat as needed"
+    )
+    recovered_timeline.add_argument("--offset", required=True, type=int)
+    recovered_timeline.add_argument(
+        "--directory-inum",
+        type=int,
+        help="Use the matching directory-scoped TSK recovery",
+    )
+    recovered_timeline.add_argument("--plaso-image", default=DEFAULT_PLASO_IMAGE)
+    recovered_timeline.add_argument(
+        "--file-filter",
+        help="Optional Plaso include filter; mounted as one read-only file and hashed",
+    )
+    recovered_timeline.add_argument("--restart", action="store_true")
+    recovered_timeline.add_argument("--force", action="store_true")
+    recovered_timeline.set_defaults(func=recovered_disk_timeline)
+
+    slice_parser = subparsers.add_parser(
+        "timeline-slice", help="Export an atomic CSV time slice from a completed Plaso timeline"
+    )
+    slice_parser.add_argument("--case-root", required=True)
+    slice_parser.add_argument("--source", action="append", help="Source name or key; repeat as needed")
+    slice_parser.add_argument("--plaso-image", default=DEFAULT_PLASO_IMAGE)
+    slice_parser.add_argument("--storage-name", default="timeline.plaso")
+    slice_parser.add_argument(
+        "--slice", required=True, help="ISO 8601 center time including a UTC offset"
+    )
+    slice_parser.add_argument("--slice-size", type=int, default=10, help="Minutes before and after")
+    slice_parser.add_argument("--output-time-zone", default="UTC")
+    slice_parser.add_argument("--name", help="Optional safe output basename")
+    slice_parser.add_argument("--restart", action="store_true", help="Remove only an interrupted export")
+    slice_parser.add_argument("--force", action="store_true", help="Replace a completed slice export")
+    slice_parser.set_defaults(func=timeline_slice)
+
+    query_parser = subparsers.add_parser(
+        "timeline-query", help="Export events matching a Plaso event-filter expression"
+    )
+    query_parser.add_argument("--case-root", required=True)
+    query_parser.add_argument("--source", action="append", help="Source name or key; repeat as needed")
+    query_parser.add_argument("--plaso-image", default=DEFAULT_PLASO_IMAGE)
+    query_parser.add_argument("--storage-name", default="timeline.plaso")
+    query_parser.add_argument("--filter", required=True, help="Plaso event-filter expression")
+    query_parser.add_argument("--name", required=True, help="Safe output basename")
+    query_parser.add_argument("--output-time-zone", default="UTC")
+    query_parser.add_argument("--restart", action="store_true", help="Remove only an interrupted export")
+    query_parser.add_argument("--force", action="store_true", help="Replace a completed query export")
+    query_parser.set_defaults(func=timeline_query)
     return parser
 
 

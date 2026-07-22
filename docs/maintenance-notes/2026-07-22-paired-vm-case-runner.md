@@ -11,11 +11,36 @@ way to enforce boundaries, resume stages, or record paired tool runs.
 
 - added `scripts/paired_vm_case.py` for discovery, boundary checks, integrity
   verification, atomic working-image creation, container builds, Volatility
-  baselines, and Sleuth Kit partition discovery
+  baselines, Sleuth Kit partition/filesystem discovery, and atomic Plaso timelines
 - added fixture-based standard-library tests
 - documented paired-source provenance, direct ELF compatibility testing,
   `elf2dmp` fallback, container limits, and disk/memory correlation
 - added minimal Volatility and Sleuth Kit container definitions
+- added a checksum-verified QEMU 11.0.2 `elf2dmp` build and atomic conversion adapter
+- added offline, provenance-linked Plaso time-slice CSV exports for focused correlation
+- added an explicit-offset, allocated-file-only TSK recovery and recovered-directory
+  Plaso fallback for volumes that TSK can traverse but Plaso's NTFS backend cannot
+- added an opt-in extended memory pass after real evidence exposed the need for console,
+  cross-view, persistence, and process-tampering checks beyond the initial baseline
+- preserved per-invocation memory summaries so a focused follow-up cannot erase the
+  baseline run record
+- corrected the timeline export adapter after live Plaso 20260512 probes rejected
+  the historical output identifier and exposed an internal-log write outside the
+  read-only container; exports now use dynamic CSV and an explicit writable log path
+- applied the same explicit log-path guard to extraction after an NTFS error showed
+  that Plaso's lazy logger otherwise masks the original filesystem exception
+- rejected Plaso's exit-zero partial success after a damaged/unsupported NTFS MFT
+  caused the main partition to be skipped while only the boot partition was stored
+- added a hashed, single-file read-only Plaso include filter after live recovery
+  exposed a multi-million-file corpus that would make an initial full parse wasteful
+- added directory-inode-scoped TSK recovery with distinct artifact names so critical
+  logs can be triaged without presenting a partial directory recovery as a full volume
+- updated renamed Volatility malware plugin identifiers after 2.28.0 emitted removal
+  warnings for the legacy aliases during live analysis
+- added atomic, offline Plaso event-filter exports after the case required a
+  filename query across millions of stored events; the adapter preserves all
+  matches, passes the filter as one non-shell argument, and gives Plaso an
+  explicit writable logfile inside the case output
 
 ## Basis
 
@@ -34,6 +59,9 @@ while recording the remaining transitive Python dependency set and limitation.
 The multi-hour shape of real paired-image verification also justified an atomic
 per-item progress ledger. It preserves interruption context but is deliberately
 not accepted as the completed integrity gate.
+The first converted crash-dump probe also showed that Volatility process
+parallelism could lose a valid DTB hit; the safe default is now `off`, with
+parallel modes retained as recorded, compatibility-tested opt-ins.
 
 ## Guardrails checked
 

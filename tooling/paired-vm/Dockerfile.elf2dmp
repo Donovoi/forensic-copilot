@@ -1,0 +1,45 @@
+FROM ubuntu:24.04@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90 AS build
+
+ARG DEBIAN_FRONTEND=noninteractive
+ARG QEMU_VERSION=11.0.2
+ARG QEMU_SHA256=3745f6ea88e2e87fe0dc838b2b1d4e0a770bf48e01a1d5a186842a1fff76ccf5
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential ca-certificates curl libcurl4-openssl-dev libglib2.0-dev \
+        ninja-build pkg-config python3 python3-venv xz-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+RUN curl --fail --location --silent --show-error \
+        --output "qemu-${QEMU_VERSION}.tar.xz" \
+        "https://download.qemu.org/qemu-${QEMU_VERSION}.tar.xz" \
+    && echo "${QEMU_SHA256}  qemu-${QEMU_VERSION}.tar.xz" | sha256sum --check --strict \
+    && tar --extract --xz --file "qemu-${QEMU_VERSION}.tar.xz"
+
+WORKDIR /build/qemu-11.0.2
+RUN ./configure \
+        --without-default-features \
+        --enable-curl \
+        --enable-tools \
+        --disable-docs \
+        --disable-system \
+        --disable-user \
+    && ninja -C build contrib/elf2dmp/elf2dmp
+
+FROM ubuntu:24.04@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90
+
+ARG DEBIAN_FRONTEND=noninteractive
+ARG QEMU_VERSION=11.0.2
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates libcurl4t64 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=build /build/qemu-11.0.2/build/contrib/elf2dmp/elf2dmp /usr/local/bin/elf2dmp
+
+LABEL org.opencontainers.image.title="QEMU elf2dmp" \
+      org.opencontainers.image.version="${QEMU_VERSION}" \
+      org.opencontainers.image.source="https://gitlab.com/qemu-project/qemu/-/tree/v11.0.2/contrib/elf2dmp"
+
+ENTRYPOINT ["/usr/local/bin/elf2dmp"]
