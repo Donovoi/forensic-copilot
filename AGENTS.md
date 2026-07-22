@@ -9,6 +9,7 @@ Forensically analyze the scoped evidence source and produce a defensible Markdow
 ## Core Rules
 
 - Preserve originals, prefer verified working copies, and document provenance, hashes, blockers, and limitations.
+- Treat paired disk and volatile-memory captures from one source as one evidence set: verify both, analyze them independently, then correlate processes, paths, hashes, network state, and timestamps without merging their provenance.
 - Stay inside the stated authority, consent, warrant, or policy boundary.
 - Manual first: before making decisions about any program, tool, command family, API, or automation route, check the newest available official manual, vendor documentation, or maintained local docs/cache. If current docs cannot be reached, state the local/offline basis and its review-date limit before proceeding.
 - Treat data location as part of scope: establish approved input/read roots, compute/staging roots, and output/report/export roots. With only a bare evidence path, read only that path, stage under ignored analyst-controlled paths, write only the requested or safe ignored report path, and ask before crossing those boundaries or using remote/cloud compute.
@@ -48,4 +49,5 @@ Forensically analyze the scoped evidence source and produce a defensible Markdow
 
 - Update `README.md` and the relevant docs when agent behavior, tool selection, report order, privacy checks, or OpenCode runtime behavior changes.
 - Before commit and push, run `scripts/validate_repo_hygiene.py` when available and manually confirm staged content is generic.
+- For paired VM disk/RAM evidence, prefer `scripts/paired_vm_case.py` for boundary validation, inventory, integrity checks, atomic working images, and recorded container runs; keep all case state under an ignored case root.
 - This repo is the canonical source for the agent definitions; push approved changes so local copies do not drift.

@@ -24,6 +24,34 @@ Analyze this authorized Windows host for user activity during the last two hours
 
 A bare path is enough to begin. The examiner should infer preservation-first, scope-limited triage, start a Markdown case record, and ask only the clarification questions that could materially change the result.
 
+## Paired VM disk and memory cases
+
+`scripts/paired_vm_case.py` provides a deterministic first-pass runner when each
+source has a compressed raw disk image, a QEMU/ELF-style memory dump, and an
+optional SHA-256 manifest. It refuses overlapping evidence and output roots,
+records machine-readable case state, validates hashes and gzip integrity, creates
+atomic decompressed working images, and runs the first Volatility and Sleuth Kit
+checks in constrained containers.
+
+```bash
+python scripts/paired_vm_case.py init \
+  --case-id CASE-001 \
+  --evidence-root /evidence/paired-vms \
+  --case-root /cases/CASE-001
+
+python scripts/paired_vm_case.py verify \
+  --case-root /cases/CASE-001 \
+  --prepare-working-disks
+python scripts/paired_vm_case.py build-tools --case-root /cases/CASE-001
+python scripts/paired_vm_case.py memory --case-root /cases/CASE-001 --info-only
+python scripts/paired_vm_case.py disk-layout --case-root /cases/CASE-001
+```
+
+Network access is disabled for analysis containers by default. Add
+`--allow-network` to a Volatility run only when its automatic Microsoft symbol
+resolution is required, and record that exception in the case report. See
+[docs/paired-vm-workflow.md](docs/paired-vm-workflow.md).
+
 ## What It Does
 
 - keeps the report reader-first: summary, findings, then details
@@ -183,6 +211,7 @@ Formal exports can be generated after review. See [docs/formal-report-output.md]
 - [docs/privacy-and-redaction.md](docs/privacy-and-redaction.md) - publication hygiene
 - [docs/assets/](docs/assets/) - README diagrams for the current platform-aware loop
 - [scripts/validate_repo_hygiene.py](scripts/validate_repo_hygiene.py) - repo hygiene check
+- [scripts/paired_vm_case.py](scripts/paired_vm_case.py) - paired VM disk/RAM case runner
 - [scripts/check_opencode_llamacpp_backend.py](scripts/check_opencode_llamacpp_backend.py) - local llama.cpp backend preflight for OpenCode tests
 - [scripts/run_local_model_investigation_eval.py](scripts/run_local_model_investigation_eval.py) - local OpenCode/llama.cpp investigation regression runner
 
