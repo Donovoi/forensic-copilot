@@ -31,6 +31,9 @@ evidence commands now require a verified gate, and `mmls` receives `-i raw`.
 The first builds also showed moving base tags and an implicit Sleuth Kit package;
 the public definitions now pin both base digests and the observed package version,
 while recording the remaining transitive Python dependency set and limitation.
+The multi-hour shape of real paired-image verification also justified an atomic
+per-item progress ledger. It preserves interruption context but is deliberately
+not accepted as the completed integrity gate.
 
 ## Guardrails checked
 

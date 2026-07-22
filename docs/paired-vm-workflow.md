@@ -42,6 +42,11 @@ during that same pass. The `.partial` file is promoted atomically only after the
 gzip stream succeeds and the compressed hash does not mismatch the supplied
 manifest. This avoids a second full decompression without weakening the gate.
 
+Long runs update `integrity.progress.json` atomically after every completed
+evidence item. That checkpoint is an interruption ledger only: downstream
+commands accept only a completed, verified `integrity.json`. The progress file is
+removed after the final result is written.
+
 An unlisted hash is reported as `unlisted`; a supplied hash mismatch or invalid
 gzip stream fails the gate. Do not reinterpret a mismatch as a filename-format
 problem without preserving the mismatch result and checking the manifest.

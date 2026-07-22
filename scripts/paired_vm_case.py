@@ -348,12 +348,13 @@ def hash_and_test_gzip_stream(path: Path, output_path: Path | None = None) -> di
     finally:
         if output_stream:
             output_stream.close()
+    compressed_bytes_read = digesting_stream.bytes_read if digesting_stream else 0
     return {
         "ok": True,
         "error": None,
         "sha256": digest.hexdigest(),
-        "sha256_complete": True,
-        "compressed_bytes_read": digesting_stream.bytes_read if digesting_stream else 0,
+        "sha256_complete": compressed_bytes_read == path.stat().st_size,
+        "compressed_bytes_read": compressed_bytes_read,
         "raw_sha256": raw_digest.hexdigest() if raw_digest else None,
         "uncompressed_bytes_read": uncompressed_bytes,
         "elapsed_seconds": round(time.monotonic() - started, 3),
@@ -419,6 +420,7 @@ def verify_case(args: argparse.Namespace) -> int:
             "manifests": manifest_records,
             "items": [],
         }
+        output["sources"].append(source_result)
         for role in ("disk_gzip", "memory_dump"):
             record = source[role]
             path, current_stat = validated_evidence_path(evidence_root, record)
@@ -473,7 +475,7 @@ def verify_case(args: argparse.Namespace) -> int:
                     actual = gzip_test["sha256"]
                 else:
                     actual = file_sha256(path)
-                    gzip_test["full_file_sha256_after_failure"] = actual
+                    gzip_test["whole_file_sha256_fallback"] = actual
             else:
                 actual = file_sha256(path)
             expected_digest = expected.get(record["name"])
@@ -519,12 +521,21 @@ def verify_case(args: argparse.Namespace) -> int:
                         working_copy = {"status": "created", **raw_metadata}
                     item_result["working_copy"] = working_copy
             source_result["items"].append(item_result)
-        output["sources"].append(source_result)
+            progress = {
+                **output,
+                "status": "in_progress",
+                "updated_utc": utc_now(),
+                "note": "Progress only; this file is not an integrity gate.",
+            }
+            atomic_write_json(case_root / "integrity.progress.json", progress)
 
     output["completed_utc"] = utc_now()
     output["status"] = "verified" if overall_ok else "failed"
     destination = case_root / "integrity.json"
     atomic_write_json(destination, output)
+    progress_path = case_root / "integrity.progress.json"
+    if progress_path.exists():
+        progress_path.unlink()
     print(f"Integrity status: {output['status']}")
     print(f"Results: {destination}")
     return 0 if overall_ok else 2

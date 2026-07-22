@@ -72,6 +72,7 @@ class PairedVmCaseTests(unittest.TestCase):
             self.assertEqual(paired_vm_case.verify_case(verify_args), 0)
             integrity = json.loads((case / "integrity.json").read_text(encoding="utf-8"))
             self.assertEqual(integrity["status"], "verified")
+            self.assertFalse((case / "integrity.progress.json").exists())
 
             prepare_args = Namespace(
                 case_root=str(case),
@@ -166,7 +167,7 @@ class PairedVmCaseTests(unittest.TestCase):
             disk_item = integrity["sources"][0]["items"][0]
             expected = sha256(disk.read_bytes()).hexdigest()
             self.assertEqual(disk_item["sha256"], expected)
-            self.assertEqual(disk_item["gzip_test"]["full_file_sha256_after_failure"], expected)
+            self.assertEqual(disk_item["gzip_test"]["whole_file_sha256_fallback"], expected)
             self.assertFalse(disk_item["gzip_test"]["sha256_complete"])
 
     def test_existing_working_disk_requires_matching_metadata(self) -> None:
