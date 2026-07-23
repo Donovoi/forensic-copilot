@@ -221,6 +221,12 @@ Authorized attribution research uses the same pinned Donovoi/robin checkout thro
 `scripts/robin_research.py run --mode attribution`; it has a distinct policy that
 forbids breach data, people-search services, account access, or subject contact.
 
+For lifecycle-managed cases, `prepare-review` freezes the report and coverage
+hashes. The peer reviewer returns structured `peer-review.json` containing those
+exact hashes and its finding challenges; `finalize-report` accepts only the exact
+recommendation `ready`. A narrative Markdown review can supplement that JSON but
+cannot replace it.
+
 ## Specialized Tool Adapters
 
 Forensic Copilot can use specialized tool adapters when a case benefits from expert tooling, but those adapters are optional providers rather than hard dependencies.

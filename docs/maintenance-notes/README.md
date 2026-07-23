@@ -6,6 +6,7 @@ They complement `docs/self-update-loop.md` by leaving a short, reviewable ration
 
 ## Index
 
+- `2026-07-23-hash-bound-peer-review-contract.md` - align reviewer outputs and formal-export examples with the structured JSON lifecycle gate
 - `2026-07-23-completion-repair-carving-attribution.md` - prevent premature final reports and add derivative repair, whole-disk carving, complete evidence lanes, and bounded attribution research
 - `2026-07-22-robin-research-backend.md` - route online tooling research through a constrained, revision-pinned Donovoi/robin adapter
 - `2026-05-31-secret-led-evidence-expansion.md` - route extracted secrets back into the forensic loop as classified leads for local unlocks and approval-needed remote use
