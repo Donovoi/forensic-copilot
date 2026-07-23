@@ -39,6 +39,10 @@ class RobinResearchTests(unittest.TestCase):
 
         with self.assertRaises(robin_research.RobinResearchError):
             robin_research.validate_response("CRITICAL - MAXIMUM STEPS REACHED")
+        with self.assertRaises(robin_research.RobinResearchError):
+            robin_research.validate_response(
+                "Maximum steps for this agent have been reached."
+            )
 
     def test_repository_url_normalization_accepts_ssh(self) -> None:
         https = robin_research.normalized_repository_url(
@@ -120,6 +124,14 @@ class RobinResearchTests(unittest.TestCase):
     def test_generated_config_is_json_serializable(self) -> None:
         encoded = json.dumps(robin_research.build_opencode_config())
         self.assertIn(robin_research.ROBIN_AGENT, encoded)
+
+    def test_attribution_mode_retains_web_only_privacy_constraints(self) -> None:
+        config = robin_research.build_opencode_config("attribution")
+        agent = config["agent"][robin_research.ROBIN_AGENT]
+        self.assertEqual(agent["permission"]["webfetch"], "allow")
+        self.assertEqual(agent["permission"]["bash"], "deny")
+        self.assertIn("hosting subscriber", agent["prompt"])
+        self.assertIn("Do not use breach data", agent["prompt"])
 
 
 if __name__ == "__main__":

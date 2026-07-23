@@ -106,6 +106,8 @@ When changing agent behavior or tool choices, also update the relevant docs:
 - Require the evidence collector to collect or prepare approved sources without analysis, write status files for empty or blocked sources, record hashes where practical, and label the collection depth as triage, targeted, or comprehensive.
 - Require the artifact router to select parser and specialist lanes without collecting or concluding.
 - Require the timeline analyst to correlate collected artifacts into user and system activity with timestamp, source, confidence, and limitation fields.
+- Require the attribution analyst to keep local accounts, observed users, owner or custodian candidates, operators, attackers, infrastructure records, contradictions, online sources, and confidence distinct. It may write only scoped fragments and controlled query logs, never the final report.
+- Require case-specific public-source attribution research to have recorded authority, approved identifier classes, minimum-necessary queries, a query budget, controlled output paths, exact query/source logging, and a ban on evidence uploads, credentials, subject contact, access-control bypass, and unrelated-person expansion.
 - Require the report challenger to adversarially test attribution, causality, alternative explanations, and release-blocking report claims.
 - Require the publication redactor to check repository, report, export, and Git metadata for publication leakage before sharing or pushing when relevant.
 - Require the script author to generate fallback code only when tools cannot be fetched or used, to keep generated code read-only toward evidence, to use already-present runtimes, and to include structured outputs, logs, status files, and validation instructions.

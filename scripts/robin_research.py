@@ -33,6 +33,18 @@ return BLOCKED or label an offline source basis with its review-date limit. Sepa
 recommended, deferred, and rejected tools; include direct source URLs, caveats, and
 confidence. Return at most seven non-empty plain-text lines and no preamble."""
 
+ATTRIBUTION_RESEARCH_INSTRUCTIONS = """You are Robin's research-only forensic
+attribution specialist. The examiner has authorized public-source lookup of the
+minimum identifiers in the supplied question. Use the configured SearXNG endpoint
+with at most three results, then verify important claims against public first-party
+or authoritative sources. Do not use breach data, paid people-search services,
+private accounts, credentials, contact with any person, or access-controlled data.
+Distinguish observed account identity, device owner/custodian, hosting subscriber,
+operator, and network provider. Preserve contradictions and alternative explanations.
+Return direct URLs, access limitations, and calibrated confidence; never upgrade a
+name or email match into legal ownership without independent corroboration. Return at
+most seven non-empty plain-text lines and no preamble."""
+
 
 class RobinResearchError(RuntimeError):
     """A safe, user-facing Robin research failure."""
@@ -139,7 +151,16 @@ def load_robin_module(root: Path) -> ModuleType:
     return module
 
 
-def build_opencode_config() -> dict[str, object]:
+def research_instructions(mode: str) -> str:
+    if mode == "tooling":
+        return RESEARCH_INSTRUCTIONS
+    if mode == "attribution":
+        return ATTRIBUTION_RESEARCH_INSTRUCTIONS
+    raise RobinResearchError(f"Unknown research mode: {mode}")
+
+
+def build_opencode_config(mode: str = "tooling") -> dict[str, object]:
+    instructions = research_instructions(mode)
     denied = {
         "*": "deny",
         "read": "deny",
@@ -159,10 +180,10 @@ def build_opencode_config() -> dict[str, object]:
         "instructions": [],
         "agent": {
             ROBIN_AGENT: {
-                "description": "Robin-backed bounded DFIR tool researcher.",
+                "description": f"Robin-backed bounded DFIR {mode} researcher.",
                 "mode": "primary",
                 "steps": 10,
-                "prompt": RESEARCH_INSTRUCTIONS,
+                "prompt": instructions,
                 "permission": {**denied, "webfetch": "allow"},
             }
         },
@@ -173,7 +194,9 @@ def validate_response(text: str) -> str:
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     if not lines:
         raise RobinResearchError("Robin returned an empty research note")
-    if any("MAXIMUM STEPS REACHED" in line.upper() for line in lines):
+    if any(
+        "MAXIMUM STEPS" in line.upper() and "REACHED" in line.upper() for line in lines
+    ):
         raise RobinResearchError("Robin exhausted its bounded research steps")
     if len(lines) > MAX_RESEARCH_LINES:
         raise RobinResearchError(
@@ -185,6 +208,7 @@ def validate_response(text: str) -> str:
 async def call_robin(
     args: argparse.Namespace, module: ModuleType, workdir: Path
 ) -> str:
+    instructions = research_instructions(args.mode)
     client = module.OpenCodeLLMModel(
         model=args.model,
         variant=args.variant or None,
@@ -192,7 +216,7 @@ async def call_robin(
         agent=ROBIN_AGENT,
         cwd=workdir,
         timeout=args.timeout,
-        agent_instructions=RESEARCH_INSTRUCTIONS,
+        agent_instructions=instructions,
         web_search_url=args.web_search_url,
     )
     response = await client.call_single(
@@ -218,7 +242,7 @@ def run_research(args: argparse.Namespace) -> int:
     with tempfile.TemporaryDirectory(prefix="forensic-robin-") as temporary:
         workdir = Path(temporary)
         (workdir / "opencode.json").write_text(
-            json.dumps(build_opencode_config(), indent=2) + "\n",
+            json.dumps(build_opencode_config(args.mode), indent=2) + "\n",
             encoding="utf-8",
         )
         try:
@@ -227,7 +251,10 @@ def run_research(args: argparse.Namespace) -> int:
             raise RobinResearchError(f"Robin OpenCode call failed: {error}") from None
 
     revision = provenance["revision"][:12]
-    print(f"ROBIN_BACKEND: Donovoi/robin@{revision} | {args.model} | {ROBIN_AGENT}")
+    print(
+        f"ROBIN_BACKEND: Donovoi/robin@{revision} | {args.model} | "
+        f"{ROBIN_AGENT} | mode={args.mode}"
+    )
     print(result)
     return 0
 
@@ -241,6 +268,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--robin-root", default=str(default_robin_root()))
     parser.add_argument("--question", default="")
+    parser.add_argument(
+        "--mode",
+        choices=("tooling", "attribution"),
+        default="tooling",
+        help="Constrained research policy to apply (default: tooling)",
+    )
     parser.add_argument(
         "--model", default=os.getenv("ROBIN_RESEARCH_MODEL", DEFAULT_MODEL)
     )
@@ -259,6 +292,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="backslashreplace")
     args = build_parser().parse_args()
     try:
         if args.command == "setup":

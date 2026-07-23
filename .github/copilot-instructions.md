@@ -2,6 +2,6 @@
 
 Use `AGENTS.md` as the compact repository policy and `docs/repository-policy.md` as the expanded policy reference.
 
-For forensic work, select or follow `Forensic Examiner`. Helper agents in `.github/agents/` are internal and should be orchestrated by the examiner.
+For forensic work, select or follow `Forensic Examiner`. Helper agents in `.github/agents/` are internal and should be orchestrated by the examiner. Device-user or owner/custodian questions route through `Forensic Attribution Analyst`, which writes scoped fragments and controlled OSINT query logs rather than the final report.
 
 Keep the workflow preservation-first, scope-limited, and report-driven. Establish the evidence operating system and runner/evidence boundary before OS-specific collection. Support offline and enterprise-restricted runs by using local docs, installed tools, native OS capabilities, and the script-author/script-reviewer fallback when tools cannot be fetched.

@@ -65,6 +65,20 @@ python scripts/paired_vm_case.py timeline --case-root /cases/CASE-001 --source H
 python scripts/paired_vm_case.py disk-recover \
   --case-root /cases/CASE-001 --source HOST-A --offset 206848 \
   --directory-inum 12345
+python scripts/paired_vm_case.py disk-recover \
+  --case-root /cases/CASE-001 --source HOST-A --offset 206848 \
+  --recovery-scope unallocated
+python scripts/paired_vm_case.py disk-recover-manifest \
+  --case-root /cases/CASE-001 --source HOST-A --offset 206848
+python scripts/paired_vm_case.py disk-carve \
+  --case-root /cases/CASE-001 --source HOST-A
+python scripts/paired_vm_case.py disk-repair-copy \
+  --case-root /cases/CASE-001 --source HOST-A \
+  --offset 206848 --length 166092800 --copy-id 01
+python scripts/paired_vm_case.py disk-repair-testdisk \
+  --case-root /cases/CASE-001 --source HOST-A \
+  --offset 206848 --length 166092800 --copy-id 01 \
+  --validation-inum 2823425
 python scripts/paired_vm_case.py timeline-recovered \
   --case-root /cases/CASE-001 --source HOST-A --offset 206848 \
   --directory-inum 12345 \
@@ -75,12 +89,39 @@ python scripts/paired_vm_case.py timeline-slice \
 python scripts/paired_vm_case.py timeline-query \
   --case-root /cases/CASE-001 --source HOST-A \
   --filter 'filename contains "server.ps1"' --name server-ps1
+python scripts/build_super_timeline.py \
+  --manifest /cases/CASE-001/timeline-inputs.json \
+  --allow-read-root /cases/CASE-001/timeline-exports \
+  --output-dir /cases/CASE-001/reports/super-timeline
+python scripts/run_pattern_analysis.py \
+  --manifest /cases/CASE-001/pattern-jobs.json \
+  --allow-read-root /cases/CASE-001/analysis-inputs \
+  --output-dir /cases/CASE-001/reports/pattern-analysis
+python scripts/paired_vm_case.py case-status --case-root /cases/CASE-001
+# Record every listed work item with its durable artifact before review.
+python scripts/paired_vm_case.py prepare-review --case-root /cases/CASE-001
+python scripts/paired_vm_case.py finalize-report \
+  --case-root /cases/CASE-001 \
+  --peer-review /cases/CASE-001/reviews/peer-review.json
 ```
+
+`init` creates only `CASE-001.working.md`. The final report and
+`completion.json` do not exist until every required evidence-item lane is
+terminal, the report links every evidence item, and an exact `ready` peer review
+matches the frozen report and coverage hashes. A report that is merely
+`ready_with_caveats` cannot pass this gate.
 
 Network access is disabled for analysis containers by default. Add
 `--allow-network` to a Volatility run only when its automatic Microsoft symbol
 resolution is required, and record that exception in the case report. See
 [docs/paired-vm-workflow.md](docs/paired-vm-workflow.md).
+
+`build_super_timeline.py` externally sorts independently exported Plaso and
+normalized Volatility events without merging their source storage files. It
+writes a full Timesketch-compatible JSONL/CSV pair, a bounded reader-facing
+HTML/CSV view, hashes, rejection counts, and provenance. `run_pattern_analysis.py`
+provides bounded static FLOSS, bstrings, and ripgrep jobs with read-root
+allowlists, target hashes or manifests, output caps, timeouts, and no shell.
 
 ## What It Does
 
@@ -167,12 +208,18 @@ The internal loop is:
 6. `forensic-evidence-collector`
 7. `forensic-artifact-router`
 8. `forensic-timeline-analyst`
-9. `forensic-report-challenger`
-10. `forensic-peer-reviewer`
-11. `forensic-publication-redactor`
-12. `forensic-maintainer` only when reusable workflow changes are justified
+9. `forensic-attribution-analyst` when device users, owner/custodian, operator identity, or approved public-source corroboration is material
+10. `forensic-report-challenger`
+11. `forensic-peer-reviewer`
+12. `forensic-publication-redactor`
+13. `forensic-maintainer` only when reusable workflow changes are justified
 
 The loop should not be bypassed. If a helper stalls or fails, retry the same helper path with a narrower prompt or restore the provider/backend before collecting evidence.
+
+The attribution analyst keeps local accounts, observed human activity, possible owner or custodian, operator identity, contradictions, public sources, and confidence separate. It writes scoped fragments and a controlled OSINT query log for examiner review; it does not edit or finalize the canonical report. Public-source queries require case authority, approved identifier classes and output paths, a query budget, and minimum-necessary privacy handling.
+Authorized attribution research uses the same pinned Donovoi/robin checkout through
+`scripts/robin_research.py run --mode attribution`; it has a distinct policy that
+forbids breach data, people-search services, account access, or subject contact.
 
 ## Specialized Tool Adapters
 
