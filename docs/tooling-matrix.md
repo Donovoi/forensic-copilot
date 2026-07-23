@@ -16,6 +16,7 @@ This matrix is the starting point for the `Forensic Senior Tooling Specialist` a
 10. treat offline and no-download environments as normal operating modes; use local docs, installed tools, native commands, and generated-script fallback rather than assuming web access
 11. identify the evidence OS and evidence mode before OS-specific collection; the runner OS is not automatically the evidence OS
 12. treat specialized tool adapters as optional providers selected by evidence fit, manual support, privacy controls, and local availability, not as mandatory product lanes
+13. route online tooling research through the exact Donovoi/robin revision pinned by `scripts/robin_research.py`; do not silently substitute another online research path if the pin or adapter fails
 
 ## Advanced tooling specialist flow
 
@@ -23,7 +24,7 @@ The senior tooling specialist should not act as a one-person installer. For ever
 
 1. map the case question to artifact classes and platform constraints
 2. invoke `Forensic Platform Profiler` when OS, evidence mode, host role, filesystem/logging, or runner boundary is unclear
-3. invoke `Forensic Tool Researcher` to check current upstream or official sources for the profiled platform
+3. invoke the pinned Donovoi/robin-backed `Forensic Tool Researcher` to check current upstream or official sources for the profiled platform
 4. select the smallest justified toolchain
 5. invoke `Forensic Tool Provisioner` to stage, update, verify, or document the execution flow under ignored local paths such as `toolcache/`, `tooling/downloads/`, or `tooling/cache/`
 6. when downloads or selected tools are blocked, invoke the script-author and script-reviewer fallback before any generated code is used
@@ -65,6 +66,8 @@ Before selecting tools, classify the evidence platform:
 | specialized tool adapters such as `X-Ways-MCP` | optional bridge to expert tool suites, APIs, plug-ins, MCP servers, and product-specific automation | Environment-specific | cases where a current manual-supported product capability is more defensible than generic tooling, such as licensed X-Ways E01/case metadata/carving workflows | Keep adapters loosely coupled. They should accept local manifests or paths, return sanitized structured outputs, and remain replaceable by another toolchain when unavailable or unsuitable. |
 | `bulk_extractor`                     | content scanning, feature extraction, carving support                    | High            | broad content extraction from images or mounted evidence                                                                                     | Good companion tool, not a full filesystem examiner; on Linux server user-activity cases it is usually corroborative rather than primary proof of logon or browsing.                 |
 | `The Sleuth Kit`                     | partition, volume, filesystem, deleted-file, and metadata analysis       | High            | raw/E01/AFF4/disk-image workflows and filesystem-level validation                                                                            | Official upstream: `sleuthkit/sleuthkit`. Foundational for disk and filesystem analysis.                                                                                             |
+| `Volatility 3`                       | volatile-memory layer detection and Windows/Linux/macOS artifact analysis | High          | physical memory, supported crash dumps, and supported VM-memory containers                                                                    | Test the source format with the OS information plugin before broad plugins. Preserve independent plugin failures and symbol-resolution provenance.                                   |
+| QEMU `elf2dmp`                       | convert QEMU ELF guest-memory dumps into Windows crash dumps              | High          | Windows QEMU ELF captures that cannot be consumed directly by the selected memory framework                                                    | Convert only a working copy, hash the derived dump, and retain the direct-parser failure. Prefer direct supported analysis when it succeeds.                                         |
 | `Velociraptor`                       | endpoint collection, artifact-based DFIR, offline collectors             | Medium          | authorized endpoint collection, reusable artifact logic, enterprise-scale or offline Windows/Linux/macOS triage                               | Powerful but operationally heavier than simple commands. Use targeted artifacts and document collector configuration, output container handling, and live-host impact.               |
 | `Hayabusa`                           | Windows event-log timelines and Sigma-oriented threat hunting            | High            | Windows user-activity and incident timelines where EVTX artifacts are central                                                                | Strong fit for last-hours Windows activity questions. Prefer release binaries or documented builds and record rule source/update state.                                               |
 | `Chainsaw`                           | rapid Windows forensic artifact search and hunt                          | High            | EVTX, MFT, Shimcache, Amcache, SRUM, and Sigma-driven triage where fast local output is useful                                                | Good complement or cross-check to Hayabusa. Watch for rule mapping, EDR warnings, and output format consistency.                                                                      |
@@ -97,6 +100,12 @@ For a typical Linux-based disk-image examination, the first-pass stack should us
 5. `bulk_extractor`
 6. `Plaso` if timeline depth is needed
 7. `Timesketch` only if collaborative or large-scale timeline review is justified
+
+For paired VM disk and volatile-memory captures, keep each pair under one source
+record but preserve per-file hashes and parser outputs. Run a bounded Volatility
+compatibility test before the baseline memory plugins, then inspect the working
+disk's partition layout before filesystem or timeline parsing. Correlate only
+after both lanes have independently recorded their observations and limitations.
 
 If BitLocker or another encrypted Windows volume is detected, extend the baseline with a read-only recovery branch: characterize the protection, test supported unlock or mount paths with in-scope material, and then decide separately whether any remaining whole-disk free-space review or carving of accessible plaintext regions is still useful.
 

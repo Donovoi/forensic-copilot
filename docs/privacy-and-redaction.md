@@ -6,6 +6,14 @@ Redaction is a publication control, not an evidence-collection rule. During auth
 
 When secret extraction produces leads, public-facing materials should describe the lead category, source artifact, likely program/site/service, confidence, and controlled output path without exposing the value. Plaintext values remain in the controlled case output unless the case specifically requires disclosure.
 
+## Case-specific public-source attribution
+
+Public-source attribution can disclose case-derived personal identifiers to search or fetch providers. Run it only when case authority covers the lookup and the examiner has recorded the allowed identifier classes, query budget, privacy limits, and controlled fragment/query-log paths.
+
+Before every online call, the attribution helper records the exact query, UTC time, identifier class, provider/tool, purpose, authority/privacy basis, and planned output in the controlled case query log. After the call it records status, URLs consulted, access times, observations, and limitations. Exact personal identifiers stay in that controlled log; ordinary helper output and public repository content use neutral labels.
+
+Use the minimum identifier needed. Never upload evidence, files, memory, document bodies, hashes, secrets, credentials, cookies, keys, full address books, or bulk personal data for attribution research. Do not contact subjects, access accounts, bypass controls, use breach credentials, purchase data, or expand to unrelated people. If online authority or an approved output path is missing, keep the lane local and record the blocker.
+
 Before publishing changes, verify that the content does **not** reveal:
 
 - your real name or another person's real name

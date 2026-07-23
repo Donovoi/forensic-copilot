@@ -15,13 +15,15 @@ Forensically analyze the scoped evidence source and maintain a defensible Markdo
 - Do not use `command`, `title`, `agent`, or `name` instead of `description`.
 - Keep the first Task prompt under 30 words. It only needs short case facts and the required platform/research/provision sequence; use one semicolon-separated line and never paste the full user request or a newline. For local Gemma-style runs, the opening Task must be emitted immediately, keep `description`, `subagent_type`, and `prompt` in that order, and never end the argument object with a period.
 - The opening Task may include short data-boundary facts such as `io known` or `io unknown` when they fit under 30 words; do not paste long paths or expand the first Task to explain them.
-- The senior tooling specialist must call `forensic-platform-profiler` first when platform facts are unclear, then `forensic-tool-researcher`, then `forensic-tool-provisioner` before handing work back to the examiner.
+- The senior tooling specialist must call `forensic-platform-profiler` first when platform facts are unclear, then the pinned Donovoi/robin-backed `forensic-tool-researcher`, then `forensic-tool-provisioner` before handing work back to the examiner.
+- The researcher must run `scripts/robin_research.py` as its first action and preserve the `ROBIN_BACKEND` revision line. Treat `ROBIN_BLOCKED` as a required-helper failure; only an explicitly offline run may use the documented local-only source fallback.
 - If evidence OS, evidence mode, runner/evidence boundary, filesystem/logging architecture, or host role is unclear, route through `forensic-platform-profiler` before broad collection or OS-specific tool choice.
 - Do not assume Windows from examples or Linux from the runner. Platform profile controls artifact priorities and tool choice.
 - Establish data-location boundaries before broad collection: input/read roots, compute/staging roots, and output/report/export roots. If the user gave only a path, default to that path as input scope, ignored analyst-controlled case/tool/artifact paths for compute, and the requested or safe ignored report path for output.
 - Ask after the mandatory senior handoff when missing data-location boundaries could materially affect legality, policy, contamination risk, remote/cloud compute, or the ability to proceed. Do not read outside input roots, stage or cache outside compute roots, use remote/cloud compute, or write outside output roots without approval.
 - BitLocker is a strong Windows-evidence signal and E01 is a strong dead-box disk-image signal. Use those facts to avoid unnecessary platform-profiler turns on slow local models unless another fact contradicts them.
-- After the senior handoff, use `forensic-evidence-collector` for scoped collection, `forensic-artifact-router` for parser or specialist-lane selection, `forensic-timeline-analyst` for timeline correlation, `forensic-report-challenger` for adversarial report review, and `forensic-publication-redactor` before publication or push.
+- After the senior handoff, use `forensic-evidence-collector` for scoped collection, `forensic-artifact-router` for parser or specialist-lane selection, `forensic-timeline-analyst` for timeline correlation, `forensic-attribution-analyst` for device-user/owner/custodian assessment, `forensic-report-challenger` for adversarial report review, and `forensic-publication-redactor` before publication or push.
+- The attribution analyst writes only scoped fragments and controlled OSINT query logs. Online queries require examiner-recorded authority, approved identifier classes, a query budget, privacy limits, and approved output paths; the helper never edits or finalizes the canonical report.
 - Match requested depth: quick triage collects the minimum defensible source set; comprehensive examination preserves or inventories every relevant in-scope artifact class.
 - Offline and no-download runs must continue through the helper loop. If selected tools cannot be fetched or used, call `forensic-script-author` and then `forensic-script-reviewer`; generated code cannot run until review returns `SCRIPT_REVIEW: approved-for-controlled-use`.
 - In OpenCode, the senior tooling specialist is a task-only coordinator; it should not read files, run shell commands, search the web directly, or keep its own todo list.
@@ -36,11 +38,11 @@ Forensically analyze the scoped evidence source and maintain a defensible Markdo
 - Keep helper prompts narrow and specific.
 - Keep `forensic-platform-profiler` text-only in OpenCode. It should infer from the prompt or return `discovery_needed`, not load shell or broad file tool schemas.
 - Require platform-profiler notes of 10 lines or fewer, researcher notes of 8 lines or fewer, provisioner notes of 10 lines or fewer, and senior handoffs of 12 lines or fewer.
-- Require collector notes of 12 lines or fewer, router notes of 10 lines or fewer, timeline notes of 12 lines or fewer, challenger notes of 12 lines or fewer, and redactor notes of 10 lines or fewer.
+- Require collector notes of 12 lines or fewer, router notes of 10 lines or fewer, timeline notes of 12 lines or fewer, attribution notes of 12 lines or fewer, challenger notes of 12 lines or fewer, and redactor notes of 10 lines or fewer.
 - Require script-author notes of 12 lines or fewer and script-reviewer notes of 12 lines or fewer.
 - Require provisioner notes to begin with visible `FLOW:` text. A successful empty provisioner result is still a failed helper loop.
-- Use local SearXNG with 3 or fewer results for research when available.
-- OpenCode `websearch` is denied for the researcher in this repo; use narrow `webfetch` only for known official upstream pages, or use local docs and label `OFFLINE-SOURCE-BASIS` when web access is unavailable.
+- Robin uses local SearXNG with 3 or fewer results for research when available and verifies leads against narrow official upstream pages.
+- OpenCode `websearch` and direct `webfetch` are denied for the outer researcher in this repo; current online research must come through the pinned Robin adapter, while explicitly offline runs use local docs and label `OFFLINE-SOURCE-BASIS`.
 - Durable case state belongs in report, artifact, and acquisition files, not in model context.
 
 ## Live Windows collection from WSL

@@ -65,26 +65,34 @@ Pay special attention when:
 
 ## Output format
 
-Return or create a Markdown note containing:
+When the examiner supplies a `review-bundle.json`, return one structured JSON
+object that can be saved as `peer-review.json` and consumed directly by
+`paired_vm_case.py finalize-report`:
 
-# Forensic Peer Review Note
+```json
+{
+  "schema_version": 1,
+  "reviewed_utc": "YYYY-MM-DDTHH:MM:SSZ",
+  "reviewer": "forensic-peer-reviewer",
+  "recommendation": "ready",
+  "report_sha256": "exact review-bundle report_sha256",
+  "coverage_sha256": "exact review-bundle coverage_sha256",
+  "supported_findings": [],
+  "challenged_findings": [],
+  "missing_corroboration": [],
+  "alternative_explanations": [],
+  "required_wording_changes": [],
+  "residual_caveats": []
+}
+```
 
-## Report reviewed
+Copy both hashes exactly from the supplied review bundle. Do not compute,
+invent, shorten, or normalize them. `recommendation` must be one of `ready`,
+`ready with caveats`, or `not ready`; the harness will finalize only the exact
+value `ready`.
 
-## Supported findings
-
-## Challenged findings
-
-## Missing corroboration
-
-## Alternative explanations
-
-## Required wording changes
-
-## Release recommendation
-
-Release recommendation must be one of:
-
-- `ready`
-- `ready with caveats`
-- `not ready`
+If no review bundle is supplied, return the same JSON shape with empty hash
+strings and a recommendation other than `ready`, explicitly explaining the
+missing frozen inputs in `missing_corroboration`. A Markdown narrative may be
+created as a supplemental human-readable note only when requested; it does not
+replace the structured JSON review record.

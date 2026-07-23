@@ -25,6 +25,9 @@ This repository is easier to trust if its limits are stated plainly. The agent i
 - Windows-first tools such as `FTK Imager`, `KAPE`, and many `Zimmerman` utilities may require a separate workstation, VM, or manual setup path.
 - Timeline tooling can be worth the cost in the right case, but tools such as `Plaso` and `Timesketch` can add packaging, service, or deployment friction.
 - Proprietary or licensed tools are not redistributed by this repo. If they are needed, the licensing and execution path should be documented explicitly.
+- An ELF file signature and QEMU notes do not prove that a memory framework can reconstruct the guest address space. Require a successful OS-information plugin result; otherwise preserve the failure and use a hashed working-copy conversion or report the blocker.
+- Container read-only mounts reduce accidental evidence modification but are not hardware write blockers. Record host mount options, container image identity, network mode, and the fact that the original evidence resides on a writable host filesystem.
+- A digest-pinned base and version-pinned forensic package are still not byte-reproducible when transitive wheels or distribution repositories remain live inputs. Record the resolved image ID and full dependency/package inventory, or additionally pin and verify every package input.
 
 ## Investigation and reporting limits
 

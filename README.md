@@ -6,6 +6,8 @@ Forensic Copilot is a portable agent workflow for digital forensic triage, host 
 
 It gives you one visible agent, **Forensic Examiner**, plus internal helper agents for platform profiling, tool research, provisioning, evidence collection, timeline analysis, report challenge, redaction, and offline script fallback.
 
+The online tooling-research round runs through a revision-pinned [Donovoi/robin](https://github.com/Donovoi/robin) adapter. The adapter launches a separate locked-down OpenCode researcher, permits only narrow official-page fetching, bounds the note to eight lines including backend provenance, and refuses a different fork or revision.
+
 Use it with real examiner judgment, your legal authority, and your local SOPs. It helps structure the work; it does not replace validation, chain of custody, or human review.
 
 ## Fast Start
@@ -23,6 +25,103 @@ Analyze this authorized Windows host for user activity during the last two hours
 ```
 
 A bare path is enough to begin. The examiner should infer preservation-first, scope-limited triage, start a Markdown case record, and ask only the clarification questions that could materially change the result.
+
+Before the first online research round, stage the pinned Robin checkout under the ignored tool cache:
+
+```bash
+python scripts/robin_research.py setup
+python scripts/robin_research.py verify
+```
+
+## Paired VM disk and memory cases
+
+`scripts/paired_vm_case.py` provides a deterministic first-pass runner when each
+source has a compressed raw disk image, a QEMU/ELF-style memory dump, and an
+optional SHA-256 manifest. It refuses overlapping evidence and output roots,
+records machine-readable case state, validates hashes and gzip integrity, creates
+atomic decompressed working images, and runs the first Volatility and Sleuth Kit
+checks in constrained containers.
+
+```bash
+python scripts/paired_vm_case.py init \
+  --case-id CASE-001 \
+  --evidence-root /evidence/paired-vms \
+  --case-root /cases/CASE-001
+
+python scripts/paired_vm_case.py verify \
+  --case-root /cases/CASE-001 \
+  --prepare-working-disks
+python scripts/paired_vm_case.py build-tools --case-root /cases/CASE-001
+python scripts/paired_vm_case.py memory --case-root /cases/CASE-001 --info-only
+python scripts/paired_vm_case.py memory-convert \
+  --case-root /cases/CASE-001 --source HOST-A --allow-network
+python scripts/paired_vm_case.py memory \
+  --case-root /cases/CASE-001 --source HOST-A --input converted --info-only
+python scripts/paired_vm_case.py memory \
+  --case-root /cases/CASE-001 --source HOST-A --input converted --extended
+python scripts/paired_vm_case.py disk-layout --case-root /cases/CASE-001
+python scripts/paired_vm_case.py disk-filesystems --case-root /cases/CASE-001
+python scripts/paired_vm_case.py timeline --case-root /cases/CASE-001 --source HOST-A
+python scripts/paired_vm_case.py disk-recover \
+  --case-root /cases/CASE-001 --source HOST-A --offset 206848 \
+  --directory-inum 12345
+python scripts/paired_vm_case.py disk-recover \
+  --case-root /cases/CASE-001 --source HOST-A --offset 206848 \
+  --recovery-scope unallocated
+python scripts/paired_vm_case.py disk-recover-manifest \
+  --case-root /cases/CASE-001 --source HOST-A --offset 206848
+python scripts/paired_vm_case.py disk-carve \
+  --case-root /cases/CASE-001 --source HOST-A
+python scripts/paired_vm_case.py disk-repair-copy \
+  --case-root /cases/CASE-001 --source HOST-A \
+  --offset 206848 --length 166092800 --copy-id 01
+python scripts/paired_vm_case.py disk-repair-testdisk \
+  --case-root /cases/CASE-001 --source HOST-A \
+  --offset 206848 --length 166092800 --copy-id 01 \
+  --validation-inum 2823425
+python scripts/paired_vm_case.py timeline-recovered \
+  --case-root /cases/CASE-001 --source HOST-A --offset 206848 \
+  --directory-inum 12345 \
+  --file-filter /cases/CASE-001/config/windows-triage.filter
+python scripts/paired_vm_case.py timeline-slice \
+  --case-root /cases/CASE-001 --source HOST-A \
+  --slice 2026-05-21T16:08:42+00:00 --slice-size 10
+python scripts/paired_vm_case.py timeline-query \
+  --case-root /cases/CASE-001 --source HOST-A \
+  --filter 'filename contains "server.ps1"' --name server-ps1
+python scripts/build_super_timeline.py \
+  --manifest /cases/CASE-001/timeline-inputs.json \
+  --allow-read-root /cases/CASE-001/timeline-exports \
+  --output-dir /cases/CASE-001/reports/super-timeline
+python scripts/run_pattern_analysis.py \
+  --manifest /cases/CASE-001/pattern-jobs.json \
+  --allow-read-root /cases/CASE-001/analysis-inputs \
+  --output-dir /cases/CASE-001/reports/pattern-analysis
+python scripts/paired_vm_case.py case-status --case-root /cases/CASE-001
+# Record every listed work item with its durable artifact before review.
+python scripts/paired_vm_case.py prepare-review --case-root /cases/CASE-001
+python scripts/paired_vm_case.py finalize-report \
+  --case-root /cases/CASE-001 \
+  --peer-review /cases/CASE-001/reviews/peer-review.json
+```
+
+`init` creates only `CASE-001.working.md`. The final report and
+`completion.json` do not exist until every required evidence-item lane is
+terminal, the report links every evidence item, and an exact `ready` peer review
+matches the frozen report and coverage hashes. A report that is merely
+`ready_with_caveats` cannot pass this gate.
+
+Network access is disabled for analysis containers by default. Add
+`--allow-network` to a Volatility run only when its automatic Microsoft symbol
+resolution is required, and record that exception in the case report. See
+[docs/paired-vm-workflow.md](docs/paired-vm-workflow.md).
+
+`build_super_timeline.py` externally sorts independently exported Plaso and
+normalized Volatility events without merging their source storage files. It
+writes a full Timesketch-compatible JSONL/CSV pair, a bounded reader-facing
+HTML/CSV view, hashes, rejection counts, and provenance. `run_pattern_analysis.py`
+provides bounded static FLOSS, bstrings, and ripgrep jobs with read-root
+allowlists, target hashes or manifests, output caps, timeouts, and no shell.
 
 ## What It Does
 
@@ -109,12 +208,24 @@ The internal loop is:
 6. `forensic-evidence-collector`
 7. `forensic-artifact-router`
 8. `forensic-timeline-analyst`
-9. `forensic-report-challenger`
-10. `forensic-peer-reviewer`
-11. `forensic-publication-redactor`
-12. `forensic-maintainer` only when reusable workflow changes are justified
+9. `forensic-attribution-analyst` when device users, owner/custodian, operator identity, or approved public-source corroboration is material
+10. `forensic-report-challenger`
+11. `forensic-peer-reviewer`
+12. `forensic-publication-redactor`
+13. `forensic-maintainer` only when reusable workflow changes are justified
 
 The loop should not be bypassed. If a helper stalls or fails, retry the same helper path with a narrower prompt or restore the provider/backend before collecting evidence.
+
+The attribution analyst keeps local accounts, observed human activity, possible owner or custodian, operator identity, contradictions, public sources, and confidence separate. It writes scoped fragments and a controlled OSINT query log for examiner review; it does not edit or finalize the canonical report. Public-source queries require case authority, approved identifier classes and output paths, a query budget, and minimum-necessary privacy handling.
+Authorized attribution research uses the same pinned Donovoi/robin checkout through
+`scripts/robin_research.py run --mode attribution`; it has a distinct policy that
+forbids breach data, people-search services, account access, or subject contact.
+
+For lifecycle-managed cases, `prepare-review` freezes the report and coverage
+hashes. The peer reviewer returns structured `peer-review.json` containing those
+exact hashes and its finding challenges; `finalize-report` accepts only the exact
+recommendation `ready`. A narrative Markdown review can supplement that JSON but
+cannot replace it.
 
 ## Specialized Tool Adapters
 
@@ -183,6 +294,7 @@ Formal exports can be generated after review. See [docs/formal-report-output.md]
 - [docs/privacy-and-redaction.md](docs/privacy-and-redaction.md) - publication hygiene
 - [docs/assets/](docs/assets/) - README diagrams for the current platform-aware loop
 - [scripts/validate_repo_hygiene.py](scripts/validate_repo_hygiene.py) - repo hygiene check
+- [scripts/paired_vm_case.py](scripts/paired_vm_case.py) - paired VM disk/RAM case runner
 - [scripts/check_opencode_llamacpp_backend.py](scripts/check_opencode_llamacpp_backend.py) - local llama.cpp backend preflight for OpenCode tests
 - [scripts/run_local_model_investigation_eval.py](scripts/run_local_model_investigation_eval.py) - local OpenCode/llama.cpp investigation regression runner
 

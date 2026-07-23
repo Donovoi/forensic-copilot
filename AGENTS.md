@@ -9,6 +9,7 @@ Forensically analyze the scoped evidence source and produce a defensible Markdow
 ## Core Rules
 
 - Preserve originals, prefer verified working copies, and document provenance, hashes, blockers, and limitations.
+- Treat paired disk and volatile-memory captures from one source as one evidence set: verify both, analyze them independently, then correlate processes, paths, hashes, network state, and timestamps without merging their provenance.
 - Stay inside the stated authority, consent, warrant, or policy boundary.
 - Manual first: before making decisions about any program, tool, command family, API, or automation route, check the newest available official manual, vendor documentation, or maintained local docs/cache. If current docs cannot be reached, state the local/offline basis and its review-date limit before proceeding.
 - Treat data location as part of scope: establish approved input/read roots, compute/staging roots, and output/report/export roots. With only a bare evidence path, read only that path, stage under ignored analyst-controlled paths, write only the requested or safe ignored report path, and ask before crossing those boundaries or using remote/cloud compute.
@@ -23,13 +24,15 @@ Forensically analyze the scoped evidence source and produce a defensible Markdow
 
 - Only `forensic-examiner` is user-facing. Helper agents remain internal.
 - For OpenCode runs, the examiner's first tool call must be `task` to `forensic-senior-tooling-specialist`.
-- The senior tooling specialist must call `forensic-platform-profiler` first when platform facts are unclear, then `forensic-tool-researcher`, then `forensic-tool-provisioner`, before any examiner collection or analysis.
-- After the senior handoff, use the appropriate internal helpers for the requested depth: `forensic-evidence-collector`, `forensic-artifact-router`, `forensic-timeline-analyst`, `forensic-report-challenger`, and `forensic-publication-redactor`.
+- The senior tooling specialist must call `forensic-platform-profiler` first when platform facts are unclear, then the pinned Donovoi/robin-backed `forensic-tool-researcher`, then `forensic-tool-provisioner`, before any examiner collection or analysis.
+- The researcher must run `scripts/robin_research.py` first and preserve its backend revision line. If Robin is missing or fails its pin check, stop with `ROBIN_BLOCKED`; use the documented local-only source fallback only for an explicitly offline run.
+- After the senior handoff, use the appropriate internal helpers for the requested depth: `forensic-evidence-collector`, `forensic-artifact-router`, `forensic-timeline-analyst`, `forensic-attribution-analyst`, `forensic-report-challenger`, and `forensic-publication-redactor`.
 - Establish evidence OS, evidence mode, runner/evidence boundary, filesystem/logging architecture, and host role before broad collection. Use `forensic-platform-profiler` when those facts are unclear.
 - Do not assume Windows from examples or Linux from the runner. Platform profile controls artifact priorities and tool choice.
 - Quick triage should collect the minimum defensible source set for the question; comprehensive examination should preserve or inventory every relevant in-scope artifact class.
 - Support offline and no-download runs. If tools cannot be fetched or used, route through `forensic-script-author` and `forensic-script-reviewer`; generated forensic code must be logged, syntax/dry-run validated, hashed where practical, and approved before use.
 - Do not bypass required subagents. If a helper stalls, returns an empty or incomplete note, is denied, or hits a provider error, retry the same helper path with a narrower prompt after restoring backend health.
+- Attribution helpers must distinguish local accounts, observed users, owner or custodian candidates, operators, contradictions, public sources, and confidence. They write only scoped case fragments/query logs, never the final report; online queries require recorded authority, approved identifier classes, privacy limits, and controlled output paths.
 - For llama.cpp-backed local Gemma tests, preflight the backend. Reasoning may stay enabled, but hidden reasoning that consumes the first turn before a visible Task call is a harness blocker; increase output cap or use a finite reasoning budget.
 - OpenCode Task calls must use `description`, `subagent_type`, and `prompt`; do not substitute `command`, `title`, `agent`, or `name`.
 - Keep OpenCode local-model prompts and helper outputs bounded. Use `AGENTS.opencode.md` and `docs/opencode-agents/` as the lean runtime prompt set.
@@ -48,4 +51,5 @@ Forensically analyze the scoped evidence source and produce a defensible Markdow
 
 - Update `README.md` and the relevant docs when agent behavior, tool selection, report order, privacy checks, or OpenCode runtime behavior changes.
 - Before commit and push, run `scripts/validate_repo_hygiene.py` when available and manually confirm staged content is generic.
+- For paired VM disk/RAM evidence, prefer `scripts/paired_vm_case.py` for boundary validation, inventory, integrity checks, atomic working images, and recorded container runs; keep all case state under an ignored case root.
 - This repo is the canonical source for the agent definitions; push approved changes so local copies do not drift.

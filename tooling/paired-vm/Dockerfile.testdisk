@@ -1,0 +1,22 @@
+FROM ubuntu@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90
+
+ARG TESTDISK_VERSION=7.2
+ARG TESTDISK_ARCHIVE_SHA256=19669b6d36314d6e531efdf836c768574e8a556d1e9db3c8f3c4e93a5092cb1c
+
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends bzip2 \
+    && rm -rf /var/lib/apt/lists/*
+
+ADD https://www.cgsecurity.org/testdisk-${TESTDISK_VERSION}.linux26-x86_64.tar.bz2 /tmp/testdisk.tar.bz2
+
+RUN printf '%s  %s\n' "${TESTDISK_ARCHIVE_SHA256}" /tmp/testdisk.tar.bz2 \
+      | sha256sum --check --strict - \
+    && mkdir -p /opt/cgsecurity \
+    && tar -xjf /tmp/testdisk.tar.bz2 --strip-components=1 -C /opt/cgsecurity \
+    && ln -s /opt/cgsecurity/testdisk_static /usr/local/bin/testdisk \
+    && ln -s /opt/cgsecurity/photorec_static /usr/local/bin/photorec \
+    && rm -f /tmp/testdisk.tar.bz2
+
+WORKDIR /work
+
+ENTRYPOINT []

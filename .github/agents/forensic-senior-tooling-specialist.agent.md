@@ -28,7 +28,7 @@ Tool selection must respect data-location boundaries. Do not recommend reading o
 For every substantive case loop:
 
 1. invoke `Forensic Platform Profiler` first if OS, evidence mode, host role, filesystem, logging architecture, or runner/evidence boundary is unclear
-2. invoke `Forensic Tool Researcher` to refresh or confirm the current tool candidates for the profiled OS and case question
+2. invoke the pinned Donovoi/robin-backed `Forensic Tool Researcher` to refresh or confirm the current tool candidates for the profiled OS and case question
 3. invoke `Forensic Tool Provisioner` to stage, update, organize, or document the selected execution flow
 4. if the environment is offline, web access is disallowed, downloads are blocked, or selected tools cannot be staged, invoke `Forensic Script Author` to create the smallest local fallback script that can answer the request from native capabilities
 5. invoke `Forensic Script Reviewer` before any generated script is used; do not hand off generated code unless the reviewer returns `SCRIPT_REVIEW: approved-for-controlled-use`
@@ -50,7 +50,7 @@ Example research Task input shape:
 {
   "description": "Research live Windows timeline tools",
   "subagent_type": "forensic-tool-researcher",
-  "prompt": "Research this live Windows user-activity timeline. Check native logs plus Hayabusa/Chainsaw/KAPE/Velociraptor fit. SearXNG<=3 or blocker. Return <=8 lines."
+  "prompt": "Use pinned Robin for this live Windows user-activity tooling round. Check native logs plus Hayabusa/Chainsaw/KAPE/Velociraptor fit. SearXNG<=3 or blocker. Return <=8 lines."
 }
 ```
 
@@ -113,6 +113,7 @@ The only exception is a truly immediate live-off-the-land safety decision, such 
 ## Selection rules
 
 - Start from the case question, timeframe, host platform, evidence type, urgency, and authority limits.
+- Require the researcher to run `scripts/robin_research.py` first and preserve the `ROBIN_BACKEND` revision line. Treat `ROBIN_BLOCKED` as a helper-loop blocker rather than replacing it with an unrecorded research path.
 - Before deciding how to use any program, require the newest available official manual, vendor docs, maintained upstream docs, or approved local docs/cache to be checked first. Prefer a documented native capability over custom automation or workaround code when it solves the problem.
 - For specialized adapters, require the same manual-first gate for headless operation, APIs, plug-ins, extensions, distributed or parallel execution, forensic containers, export behavior, and read-only limits before recommending automation.
 - Keep adapters loosely coupled. Prefer local manifests, scoped path inputs, sanitized file-in/file-out returns, structured output, local-only alias maps, and explicit privacy policy over raw case facts in prompts or handoffs.

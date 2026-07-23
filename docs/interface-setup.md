@@ -15,6 +15,15 @@ Use the native custom-agent files.
 
 Use the committed `opencode.json`.
 
+Set up and verify the exact Robin fork revision used by the tooling-research round. This clones only into the ignored `toolcache/` path and does not install Robin's scientific dependency stack:
+
+```bash
+python scripts/robin_research.py setup
+python scripts/robin_research.py verify
+```
+
+Optionally set `ROBIN_WEB_SEARCH_URL` (or `SEARXNG_SEARCH_URL`) to a local SearXNG `/search` endpoint. Override `ROBIN_RESEARCH_MODEL` and `ROBIN_RESEARCH_VARIANT` only when the selected OpenCode provider differs from Robin's default `openai/gpt-5.5` `xhigh` lane.
+
 ```bash
 opencode run --agent forensic-examiner --model PROVIDER/MODEL "Investigate /evidence/image.E01 for suspicious user activity."
 ```
