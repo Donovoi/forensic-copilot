@@ -46,6 +46,11 @@ elif name=='photorec':
  prefix=Path(args[args.index('/d')+1])
  log=Path(args[args.index('/logname')+1])
  d=Path(str(prefix)+'.1');d.mkdir()
+ if mode=='monitor_handshake':
+  deadline=time.monotonic()+10
+  while not (base/'monitor-observed').exists():
+   if time.monotonic()>deadline:raise RuntimeError('Parent monitor handshake timed out')
+   time.sleep(.005)
  payload=image.read_bytes()[(63+32)*512:(63+32)*512+1200]
  path=d/'f0000032.bin'
  if mode=='sleep':time.sleep(20)
@@ -457,9 +462,11 @@ class SupervisorTests(unittest.TestCase):
         def tracking_check(rec, *args, **kwargs):
             process = kwargs.get('active_photorec')
             calls.append((rec.status.get('stage'), process is not None, kwargs.get('force_status', False)))
+            if rec.status.get('stage') == 'photorec' and process is not None:
+                (self.root/'monitor-observed').write_text('observed')
             return original_check(rec, *args, **kwargs)
         with mock.patch.object(s.Recorder, 'check', tracking_check):
-            self.assertEqual(self.run_mode(), 0)
+            self.assertEqual(self.run_mode('monitor_handshake'), 0)
         self.assertTrue(any(stage == 'photorec' and scoped for stage, scoped, forced in calls))
         self.assertTrue(any(stage == 'photorec' and forced and not scoped for stage, scoped, forced in calls))
         self.assertTrue(all(stage == 'photorec' and not forced for stage, scoped, forced in calls if scoped))

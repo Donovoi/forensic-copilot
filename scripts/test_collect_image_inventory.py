@@ -352,8 +352,15 @@ class InventoryTests(unittest.TestCase):
 
     def test_timeout_kills_child_and_records_failure(self):
         self.fake_mode = "timeout"
-        with self.assertRaisesRegex(inventory.InventoryError, "time limit"):
-            self.run_inventory(replace(self.config, max_stage_hours=0.00003))
+        original_run_stage = inventory.run_stage
+        def targeted_deadline(config, recorder, name, command, tool_record):
+            # Tool-version startup must not consume the timeout intended for mmls.
+            if name == "mmls":
+                config = replace(config, max_stage_hours=1 / 3600)
+            return original_run_stage(config, recorder, name, command, tool_record)
+        with patch.object(inventory, "run_stage", side_effect=targeted_deadline):
+            with self.assertRaisesRegex(inventory.InventoryError, "time limit"):
+                self.run_inventory()
         result = inventory.read_json(self.config.output_dir / "status.json")
         self.assertEqual(result["stages"]["mmls"]["state"], "failed")
         self.assertIsNotNone(result["stages"]["mmls"]["exit_code"])
