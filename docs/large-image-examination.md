@@ -45,6 +45,8 @@ For media distinguish signature recognition, metadata parsing, decoder validatio
 
 Retain original timestamps and semantics alongside normalized UTC when conversion is supported. Every event needs source artifact, record ID or byte offset, timestamp field, clock/timezone basis, account association, observation, interpretation, confidence and limitations. Separate filesystem metadata events from application-recorded actions. A copied-file timestamp need not be a local edit; access times need not be human opens; deletion flags rarely establish deletion dates.
 
+Verify timestamp precision and range at the parser boundary. TSK 4.14.0 public-fixture checks reproduced zero/unknown exports for raw NTFS dates in 1960 and 2200, whole-second bodyfile output for a fractional 2009 timestamp, and a preserved 2040 date. These test points do not define every supported boundary. An exact bodyfile timeline cannot restore information lost during native export; retain raw SI/FN FILETIME values for significant chronology and investigate exported zero values. Its type-48 rows use a selected FILE_NAME timestamp set; they do not enumerate every filename attribute. See the versioned [bodyfile implementation](https://github.com/sleuthkit/sleuthkit/blob/sleuthkit-4.14.0/tsk/fs/fs_name.c#L650) and [filename selection](https://github.com/sleuthkit/sleuthkit/blob/sleuthkit-4.14.0/tsk/fs/fls_lib.c#L159).
+
 Establish the evidence timezone from configuration artifacts. Do not impose the analyst host timezone. Distinguish account identifiers, device ownership and the human performing an action.
 
 | Evidence | Supports | Does not establish alone |

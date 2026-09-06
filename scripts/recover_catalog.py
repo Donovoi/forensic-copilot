@@ -64,6 +64,7 @@ class Config:
     progress_seconds: float = 5.0
     # Programmatic synthetic fixtures only; CLI always resolves icat from tsk_bin.
     tool_prefix: tuple[str, ...] | None = None
+    selection_manifest: Path | None = None
 
 
 def load_gate(config):
@@ -84,6 +85,10 @@ def normalize(config):
     for name in ("image", "preservation_state", "preservation_exit_code", "tsk_bin", "catalog",
                  "output_dir", "state_dir", "gate_module"):
         setattr(config, name, Path(os.path.abspath(getattr(config, name))))
+    if config.selection_manifest is not None:
+        config.selection_manifest = Path(os.path.abspath(config.selection_manifest))
+        if config.all_files:
+            raise RecoveryError("Explicit stream selection and --all are mutually exclusive")
     if config.partition_offset < 0 or config.sector_size not in (512, 1024, 2048, 4096):
         raise RecoveryError("Require nonnegative sector offset and a supported explicit sector size")
     if re.search(r"\.\d+$", config.image.name):
@@ -96,6 +101,8 @@ def normalize(config):
     roots = [config.output_dir, config.state_dir]
     inputs = [config.image, config.preservation_state, config.preservation_exit_code,
               config.tsk_bin, config.catalog.parent, config.catalog, config.gate_module]
+    if config.selection_manifest is not None:
+        inputs.append(config.selection_manifest)
     for root in roots:
         if root.is_symlink() or not root.parent.is_dir():
             raise RecoveryError("Output/state parent must exist and root may not be a symbolic link")
@@ -112,6 +119,8 @@ def guard_paths(config, gate):
     for name in ("preservation_state", "preservation_exit_code", "tsk_bin", "catalog",
                  "output_dir", "state_dir", "gate_module"):
         gate.require_unaliased(getattr(config, name))
+    if config.selection_manifest is not None:
+        gate.require_unaliased(config.selection_manifest)
 
 
 def guard_state(config, gate):
@@ -169,6 +178,110 @@ def json_record(gate, path):
         if before != gate.metadata(os.fstat(stream.fileno())):
             raise RecoveryError("Inventory provenance changed while reading")
     return value, {"path": str(path), "metadata": before, "sha256": hashlib.sha256(payload).hexdigest()}
+
+
+def numeric_stream_id(value):
+    """Canonical numeric equivalence is only for refusing colliding catalog IDs."""
+    if not isinstance(value, str) or not re.fullmatch(r"[0-9]+-[0-9]+-[0-9]+", value):
+        return None
+    # Catalog aliases can be malformed through arbitrarily long zero padding.
+    # Strip that padding before the bounded conversion; never parse a huge int.
+    normalized = [part.lstrip("0") or "0" for part in value.split("-")]
+    if any(len(part) > 20 for part in normalized):
+        return None
+    parts = [int(part) for part in normalized]
+    if any(part >= 2 ** 64 for part in parts):
+        return None
+    return "-".join(str(part) for part in parts)
+
+
+def read_selection(config, gate, catalog_record):
+    if config.selection_manifest is None:
+        return None
+    gate.require_unaliased(config.selection_manifest)
+
+    def unique_keys(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise RecoveryError("Duplicate selection manifest key: " + key)
+            result[key] = value
+        return result
+
+    with gate.protected_file(config.selection_manifest) as stream:
+        before = gate.metadata(os.fstat(stream.fileno()))
+        payload = stream.read(1024 * 1024 + 1)
+        if len(payload) > 1024 * 1024:
+            raise RecoveryError("Selection manifest exceeds one MiB")
+        try:
+            value = json.loads(payload.decode("utf-8"), object_pairs_hook=unique_keys)
+        except (ValueError, UnicodeDecodeError) as error:
+            raise RecoveryError("Selection manifest must be strict UTF-8 JSON without a BOM") from error
+        if before != gate.metadata(os.fstat(stream.fileno())):
+            raise RecoveryError("Selection manifest changed while reading")
+    if not isinstance(value, dict) or set(value) != {"schema_version", "catalog_sha256", "stream_ids"}:
+        raise RecoveryError("Selection manifest requires only schema_version, catalog_sha256 and stream_ids")
+    if type(value["schema_version"]) is not int or value["schema_version"] != VERSION:
+        raise RecoveryError("Unsupported selection manifest schema")
+    if value["catalog_sha256"] != catalog_record["sha256"]:
+        raise RecoveryError("Selection manifest catalog SHA256 mismatch (require lowercase hex)")
+    identifiers = value["stream_ids"]
+    if not isinstance(identifiers, list) or not 1 <= len(identifiers) <= 10000:
+        raise RecoveryError("Selection must contain between one and 10000 full stream IDs")
+    seen = set()
+    for identifier in identifiers:
+        if not isinstance(identifier, str) or numeric_stream_id(identifier) != identifier:
+            raise RecoveryError("Selection requires canonical full record-type-attribute IDs")
+        if identifier in seen:
+            raise RecoveryError("Duplicate selected stream ID: " + identifier)
+        seen.add(identifier)
+    return {"manifest": {"path": str(config.selection_manifest), "metadata": before,
+                         "sha256": hashlib.sha256(payload).hexdigest()},
+            "schema_version": VERSION, "catalog_sha256": value["catalog_sha256"],
+            "stream_ids": sorted(seen)}
+
+
+def validate_selection_catalog(config, gate, selection):
+    """Stream the catalog with at most one small summary per requested ID, even in dry-run."""
+    requested = set(selection["stream_ids"])
+    found = {}
+    with gate.protected_file(config.catalog) as catalog:
+        while raw := catalog.readline(1024 * 1024 + 1):
+            if len(raw) > 1024 * 1024:
+                raise RecoveryError("Catalog row exceeds one MiB")
+            try:
+                row = json.loads(raw)
+            except (ValueError, UnicodeDecodeError):
+                continue  # Unparseable references are retained by the full import, never guessed.
+            if not isinstance(row, dict):
+                continue
+            identifier = row.get("inode_attribute")
+            equivalent = numeric_stream_id(identifier)
+            if equivalent not in requested:
+                continue
+            if identifier != equivalent:
+                raise RecoveryError("Selected stream has a noncanonical catalog alias: " + equivalent)
+            problem = valid_row(row)
+            if problem:
+                raise RecoveryError("Selected stream has an invalid catalog reference: " + identifier + ": " + problem)
+            if int(identifier.split("-")[1]) != 128:
+                raise RecoveryError("Selected stream is unsupported: require type-128 DATA: " + identifier)
+            if row.get("deletion_corroborated") is not True:
+                raise RecoveryError("Selected stream has ambiguous allocation flags: " + identifier)
+            summary = (row["size"], row["deleted"], row["reallocated"])
+            if identifier in found and found[identifier] != summary:
+                raise RecoveryError("Selected stream aliases conflict on size or allocation: " + identifier)
+            found[identifier] = summary
+    missing = requested - found.keys()
+    if missing:
+        # Bound diagnostics, while refusing the entire selection.
+        raise RecoveryError("Selected stream IDs missing from catalog (" + str(len(missing)) + "): " +
+                            ", ".join(sorted(missing)[:10]))
+
+
+def check_selection(config, gate, selection, catalog_record):
+    if selection is not None and read_selection(config, gate, catalog_record) != selection:
+        raise RecoveryError("Selection manifest changed during recovery")
 
 
 def read_inventory_binding(config, gate, preservation, catalog_record):
@@ -387,7 +500,7 @@ def import_catalog(config, gate, db, recorder):
                 db.commit()
                 recorder.update(phase="importing_catalog", catalog_rows=line_number)
     db.commit()
-    if not config.all_files:
+    if not config.all_files and config.selection_manifest is None:
         db.execute("UPDATE streams SET state='not_selected',reason='Allocated alias set outside deleted mode' "
                    "WHERE state='pending' AND deleted=0")
     db.commit()
@@ -650,16 +763,26 @@ def run_validated(config, gate, recorder=None, already_locked=False):
     if config.partition_offset * config.sector_size >= preservation["size"]:
         raise RecoveryError("Filesystem offset is outside the verified image")
     with contextlib.ExitStack() as provenance_locks:
-        for path in (config.catalog, config.catalog.parent / "manifest.json", config.catalog.parent / "status.json"):
+        paths = [config.catalog, config.catalog.parent / "manifest.json", config.catalog.parent / "status.json"]
+        if config.selection_manifest is not None:
+            paths.append(config.selection_manifest)
+        for path in paths:
             gate.require_unaliased(path)
             provenance_locks.enter_context(gate.protected_file(path))
         catalog_record = file_record(gate, config.catalog)
         inventory_binding = read_inventory_binding(config, gate, preservation, catalog_record)
-        return run_bound(config, gate, preservation, catalog_record, inventory_binding,
+        selection = read_selection(config, gate, catalog_record)
+        if selection is not None:
+            validate_selection_catalog(config, gate, selection)
+            if file_record(gate, config.catalog) != catalog_record:
+                raise RecoveryError("Catalog changed during selection validation")
+            check_selection(config, gate, selection, catalog_record)
+        return run_bound(config, gate, preservation, catalog_record, inventory_binding, selection,
                          recorder=recorder, already_locked=already_locked)
 
 
-def run_bound(config, gate, preservation, catalog_record, inventory_binding, recorder=None, already_locked=False):
+def run_bound(config, gate, preservation, catalog_record, inventory_binding, selection=None,
+              recorder=None, already_locked=False):
     prefix, tools, tool_version = tool_records(config, gate)
     inputs = {"schema_version": VERSION, "image_gate": preservation, "catalog": catalog_record,
               "inventory_binding": inventory_binding,
@@ -667,7 +790,8 @@ def run_bound(config, gate, preservation, catalog_record, inventory_binding, rec
               "tool_prefix": prefix, "tools": tools, "tool_version": tool_version,
               "gate_sha256": config.gate_sha256.lower(),
               "partition_offset_sectors": config.partition_offset, "sector_size": config.sector_size,
-              "filesystem": "ntfs", "mode": "all" if config.all_files else "deleted",
+              "filesystem": "ntfs", "mode": "selected" if selection is not None else "all" if config.all_files else "deleted",
+              "selection": selection,
               "output_dir": str(config.output_dir), "state_dir": str(config.state_dir)}
     if config.dry_run:
         return {"phase": "dry_run", "writes_performed": False, "image_opened": False,
@@ -695,7 +819,8 @@ def run_bound(config, gate, preservation, catalog_record, inventory_binding, rec
             open_database(config.state_dir / "recovery.sqlite3", gate)) as db:
         try:
             recorder.update(force=True, phase="validating", max_output_bytes=config.max_output_bytes,
-                            reserve_bytes=config.reserve_bytes)
+                            reserve_bytes=config.reserve_bytes, mode=inputs["mode"],
+                            selected_stream_count=len(selection["stream_ids"]) if selection is not None else None)
             recorder.event("attempt_started", resume=config.resume, pid=os.getpid(),
                            script_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                            python=sys.version, max_output_bytes=config.max_output_bytes,
@@ -703,6 +828,20 @@ def run_bound(config, gate, preservation, catalog_record, inventory_binding, rec
             rows = import_catalog(config, gate, db, recorder)
             if file_record(gate, config.catalog) != catalog_record:
                 raise RecoveryError("Catalog changed during import")
+            check_selection(config, gate, selection, catalog_record)
+            selection_filter = ""
+            if selection is not None:
+                db.execute("CREATE TEMP TABLE selected_ids (inode TEXT PRIMARY KEY)")
+                for identifier in selection["stream_ids"]:
+                    db.execute("INSERT INTO selected_ids VALUES(?)", (identifier,))
+                selection_filter = " AND inode IN (SELECT inode FROM selected_ids)"
+                indexed = db.execute("SELECT COUNT(*) FROM streams WHERE inode IN "
+                                     "(SELECT inode FROM selected_ids)").fetchone()[0]
+                if indexed != len(selection["stream_ids"]):
+                    raise RecoveryError("Recovery index does not contain every selected stream")
+                db.execute("UPDATE streams SET state='not_selected',reason='Outside explicit stream selection' "
+                           "WHERE state='pending' AND inode NOT IN (SELECT inode FROM selected_ids)")
+                db.commit()
             used = known_output_bytes(config, gate, db)
             reconcile_interrupted(config, gate, db, recorder)
             if used > config.max_output_bytes:
@@ -711,8 +850,10 @@ def run_bound(config, gate, preservation, catalog_record, inventory_binding, rec
             with gate.protected_file(config.image) as image:
                 gate.check_image_handle(config, preservation, image)
                 selected = db.execute("SELECT * FROM streams WHERE state IN "
-                                      "('pending','complete','partial','failed','interrupted','deferred') ORDER BY id")
+                                      "('pending','complete','partial','failed','interrupted','deferred')" +
+                                      selection_filter + " ORDER BY id")
                 for stream in selected:
+                    check_selection(config, gate, selection, catalog_record)
                     gate.check_image_handle(config, preservation, image)
                     state, added = export_one(config, gate, db, recorder, prefix, stream, used)
                     used += added
@@ -728,17 +869,24 @@ def run_bound(config, gate, preservation, catalog_record, inventory_binding, rec
                     raise RecoveryError("Preservation records changed during recovery")
                 if read_inventory_binding(config, gate, preservation, catalog_record) != inventory_binding:
                     raise RecoveryError("Inventory provenance changed during recovery")
+                check_selection(config, gate, selection, catalog_record)
             for record in tools:
                 if file_record(gate, Path(record["path"])) != record:
                     raise RecoveryError("Tool or dependency changed during recovery")
             counts = dict(db.execute("SELECT state,COUNT(*) FROM streams GROUP BY state"))
+            selected_counts = (dict(db.execute("SELECT state,COUNT(*) FROM streams WHERE inode IN "
+                                               "(SELECT inode FROM selected_ids) GROUP BY state"))
+                               if selection is not None else counts)
             invalid = db.execute("SELECT COUNT(*) FROM refs WHERE problem IS NOT NULL").fetchone()[0]
-            deferred = counts.get("pending", 0) + counts.get("deferred", 0)
-            failures = invalid + sum(counts.get(name, 0) for name in
+            deferred = selected_counts.get("pending", 0) + selected_counts.get("deferred", 0)
+            failures = (0 if selection is not None else invalid) + sum(selected_counts.get(name, 0) for name in
                                      ("failed", "partial", "conflict", "unsupported", "interrupted", "ambiguous_allocation"))
+            if selection is not None:
+                failures = len(selection["stream_ids"]) - selected_counts.get("complete", 0) - deferred
             phase = "deferred" if deferred else "complete_with_errors" if failures else "complete"
             write_manifests(config, gate, db)
-            recorder.update(force=True, phase=phase, counts=counts, invalid_catalog_rows=invalid,
+            recorder.update(force=True, phase=phase, counts=counts, selected_counts=selected_counts,
+                            invalid_catalog_rows=invalid,
                             catalog_rows=rows, output_bytes=used, recovered_all_selected=phase == "complete",
                             completed_utc=gate.utc_now())
             recorder.event("attempt_finished", phase=phase, counts=counts, output_bytes=used)
@@ -762,7 +910,10 @@ def parse_args(argv=None):
     parser.add_argument("--sector-size", type=int, required=True)
     parser.add_argument("--max-output-gib", type=int, required=True, help="Cumulative retained export-byte cap")
     parser.add_argument("--reserve-gib", type=int, default=64)
-    parser.add_argument("--all", dest="all_files", action="store_true", help="Include allocated DATA streams")
+    selection = parser.add_mutually_exclusive_group()
+    selection.add_argument("--all", dest="all_files", action="store_true", help="Include allocated DATA streams")
+    selection.add_argument("--select-streams", dest="selection_manifest", type=Path,
+                           help="Strict UTF-8 JSON manifest of exact catalog-bound full NTFS DATA IDs")
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--stream-timeout", type=float, default=1800)

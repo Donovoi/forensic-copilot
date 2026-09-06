@@ -115,6 +115,12 @@ That is deliberate. This file should not imply a document was checked if it was 
 
 ## How to use this file
 
+Additional maintained sources reviewed for bounded historical-image work:
+
+- [TSK 4.14.0 bodyfile timestamps](https://github.com/sleuthkit/sleuthkit/blob/sleuthkit-4.14.0/tsk/fs/fs_name.c#L650) and [FILE_NAME selection](https://github.com/sleuthkit/sleuthkit/blob/sleuthkit-4.14.0/tsk/fs/fls_lib.c#L159): attribute provenance and exported precision/range require explicit verification.
+- [PhotoRec scripted operation](https://www.cgsecurity.org/testdisk_doc/scripted_run.html) and [PhotoRec 7.2 source archive](https://www.cgsecurity.org/testdisk-7.2.tar.bz2): exact command behavior, NTFS bitmap filtering, report structure and controlled signature selection.
+- [Microsoft file times](https://learn.microsoft.com/en-us/windows/win32/sysinfo/file-times): UTC storage and timestamp-update limits; metadata alone does not establish human activity.
+
 When new guidance materially changes the recommended workflow:
 
 1. update the relevant agent or doc

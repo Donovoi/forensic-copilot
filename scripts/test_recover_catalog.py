@@ -134,6 +134,191 @@ class RecoveryTests(unittest.TestCase):
         path = self.tools / "calls.log"
         return path.read_text().splitlines() if path.exists() else []
 
+    def select(self, identifiers):
+        self.config.selection_manifest = self.root / "selection.json"
+        value = {"schema_version": 1, "catalog_sha256": hashlib.sha256(self.catalog.read_bytes()).hexdigest(),
+                 "stream_ids": identifiers}
+        self.config.selection_manifest.write_text(json.dumps(value), encoding="utf-8")
+        return value
+
+    def test_selection_allocated_deleted_ads_and_aliases_preserve_all_refs(self):
+        self.write_catalog([catalog_row(deleted=False),
+                            catalog_row(identifier="15-128-1", path="/sample.txt:ADS", source_line=2),
+                            catalog_row(identifier="15-128-1", path="/alias.txt:ADS", source_line=3),
+                            catalog_row(identifier="12-128-2", source_line=4),
+                            catalog_row(identifier="99-48-1", source_line=5),
+                            catalog_row(identifier="100", source_line=6),
+                            catalog_row(identifier="101-128-1", path="/../invalid", source_line=7)])
+        self.select(["15-128-1", "11-128-1"])
+        status = recovery.run(self.config)
+        self.assertEqual(status["phase"], "complete")
+        self.assertTrue(status["recovered_all_selected"])
+        self.assertEqual(status["selected_counts"], {"complete": 2})
+        self.assertEqual(status["invalid_catalog_rows"], 1)
+        self.assertEqual(status["counts"]["unsupported"], 1)
+        self.assertEqual(self.calls(), ["11-128-1", "15-128-1"])
+        attempts = self.results()
+        self.assertNotIn("-r", attempts[0]["details"]["command"])
+        self.assertIn("-r", attempts[1]["details"]["command"])
+        self.assertEqual(attempts[1]["details"]["alias_count"], 2)
+        self.assertEqual(len((self.state / "source-references.jsonl").read_text().splitlines()), 7)
+        inputs = json.loads((self.state / "inputs.json").read_text())
+        self.assertEqual(inputs["mode"], "selected")
+        self.assertEqual(inputs["selection"]["stream_ids"], ["11-128-1", "15-128-1"])
+        self.assertEqual(inputs["selection"]["manifest"]["sha256"],
+                         hashlib.sha256(self.config.selection_manifest.read_bytes()).hexdigest())
+        self.config.resume = True
+        self.assertEqual(recovery.run(self.config)["phase"], "complete")
+        self.assertEqual(len(self.results()), 2)
+        self.assertEqual(self.calls(), ["11-128-1", "15-128-1"])
+
+    def test_selection_missing_unsupported_ambiguous_conflicting_and_invalid_fail_before_image(self):
+        cases = [([catalog_row()], ["15-128-1"], "missing"),
+                 ([catalog_row(identifier="11-48-1")], ["11-48-1"], "unsupported"),
+                 ([dict(catalog_row(), deletion_corroborated=False)], ["11-128-1"], "ambiguous"),
+                 ([catalog_row(), catalog_row(size=6)], ["11-128-1"], "conflict"),
+                 ([catalog_row(), catalog_row(deleted=False)], ["11-128-1"], "conflict"),
+                 ([catalog_row(), dict(catalog_row(), reallocated=True)], ["11-128-1"], "conflict"),
+                 ([catalog_row(), dict(catalog_row(), deletion_corroborated=False)], ["11-128-1"], "ambiguous"),
+                 ([catalog_row(), catalog_row(path="/../bad")], ["11-128-1"], "invalid"),
+                 ([catalog_row(), catalog_row(identifier="011-128-1")], ["11-128-1"], "noncanonical")]
+        for component in range(3):
+            parts = ["11", "128", "1"]
+            parts[component] = "0" * 5000 + parts[component]
+            cases.append(([catalog_row(), catalog_row(identifier="-".join(parts), size=6)],
+                          ["11-128-1"], "noncanonical"))
+        for rows, identifiers, error in cases:
+            with self.subTest(error=error, rows=rows):
+                self.write_catalog(rows)
+                self.select(identifiers)
+                gate = recovery.load_gate(self.config)
+                original = gate.protected_file
+                def no_image(path, *args, **kwargs):
+                    self.assertNotEqual(Path(path), self.image)
+                    return original(path, *args, **kwargs)
+                with patch.object(recovery, "load_gate", return_value=gate), \
+                        patch.object(gate, "protected_file", side_effect=no_image), \
+                        self.assertRaisesRegex(recovery.RecoveryError, error):
+                    recovery.run(self.config)
+                self.assertEqual(self.calls(), [])
+                self.assertFalse(self.state.exists())
+                self.assertFalse(self.output.exists())
+
+    def test_selection_manifest_strict_schema_and_ids(self):
+        value = self.select(["11-128-1"])
+        cases = [(dict(value, stream_ids=["11-128-1", "11-128-1"]), "Duplicate selected"),
+                 (dict(value, stream_ids=[]), "between one"),
+                 (dict(value, stream_ids=["11"]), "canonical full"),
+                 (dict(value, stream_ids=["011-128-1"]), "canonical full"),
+                 (dict(value, stream_ids=["11-128-18446744073709551616"]), "canonical full"),
+                 (dict(value, stream_ids=["11-128-1;cmd"]), "canonical full"),
+                 (dict(value, stream_ids=[None]), "canonical full"),
+                 (dict(value, paths=["/photos/*"]), "requires only"),
+                 (dict(value, schema_version=True), "Unsupported"),
+                 (dict(value, catalog_sha256="0" * 64), "catalog SHA256"),
+                 (dict(value, stream_ids=["11-128-1"] * 10001), "10000")]
+        for invalid, error in cases:
+            with self.subTest(error=error):
+                self.config.selection_manifest.write_text(json.dumps(invalid), encoding="utf-8")
+                with self.assertRaisesRegex(recovery.RecoveryError, error):
+                    recovery.run(self.config)
+        for payload, error in [(b'\xff', "UTF-8"), (b'\xef\xbb\xbf{}', "UTF-8"),
+                               (b'{"schema_version":1,"schema_version":1}', "Duplicate selection"),
+                               (b' ' * (1024 * 1024 + 1), "exceeds one MiB")]:
+            self.config.selection_manifest.write_bytes(payload)
+            with self.assertRaisesRegex(recovery.RecoveryError, error):
+                recovery.run(self.config)
+        self.assertEqual(self.calls(), [])
+        self.assertFalse(self.state.exists())
+
+    def test_selection_dry_run_streams_catalog_without_sqlite_image_or_outputs(self):
+        self.write_catalog([catalog_row(identifier=str(n) + "-128-1") for n in range(1000, 2000)] +
+                           [catalog_row()])
+        self.select(["11-128-1"])
+        self.config.dry_run = True
+        with patch.object(recovery.sqlite3, "connect", side_effect=AssertionError("No dry-run database")):
+            status = recovery.run(self.config)
+        self.assertEqual(status["phase"], "dry_run")
+        self.assertFalse(status["image_opened"])
+        self.assertFalse(self.state.exists())
+        self.assertFalse(self.output.exists())
+        self.assertEqual(self.calls(), [])
+        self.select(["15-128-1"])
+        with self.assertRaisesRegex(recovery.RecoveryError, "missing"):
+            recovery.run(self.config)
+
+    def test_selection_changed_list_refuses_resume_and_invalidates_success(self):
+        self.write_catalog([catalog_row(), catalog_row(identifier="15-128-1")])
+        self.select(["11-128-1"])
+        self.assertEqual(recovery.run(self.config)["phase"], "complete")
+        self.select(["15-128-1"])
+        self.config.resume = True
+        with self.assertRaisesRegex(recovery.RecoveryError, "identities differ"):
+            recovery.run(self.config)
+        self.assertEqual(self.calls(), ["11-128-1"])
+        status = json.loads((self.state / "status.json").read_text())
+        self.assertEqual(status["phase"], "failed")
+        self.assertFalse(status["recovered_all_selected"])
+
+    def test_selection_whitespace_change_refuses_resume(self):
+        self.select(["11-128-1"])
+        recovery.run(self.config)
+        with self.config.selection_manifest.open("a", encoding="utf-8") as stream:
+            stream.write("\n")
+        self.config.resume = True
+        with self.assertRaisesRegex(recovery.RecoveryError, "identities differ"):
+            recovery.run(self.config)
+        self.assertEqual(self.calls(), ["11-128-1"])
+
+    def test_selection_missing_on_resume_invalidates_success(self):
+        self.select(["11-128-1"])
+        recovery.run(self.config)
+        self.select(["99-128-1"])
+        self.config.resume = True
+        with self.assertRaisesRegex(recovery.RecoveryError, "missing"):
+            recovery.run(self.config)
+        self.assertEqual(json.loads((self.state / "status.json").read_text())["phase"], "failed")
+
+    def test_selection_exclusive_all_and_protected_output_boundary(self):
+        self.select(["11-128-1"])
+        self.config.all_files = True
+        with self.assertRaisesRegex(recovery.RecoveryError, "mutually exclusive"):
+            recovery.run(self.config)
+        self.config.all_files = False
+        self.config.selection_manifest = self.output / "selection.json"
+        with self.assertRaisesRegex(recovery.RecoveryError, "disjoint"):
+            recovery.run(self.config)
+
+    def test_selection_parent_alias_is_refused(self):
+        self.select(["11-128-1"])
+        alias = self.root / "selection-alias"
+        self.make_directory_alias(alias, self.root)
+        self.config.selection_manifest = alias / "selection.json"
+        self.assert_provenance_rejected_before_tool("aliases are not accepted")
+
+    def test_selection_moved_identical_file_refuses_resume(self):
+        self.select(["11-128-1"])
+        recovery.run(self.config)
+        destination = self.root / "other-selection.json"
+        self.config.selection_manifest.rename(destination)
+        self.config.selection_manifest = destination
+        self.config.resume = True
+        with self.assertRaisesRegex(recovery.RecoveryError, "identities differ"):
+            recovery.run(self.config)
+        self.assertEqual(self.calls(), ["11-128-1"])
+
+    @unittest.skipUnless(os.name == "nt", "Windows deny-write handle validation")
+    def test_selection_manifest_held_readonly_through_export(self):
+        self.select(["11-128-1"])
+        export = recovery.export_one
+        def inspect_lock(*args, **kwargs):
+            with self.assertRaises(OSError):
+                with self.config.selection_manifest.open("r+b"):
+                    self.fail("Selection manifest was writable during export")
+            return export(*args, **kwargs)
+        with patch.object(recovery, "export_one", side_effect=inspect_lock):
+            self.assertEqual(recovery.run(self.config)["phase"], "complete")
+
     def test_binary_fidelity_zero_holes_hashes_and_locked_image(self):
         status = recovery.run(self.config)
         self.assertEqual(status["phase"], "complete")

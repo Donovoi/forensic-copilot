@@ -2,6 +2,8 @@
 
 For large-image recovery and contact/timeline reporting, also apply [large-image examination](large-image-examination.md). Space for a working image does not guarantee space for exports. A complete copy, successful tool exit, or recognized media header does not establish complete deleted-file recovery. Preserve layer-specific gaps and distinguish stored contact details from communication records.
 
+Native metadata exports may round or replace raw timestamps; exact catalog processing does not restore lost precision or range. The optional carver verifies reported extents against current allocation but excludes Dovecot signatures and does not validate unmapped thumbnail parentage. Its output/runtime limits are polled, and fresh-only runs cannot claim automatic resume. See [timeline](inventory-timeline.md) and [carving](supervised-carving.md) contracts before selecting them.
+
 This repository is easier to trust if its limits are stated plainly. The agent is meant to help structure examinations, not to pretend every evidence type or workflow is equally well supported.
 
 ## Evidence access limits
