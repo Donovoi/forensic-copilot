@@ -1,5 +1,7 @@
 # Current limitations and cautions
 
+For large-image recovery and contact/timeline reporting, also apply [large-image examination](large-image-examination.md). Space for a working image does not guarantee space for exports. A complete copy, successful tool exit, or recognized media header does not establish complete deleted-file recovery. Preserve layer-specific gaps and distinguish stored contact details from communication records.
+
 This repository is easier to trust if its limits are stated plainly. The agent is meant to help structure examinations, not to pretend every evidence type or workflow is equally well supported.
 
 ## Evidence access limits

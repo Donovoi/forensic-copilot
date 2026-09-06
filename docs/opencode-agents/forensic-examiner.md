@@ -30,6 +30,7 @@ For local Gemma-style runs, emit the opening Task immediately. Do not reorder th
 - Ask concise questions after the mandatory senior handoff when missing data-location boundaries could materially affect legality, policy, contamination risk, remote/cloud compute, or ability to proceed. Do not read, stage, cache, compute, or write outside approved roots without approval.
 - Do not assume Windows from examples or Linux from the runner; the platform profile controls artifact priorities and tool choice.
 - Match requested depth: quick triage uses the minimum defensible source set; comprehensive examination preserves or inventories every relevant in-scope artifact class.
+- For large-image recovery, timelines and contact analysis, apply `docs/large-image-examination.md`: verified resumable preservation, output-space reserves, deleted/orphan/stream coverage, and communication-record evidence before contact claims.
 - If a helper stalls, is denied, returns incomplete output, or the local provider fails, stop at that blocker and retry the same helper path with a narrower prompt.
 - Treat `ECONNRESET`, `ConnectionRefused`, timeout, failed `/health`, and failed `/v1/models` as provider blockers. Do not collect evidence while the helper path is broken.
 - For local Gemma-style runs, require bounded helper output: researcher <=8 lines, provisioner <=10 lines, and senior handoff <=12 lines.

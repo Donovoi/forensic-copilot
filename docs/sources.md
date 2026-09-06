@@ -4,6 +4,19 @@ This file records the external material that currently informs the repo. It is n
 
 Last reviewed: `2026-06-02`
 
+Large-image tooling and preservation addendum reviewed: `2026-09-06`. The date above remains the review date for earlier entries; this addendum does not imply they were all rechecked.
+
+## Large-image preservation and recovery addendum
+
+| Source | Use in this update |
+| --- | --- |
+| [TSK fls](https://www.sleuthkit.org/sleuthkit/man/fls.html), [ils](https://www.sleuthkit.org/sleuthkit/man/ils.html), [icat](https://www.sleuthkit.org/sleuthkit/man/icat.html), [tsk_recover](https://www.sleuthkit.org/sleuthkit/man/tsk_recover.html) | Deleted-directory limits, metadata/orphan coverage, full stream identifiers, sparse-hole behavior and recovery selection |
+| [PhotoRec scripted run](https://www.cgsecurity.org/testdisk_doc/scripted_run.html), [recovery workflow](https://www.cgsecurity.org/testdisk_doc/photorec.html) | Separate free-space/whole-space carving, output and session handling, recovery limitations |
+| [Python os/fsync](https://docs.python.org/3/library/os.html#os.fsync), [hashlib](https://docs.python.org/3/library/hashlib.html), [msvcrt.open_osfhandle](https://docs.python.org/3/library/msvcrt.html#msvcrt.open_osfhandle) | Logical copying, flush/hash mechanics and Windows handle ownership |
+| [Microsoft CreateFileW](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew) | Explicit read-only access, exclusive creation and deny-write/delete sharing |
+
+See [large-image examination](large-image-examination.md) and [image preservation](image-preservation.md) for implementation limits and the independent script-review gate.
+
 ## Process guidance checked directly
 
 | Source                                                                                | Used for                                                                      | Why it matters here                                                                                      | Link                                                                                                                                    |

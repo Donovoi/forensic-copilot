@@ -1,0 +1,2 @@
+# Keep reviewed helper bytes stable across Windows and POSIX checkouts.
+scripts/*.py text eol=lf

@@ -28,6 +28,7 @@ Forensically analyze the scoped evidence source and produce a defensible Markdow
 - Establish evidence OS, evidence mode, runner/evidence boundary, filesystem/logging architecture, and host role before broad collection. Use `forensic-platform-profiler` when those facts are unclear.
 - Do not assume Windows from examples or Linux from the runner. Platform profile controls artifact priorities and tool choice.
 - Quick triage should collect the minimum defensible source set for the question; comprehensive examination should preserve or inventory every relevant in-scope artifact class.
+- For large-image recovery, historical timelines, or contact analysis, follow `docs/large-image-examination.md`; budget output space separately, keep resumable stage status, and require contextual communication records before claiming contact.
 - Support offline and no-download runs. If tools cannot be fetched or used, route through `forensic-script-author` and `forensic-script-reviewer`; generated forensic code must be logged, syntax/dry-run validated, hashed where practical, and approved before use.
 - Do not bypass required subagents. If a helper stalls, returns an empty or incomplete note, is denied, or hits a provider error, retry the same helper path with a narrower prompt after restoring backend health.
 - For llama.cpp-backed local Gemma tests, preflight the backend. Reasoning may stay enabled, but hidden reasoning that consumes the first turn before a visible Task call is a harness blocker; increase output cap or use a finite reasoning budget.

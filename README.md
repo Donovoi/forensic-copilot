@@ -130,6 +130,14 @@ See [docs/specialized-tool-adapters.md](docs/specialized-tool-adapters.md).
 
 Quick triage collects the minimum defensible source set needed to answer or prioritize the question.
 
+For large images, broad deleted-file recovery, timelines and contact analysis, use [the large-image examination workflow](docs/large-image-examination.md). It adds storage budgeting, resumable preservation, explicit recovery-layer coverage, per-file provenance, and rules for distinguishing a stored address from a recorded communication.
+
+The optional [image-preservation helper](docs/image-preservation.md) provides a read-only source copy, source-stream SHA-256, independent destination verification, atomic progress and verified-prefix resume. It uses the Python standard library and requires the normal script-review gate before evidence use.
+
+The [verified-image inventory runner](docs/image-inventory.md) waits for successful preservation, then records partition/filesystem information, allocated/deleted/orphan metadata, and a stream-aware catalog for recovery planning. It preserves raw tool output and provenance and does not treat an inventory as completed recovery.
+
+The [bounded catalog recovery runner](docs/catalog-recovery.md) exports selected NTFS DATA streams with safe filenames, source references, independent output hashes, explicit space limits and verified resume. Its default is corroborated deleted streams; carving and uncatalogued orphan recovery remain separate stages.
+
 Comprehensive examination preserves or inventories every relevant in-scope artifact class, including artifacts that are sensitive, hidden, encrypted, inconvenient, or likely to contain credentials. Sensitivity changes handling and disclosure; it does not make an artifact irrelevant.
 
 Secret extraction can be a legitimate forensic step when it is inside the case authority and helps unlock evidence, identify additional victims, or prove access. Treat it as a controlled evidence lane: dump plaintext secrets only to approved, ignored case-output paths with provenance, hashes, tool details, and handling notes. Keep public repository content, ordinary prompts, and report prose redacted unless the case specifically requires a value to be disclosed. If the active AI interface, provider policy, system instruction, or enterprise rule does not allow plaintext secret handling, switch that part of the work to approved local tools or a local/offline model and record the provider or model change in the case report.

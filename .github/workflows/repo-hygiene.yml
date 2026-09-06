@@ -22,4 +22,18 @@ jobs:
         run: python scripts/validate_repo_hygiene.py
 
       - name: Compile helper scripts
-        run: python -m py_compile scripts/render_formal_report.py scripts/validate_repo_hygiene.py
+        run: python -m py_compile scripts/render_formal_report.py scripts/validate_repo_hygiene.py scripts/preserve_image.py scripts/collect_image_inventory.py scripts/recover_catalog.py
+
+  image-workflow-fixtures:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.10", "3.12"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Validate image workflow against synthetic files
+        run: python -m unittest discover -s scripts -p 'test_*.py' -v
