@@ -6,6 +6,7 @@ import argparse
 from contextlib import ExitStack
 from datetime import datetime, timedelta, timezone
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
@@ -18,6 +19,7 @@ import types
 
 VERSION = 1
 CONTROL_RESERVE = 2 * 1024 * 1024
+CATALOG_BUFFER_BYTES = 64 * 1024
 FIELDS = ("atime_epoch", "mtime_epoch", "ctime_epoch", "crtime_epoch")
 STAGES = ("mmls", "fsstat", "fls_root", "fls_recursive", "fls_bodyfile", "ils_all", "ils_orphan",
           "version_mmls", "version_fsstat", "version_fls", "version_ils")
@@ -339,6 +341,18 @@ def increment(db, kind, name, amount=1):
 
 def import_rows(args, catalog, db, budget, progress, reference_epoch):
     catalog.seek(0)
+    buffered = io.BufferedReader(catalog, buffer_size=CATALOG_BUFFER_BYTES)
+    try:
+        return import_buffered_rows(args, buffered, db, budget, progress, reference_epoch)
+    finally:
+        try:
+            position = buffered.tell()
+        finally:
+            buffered.detach()  # The caller's protected context retains lock/close ownership.
+        catalog.seek(position)  # Discard read-ahead without changing the logical position.
+
+
+def import_buffered_rows(args, catalog, db, budget, progress, reference_epoch):
     h = hashlib.sha256()
     row_id = offset = invalid_times = previous_source_line = 0
     last_update = time.monotonic()

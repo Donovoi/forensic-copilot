@@ -1,12 +1,14 @@
 import copy
 import hashlib
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
 import re
 import sqlite3
 import tempfile
+import types
 import unittest
 from unittest.mock import patch
 
@@ -32,6 +34,28 @@ def base_row(number, **overrides):
              "deletion_corroborated": True, "deletion_basis": "synthetic exact flags"}
     value.update(overrides)
     return value
+
+
+class CountingRaw(io.RawIOBase):
+    def __init__(self, payload):
+        super().__init__()
+        self.payload, self.requests = io.BytesIO(payload), []
+
+    def readable(self):
+        return True
+
+    def seekable(self):
+        return True
+
+    def readinto(self, target):
+        self.requests.append(len(target))
+        return self.payload.readinto(target)
+
+    def seek(self, *args):
+        return self.payload.seek(*args)
+
+    def tell(self):
+        return self.payload.tell()
 
 
 class TimelineTests(unittest.TestCase):
@@ -95,6 +119,53 @@ class TimelineTests(unittest.TestCase):
         for artifact in manifest["artifacts"]:
             self.assertEqual(hashlib.sha256(Path(artifact["path"]).read_bytes()).hexdigest(), artifact["sha256"])
         self.assertEqual(before, {p.name: p.read_bytes() for p in self.inventory.iterdir()})
+
+    def test_buffered_import_exact_bytes_offsets_hash_and_block_reads(self):
+        rows = [base_row(n, full_path='/root/€-surrogate-\udcff.txt') for n in range(1, 2001)]
+        lines = [json.dumps(row, ensure_ascii=True).encode() + b'\r\n' for row in rows]
+        lines[-1] = lines[-1][:-2]
+        payload = b''.join(lines)
+        raw = CountingRaw(payload)
+        budget = types.SimpleNamespace(database_limit=lambda db: None, control=lambda *a: None)
+        db = timeline.open_database(self.root / 'buffered.sqlite')
+        try:
+            result = timeline.import_rows(self.args(), raw, db, budget, {}, 1_800_000_000)
+            self.assertEqual(result['catalog_sha256'], hashlib.sha256(payload).hexdigest())
+            self.assertEqual(result['catalog_rows'], len(rows))
+            self.assertEqual(result['catalog_bytes'], len(payload))
+            actual = db.execute('SELECT row_id,byte_offset,byte_length,row_sha256,raw FROM rows ORDER BY row_id').fetchall()
+            offset = 0
+            for number, (record, line) in enumerate(zip(actual, lines), 1):
+                self.assertEqual(record, (number, offset, len(line), hashlib.sha256(line).hexdigest(), line))
+                offset += len(line)
+            self.assertEqual(raw.tell(), len(payload))
+            self.assertFalse(raw.closed)
+            self.assertEqual(set(raw.requests), {timeline.CATALOG_BUFFER_BYTES})
+            self.assertLessEqual(len(raw.requests), len(payload) // timeline.CATALOG_BUFFER_BYTES + 3)
+        finally:
+            db.close()
+
+    def test_buffered_import_limits_invalid_utf8_and_failure_position(self):
+        prefix = json.dumps(dict(base_row(1), padding='')).encode()
+        limit = 1024 * 1024
+        exact = prefix[:-2] + b' ' * (limit - len(prefix)) + prefix[-2:]
+        bad = b' ' * (timeline.CATALOG_BUFFER_BYTES - 1) + b'\xc3\xff\r\n'
+        for index, (payload, consumed, fails) in enumerate([(exact, limit, False),
+                (exact + b'\ntrailing', limit + 1, True), (bad + b'{}\n', len(bad), True)]):
+            with self.subTest(index=index):
+                raw = CountingRaw(payload)
+                db = timeline.open_database(self.root / ('limit' + str(index) + '.sqlite'))
+                budget = types.SimpleNamespace(database_limit=lambda db: None, control=lambda *a: None)
+                try:
+                    if fails:
+                        with self.assertRaises((timeline.TimelineError, UnicodeDecodeError)):
+                            timeline.import_rows(self.args('--max-line-bytes', str(limit)), raw, db, budget, {}, 1_800_000_000)
+                    else:
+                        self.assertEqual(timeline.import_rows(self.args('--max-line-bytes', str(limit)), raw, db, budget, {}, 1_800_000_000)['catalog_rows'], 1)
+                    self.assertFalse(raw.closed)
+                    self.assertEqual(raw.tell(), consumed)
+                finally:
+                    db.close()
 
     def test_never_reads_or_stats_recorded_image(self):
         original_open, original_stat = Path.open, Path.stat

@@ -1,6 +1,7 @@
 """Synthetic-only tests; no evidence or external tools unless explicitly noted."""
 import contextlib
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
@@ -13,6 +14,31 @@ from unittest.mock import patch
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / 'scripts'))
 import probe_recovered_media as media
+
+
+class CountingProxy(io.RawIOBase):
+    def __init__(self, raw):
+        super().__init__()
+        self.raw, self.requests = raw, []
+
+    def readable(self):
+        return True
+
+    def readinto(self, target):
+        self.requests.append(len(target))
+        return self.raw.readinto(target)
+
+    def fileno(self):
+        return self.raw.fileno()
+
+    def seekable(self):
+        return True
+
+    def seek(self, *args):
+        return self.raw.seek(*args)
+
+    def tell(self):
+        return self.raw.tell()
 
 
 class MediaTests(unittest.TestCase):
@@ -90,6 +116,78 @@ class MediaTests(unittest.TestCase):
 
     def latest(self):
         return json.loads(sorted((self.state / 'records').glob('*.json'))[-1].read_text())
+
+    def manifest_payload(self, payload, selected_line=1):
+        path = self.source / 'export-attempts.jsonl'
+        path.write_bytes(payload)
+        batch = json.loads(self.batch.read_bytes())
+        batch['source_files'][path.name] = media.digest(payload)
+        batch['artifacts'][0]['source_line'] = selected_line
+        self.batch.write_text(json.dumps(batch))
+        self.c.batch_sha256 = media.digest(self.batch.read_bytes())
+
+    @contextlib.contextmanager
+    def count_manifest_reads(self):
+        original = self.gate.protected_file
+        readers = []
+
+        @contextlib.contextmanager
+        def protected(path, *args, **kwargs):
+            with original(path, *args, **kwargs) as raw:
+                if Path(path) != self.source / 'export-attempts.jsonl':
+                    yield raw
+                    return
+                proxy = CountingProxy(raw)
+                readers.append(proxy)
+                try:
+                    yield proxy
+                finally:
+                    self.assertFalse(raw.closed)
+                    self.assertFalse(proxy.closed)
+                    proxy.close()  # This fixture proxy never owns the original handle.
+
+        with patch.object(self.gate, 'protected_file', side_effect=protected):
+            yield readers
+
+    def test_buffered_manifest_selection_uses_block_reads_and_exact_row_hash(self):
+        line = json.dumps(self.row).encode() + b'\r\n'
+        last = json.dumps(self.row).encode()
+        payload = line * 1999 + last
+        self.manifest_payload(payload, selected_line=2000)
+        with self.count_manifest_reads() as readers, contextlib.ExitStack() as locks:
+            rows, _ = media.bind_source(self.c, self.gate, locks)
+            self.assertEqual(len(rows), 1)
+            self.assertEqual(rows[0]['source_line'], 2000)
+            self.assertEqual(rows[0]['source_row_sha256'], media.digest(last))
+            self.assertEqual(rows[0]['source_reference'], self.row)
+        buffered = [raw for raw in readers if set(raw.requests) == {media.MANIFEST_BUFFER_BYTES}]
+        self.assertEqual(len(buffered), 1)
+        self.assertLessEqual(len(buffered[0].requests), len(payload) // media.MANIFEST_BUFFER_BYTES + 3)
+
+    def test_buffered_manifest_line_limits_and_invalid_utf8_boundary(self):
+        prefix = json.dumps(dict(self.row, padding='')).encode()
+        exact = prefix[:-2] + b' ' * (media.MIB - len(prefix)) + prefix[-2:]
+        bad = b' ' * (media.MANIFEST_BUFFER_BYTES - 1) + b'\xc3\xff\r\n'
+        for index, (payload, fails) in enumerate([(exact, False), (exact + b'\n', True), (bad, True)]):
+            with self.subTest(index=index):
+                self.manifest_payload(payload)
+                with self.count_manifest_reads(), contextlib.ExitStack() as locks:
+                    if fails:
+                        with self.assertRaises((media.ProbeError, UnicodeDecodeError)):
+                            media.bind_source(self.c, self.gate, locks)
+                    else:
+                        rows, _ = media.bind_source(self.c, self.gate, locks)
+                        self.assertEqual(rows[0]['source_row_sha256'], media.digest(exact))
+
+    def test_buffered_manifest_keeps_windows_write_denial(self):
+        path = self.source / 'export-attempts.jsonl'
+        with media.buffered_manifest(path, self.gate) as stream:
+            self.assertTrue(stream.readline(media.MIB + 1))
+            with self.assertRaises(OSError):
+                with open(path, 'r+b'):
+                    pass
+        with open(path, 'r+b') as stream:
+            self.assertTrue(stream.read(1))
 
     def test_selected_file_exact_hash_caveats_and_unchanged_resume(self):
         original = self.image.read_bytes()

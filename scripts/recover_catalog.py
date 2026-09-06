@@ -12,6 +12,7 @@ import argparse
 import contextlib
 from dataclasses import dataclass
 import hashlib
+import io
 import json
 import math
 import os
@@ -28,6 +29,7 @@ import time
 import types
 
 GIB = 1024 ** 3
+CATALOG_BUFFER_BYTES = 64 * 1024
 VERSION = 1
 LIMITATIONS = [
     "Filesystem-directed exports from cataloged NTFS type-128 DATA attributes only; no carving.",
@@ -241,11 +243,24 @@ def read_selection(config, gate, catalog_record):
             "stream_ids": sorted(seen)}
 
 
+@contextlib.contextmanager
+def buffered_catalog(config, gate):
+    """Buffer only this catalog reader; the protected context owns its raw handle."""
+    with gate.protected_file(config.catalog) as raw:
+        catalog = io.BufferedReader(raw, buffer_size=CATALOG_BUFFER_BYTES)
+        try:
+            yield catalog
+        finally:
+            # Preserve lock/handle ownership, including on long-row or parse failure.
+            # Each caller opens from byte zero and does not reuse the raw position.
+            catalog.detach()
+
+
 def validate_selection_catalog(config, gate, selection):
     """Stream the catalog with at most one small summary per requested ID, even in dry-run."""
     requested = set(selection["stream_ids"])
     found = {}
-    with gate.protected_file(config.catalog) as catalog:
+    with buffered_catalog(config, gate) as catalog:
         while raw := catalog.readline(1024 * 1024 + 1):
             if len(raw) > 1024 * 1024:
                 raise RecoveryError("Catalog row exceeds one MiB")
@@ -447,7 +462,7 @@ class Recorder:
 
 def import_catalog(config, gate, db, recorder):
     last = db.execute("SELECT COALESCE(MAX(catalog_line),0) FROM refs").fetchone()[0]
-    with gate.protected_file(config.catalog) as catalog:
+    with buffered_catalog(config, gate) as catalog:
         line_number = 0
         while raw := catalog.readline(1024 * 1024 + 1):
             line_number += 1

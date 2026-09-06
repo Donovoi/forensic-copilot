@@ -10,6 +10,7 @@ import contextlib
 import ctypes
 from dataclasses import dataclass
 import hashlib
+import io
 import json
 import math
 import os
@@ -24,6 +25,7 @@ import time
 import types
 
 MIB = 1024 ** 2
+MANIFEST_BUFFER_BYTES = 64 * 1024
 GIB = 1024 ** 3
 GATE_SHA256 = '5b8089929c4586c68403b5d0c37b6b88d6b632b1097e1e7a7f68d1d99e348a5e'
 LIMITATIONS = [
@@ -160,6 +162,16 @@ def json_file(path, gate, limit=MIB):
     return strict_json(payload), {'path': str(path), 'metadata': metadata, 'size': len(payload), 'sha256': digest(payload)}
 
 
+@contextlib.contextmanager
+def buffered_manifest(path, gate):
+    with gate.protected_file(path) as raw:
+        stream = io.BufferedReader(raw, buffer_size=MANIFEST_BUFFER_BYTES)
+        try:
+            yield stream
+        finally:
+            stream.detach()  # Preserve original protected-context lock/close ownership.
+
+
 def bind_source(c, gate, locks):
     batch, batch_record = json_file(c.batch, gate)
     if batch_record['sha256'] != c.batch_sha256.lower():
@@ -242,7 +254,7 @@ def bind_source(c, gate, locks):
             raise ProbeError('Invalid or duplicate source-row selection')
         requested[number] = item['sha256']
     rows, retained = [], 0
-    with gate.protected_file(source / manifest_name) as stream:
+    with buffered_manifest(source / manifest_name, gate) as stream:
         number = 0
         while raw := stream.readline(MIB + 1):
             number += 1

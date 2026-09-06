@@ -1,5 +1,6 @@
 import copy
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
@@ -16,6 +17,66 @@ spec.loader.exec_module(m)
 GATE = HERE / "collect_image_inventory.py"
 GATE_HASH = "5b8089929c4586c68403b5d0c37b6b88d6b632b1097e1e7a7f68d1d99e348a5e"
 TIMES = [113288544000000000, 128915178111234567, 138534624000000000, 189025920000000000]
+
+
+class CountingRaw(io.RawIOBase):
+    def __init__(self, payload):
+        super().__init__()
+        self.payload, self.requests = io.BytesIO(payload), []
+
+    def readable(self):
+        return True
+
+    def seekable(self):
+        return True
+
+    def readinto(self, target):
+        self.requests.append(len(target))
+        return self.payload.readinto(target)
+
+    def seek(self, *args):
+        return self.payload.seek(*args)
+
+    def tell(self):
+        return self.payload.tell()
+
+
+class BufferedJSONLTests(unittest.TestCase):
+    def test_exact_lines_block_reads_eof_rewind_and_repeated_pass(self):
+        lines = [json.dumps({'line': n, 'name': '€\udcff'}).encode() + b'\r\n' for n in range(3000)]
+        lines[-1] = lines[-1][:-2]
+        payload = b''.join(lines)
+        raw = CountingRaw(payload)
+        for _ in range(2):
+            before = len(raw.requests)
+            actual = list(m.json_lines(raw))
+            self.assertEqual(actual, [(n, line, json.loads(line)) for n, line in enumerate(lines, 1)])
+            self.assertEqual(raw.tell(), 0)
+            self.assertFalse(raw.closed)
+            self.assertLessEqual(len(raw.requests) - before, len(payload) // m.JSONL_BUFFER_BYTES + 3)
+        self.assertEqual(set(raw.requests), {m.JSONL_BUFFER_BYTES})
+
+    def test_limits_invalid_utf8_and_failure_position(self):
+        exact = b'{"padding":"' + b' ' * (m.MAX_LINE - 14) + b'"}'
+        self.assertEqual(len(exact), m.MAX_LINE)
+        self.assertEqual(list(m.json_lines(CountingRaw(exact)))[0][1], exact)
+        bad = b' ' * (m.JSONL_BUFFER_BYTES - 1) + b'\xc3\xff\r\n'
+        for payload, consumed in [(exact + b'\ntrailing', m.MAX_LINE + 1), (bad + b'{}\n', len(bad))]:
+            raw = CountingRaw(payload)
+            with self.assertRaises((m.SupplementError, UnicodeDecodeError)):
+                list(m.json_lines(raw))
+            self.assertFalse(raw.closed)
+            self.assertEqual(raw.tell(), consumed)
+
+    def test_generator_close_detaches_and_preserves_consumed_position(self):
+        first = b'{"first":1}\r\n'
+        raw = CountingRaw(first + b'{"second":2}\n')
+        lines = m.json_lines(raw)
+        self.assertEqual(next(lines), (1, first, {'first': 1}))
+        lines.close()
+        self.assertFalse(raw.closed)
+        self.assertEqual(raw.tell(), len(first))
+        self.assertEqual(raw.read(), b'{"second":2}\n')
 
 
 def attribute(kind, value, instance=1, name=b""):

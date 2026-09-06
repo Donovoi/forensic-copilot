@@ -27,6 +27,7 @@ RECORD_SIZE = 1024
 SECTOR_SIZE = 512
 CONTROL_RESERVE = 2 * 1024 * 1024
 MAX_LINE = 1024 * 1024
+JSONL_BUFFER_BYTES = 64 * 1024
 EPOCH_DELTA_NS = 11644473600000000000
 TIME_FIELDS = ("creation", "last_modification", "last_change", "last_access")
 DISSECT_FIELDS = ("CreationTime", "LastModificationTime", "LastChangeTime", "LastAccessTime")
@@ -304,16 +305,25 @@ def parse_record(raw, slot, export_hash, reference_ns):
 
 def json_lines(stream):
     stream.seek(0)
-    line = 0
-    while raw := stream.readline(MAX_LINE + 1):
-        line += 1
-        if len(raw) > MAX_LINE:
-            raise SupplementError("JSONL input line exceeds one MiB")
-        value = strict_json(raw)
-        if not isinstance(value, dict):
-            raise SupplementError("JSONL input must contain objects")
-        yield line, raw, value
-    stream.seek(0)
+    buffered = io.BufferedReader(stream, buffer_size=JSONL_BUFFER_BYTES)
+    complete = False
+    try:
+        line = 0
+        while raw := buffered.readline(MAX_LINE + 1):
+            line += 1
+            if len(raw) > MAX_LINE:
+                raise SupplementError("JSONL input line exceeds one MiB")
+            value = strict_json(raw)
+            if not isinstance(value, dict):
+                raise SupplementError("JSONL input must contain objects")
+            yield line, raw, value
+        complete = True
+    finally:
+        try:
+            position = 0 if complete else buffered.tell()
+        finally:
+            buffered.detach()  # ExitStack owns this still-locked provenance handle.
+        stream.seek(position)  # Preserve rewind at EOF and consumed position on failure.
 
 
 def bind_inputs(args, gate, stack):

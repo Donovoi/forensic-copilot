@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Synthetic fake-tool fixtures only; no evidence or installed forensic tool use."""
+import contextlib
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
@@ -8,6 +10,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+import types
 import unittest
 from unittest.mock import patch
 
@@ -63,6 +66,21 @@ def catalog_row(identifier="11-128-1", path="/photos/sample.jpg", deleted=True, 
             "crtime_epoch": 3, "deleted": deleted, "reallocated": False,
             "deletion_corroborated": True,
             "raw_line_sha256": "0" * 64}
+
+
+class CountingRaw(io.RawIOBase):
+    """Unbuffered fixture: inherited readline performs one readinto per byte."""
+    def __init__(self, payload):
+        super().__init__()
+        self.payload = io.BytesIO(payload)
+        self.requests = []
+
+    def readable(self):
+        return True
+
+    def readinto(self, target):
+        self.requests.append(len(target))
+        return self.payload.readinto(target)
 
 
 class RecoveryTests(unittest.TestCase):
@@ -140,6 +158,102 @@ class RecoveryTests(unittest.TestCase):
                  "stream_ids": identifiers}
         self.config.selection_manifest.write_text(json.dumps(value), encoding="utf-8")
         return value
+
+    @contextlib.contextmanager
+    def counting_catalog(self, gate, payload):
+        readers = []
+
+        @contextlib.contextmanager
+        def protected(path, writable=False):
+            self.assertEqual(path, self.catalog)
+            self.assertFalse(writable)
+            raw = CountingRaw(payload)
+            readers.append(raw)
+            try:
+                yield raw
+            finally:
+                # The buffering wrapper must detach, leaving close/lock ownership here.
+                self.assertFalse(raw.closed)
+                raw.close()
+
+        with patch.object(gate, "protected_file", side_effect=protected):
+            yield readers
+
+    def test_buffered_selection_and_import_use_block_reads_and_preserve_refs(self):
+        rows = [catalog_row(source_line=number) for number in range(1, 2001)]
+        payload = b"".join(json.dumps(row).encode() + b"\r\n" for row in rows)
+        gate = recovery.load_gate(self.config)
+        with self.counting_catalog(gate, payload) as readers:
+            recovery.validate_selection_catalog(self.config, gate, {"stream_ids": ["11-128-1"]})
+            with contextlib.closing(recovery.open_database(self.root / "index.sqlite3", gate)) as db:
+                count = recovery.import_catalog(self.config, gate, db, types.SimpleNamespace(update=lambda **kw: None))
+                refs = db.execute("SELECT * FROM refs ORDER BY catalog_line").fetchall()
+                self.assertEqual(count, len(rows))
+                self.assertEqual([json.loads(ref["raw_json"]) for ref in refs], rows)
+                self.assertEqual([ref["catalog_line"] for ref in refs], list(range(1, len(rows) + 1)))
+                self.assertEqual(db.execute("SELECT alias_count FROM streams").fetchone()[0], len(rows))
+                # A resumed import starts at byte zero and preserves prior references.
+                self.assertEqual(recovery.import_catalog(self.config, gate, db, types.SimpleNamespace(update=lambda **kw: None)), len(rows))
+                self.assertEqual(db.execute("SELECT COUNT(*) FROM refs").fetchone()[0], len(rows))
+        self.assertEqual(len(readers), 3)
+        for raw in readers:
+            self.assertTrue(raw.closed)
+            self.assertLessEqual(len(raw.requests), (len(payload) + recovery.CATALOG_BUFFER_BYTES - 1) // recovery.CATALOG_BUFFER_BYTES + 2)
+            self.assertEqual(set(raw.requests), {recovery.CATALOG_BUFFER_BYTES})
+
+    def test_buffered_raw_byte_parity_across_boundaries_and_final_unterminated_line(self):
+        first = b"a" * (recovery.CATALOG_BUFFER_BYTES - 1) + "€".encode() + b"\r\n"
+        second = b"\xff\xfe invalid UTF-8\n"
+        last = b"last\x00without newline"
+        payload = first + second + last
+        gate = recovery.load_gate(self.config)
+        with self.counting_catalog(gate, payload):
+            with recovery.buffered_catalog(self.config, gate) as stream:
+                actual = [stream.readline(1024 * 1024 + 1) for _ in range(4)]
+        self.assertEqual(actual, [first, second, last, b""])
+        self.assertEqual(hashlib.sha256(b"".join(actual)).hexdigest(), hashlib.sha256(payload).hexdigest())
+
+    def test_buffered_invalid_utf8_boundary_retains_exact_bad_row_hash(self):
+        bad = b" " * (recovery.CATALOG_BUFFER_BYTES - 1) + b"\xc3\xff\r\n"
+        good = json.dumps(catalog_row(source_line=2)).encode()  # Last row has no newline.
+        gate = recovery.load_gate(self.config)
+        with self.counting_catalog(gate, bad + good):
+            recovery.validate_selection_catalog(self.config, gate, {"stream_ids": ["11-128-1"]})
+            with contextlib.closing(recovery.open_database(self.root / "index.sqlite3", gate)) as db:
+                self.assertEqual(recovery.import_catalog(self.config, gate, db, types.SimpleNamespace(update=lambda **kw: None)), 2)
+                refs = db.execute("SELECT * FROM refs ORDER BY catalog_line").fetchall()
+                self.assertEqual(refs[0]["problem"], "invalid_json")
+                self.assertEqual(json.loads(refs[0]["raw_json"]), {"unparsed_catalog_line_sha256": hashlib.sha256(bad).hexdigest()})
+                self.assertEqual(json.loads(refs[1]["raw_json"]), catalog_row(source_line=2))
+
+    def test_buffered_line_limit_and_failure_keep_raw_handle_owned(self):
+        gate = recovery.load_gate(self.config)
+        limit = 1024 * 1024
+        base = json.dumps(dict(catalog_row(), padding="")).encode()
+        exact = base[:-2] + b" " * (limit - len(base)) + base[-2:]
+        self.assertEqual(len(exact), limit)
+        with self.counting_catalog(gate, exact):
+            recovery.validate_selection_catalog(self.config, gate, {"stream_ids": ["11-128-1"]})
+        for payload in (exact + b"\n", b"x" * (limit + 2)):
+            with self.subTest(bytes=len(payload)), self.counting_catalog(gate, payload) as readers:
+                with self.assertRaisesRegex(recovery.RecoveryError, "exceeds one MiB"):
+                    recovery.validate_selection_catalog(self.config, gate, {"stream_ids": ["11-128-1"]})
+                with contextlib.closing(recovery.open_database(self.root / "index.sqlite3", gate)) as db:
+                    with self.assertRaisesRegex(recovery.RecoveryError, "exceeds one MiB"):
+                        recovery.import_catalog(self.config, gate, db, types.SimpleNamespace(update=lambda **kw: None))
+                    self.assertEqual(db.execute("SELECT COUNT(*) FROM refs").fetchone()[0], 0)
+                self.assertTrue(all(raw.closed for raw in readers))
+
+    @unittest.skipUnless(os.name == "nt", "Windows mandatory share denial")
+    def test_buffered_catalog_keeps_windows_write_denial(self):
+        gate = recovery.load_gate(self.config)
+        with recovery.buffered_catalog(self.config, gate) as stream:
+            self.assertTrue(stream.readline(1024 * 1024 + 1))
+            with self.assertRaises(OSError):
+                with open(self.catalog, "r+b"):
+                    pass
+        with open(self.catalog, "r+b") as writable:
+            self.assertTrue(writable.read(1))
 
     def test_selection_allocated_deleted_ads_and_aliases_preserve_all_refs(self):
         self.write_catalog([catalog_row(deleted=False),
