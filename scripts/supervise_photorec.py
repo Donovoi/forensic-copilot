@@ -113,6 +113,7 @@ def checked_directory(path, gate):
     if not stat.S_ISDIR(info.st_mode):
         raise CarveError('Owned traversal directory changed type')
     gate.require_unaliased(path)
+    return info
 
 
 def load_gate(path):
@@ -294,7 +295,7 @@ class Recorder:
             out.write(json.dumps({'utc': self.gate.utc_now(), 'event': kind, **fields}, ensure_ascii=True) + '\n')
             out.flush()
 
-    def check(self, force_status=False):
+    def check(self, force_status=False, active_photorec=None):
         if self.stop_reason:
             raise ThresholdStop(self.stop_reason)
         if time.monotonic() - self.started >= self.c.max_seconds:
@@ -309,10 +310,11 @@ class Recorder:
         total = count = log_bytes = 0
         began = time.monotonic()
         for root in (self.c.output_dir, self.c.state_dir):
+            root_info = checked_directory(root, self.gate)
             pending = [root]
             while pending:
                 directory = pending.pop()
-                checked_directory(directory, self.gate)
+                directory_info = checked_directory(directory, self.gate)
                 for entry in entries_in(directory):
                     path = Path(entry.path)
                     if time.monotonic() - began > 5:
@@ -321,7 +323,33 @@ class Recorder:
                     # Scandir supplies a direct child name of a freshly canonical
                     # directory; fresh lstat rejects leaf aliases without resolving
                     # every ordinary leaf's full ancestor chain again.
-                    info = path.stat(follow_symlinks=False)
+                    # PhotoRec may rename a recognized file while it is scanning.
+                    # Only tolerate an absent regular result leaf while the exact
+                    # supervised PhotoRec process is still alive. State files,
+                    # directories, aliases and every post-exit check stay strict.
+                    rename_candidate = (
+                        active_photorec is not None and root == self.c.output_dir
+                        and directory.parent == self.c.output_dir
+                        and re.fullmatch(r'recup\.[1-9][0-9]*', directory.name) is not None
+                        and re.fullmatch(r'[fbt][0-9]{7,}[^/\\:]*', path.name) is not None
+                        and not entry.is_symlink()
+                        and entry.is_file(follow_symlinks=False)
+                    )
+                    try:
+                        info = path.stat(follow_symlinks=False)
+                    except FileNotFoundError:
+                        if not rename_candidate or active_photorec.poll() is not None:
+                            raise
+                        # A missing or replaced parent is not a file rename.
+                        for parent, before in ((root, root_info), (directory, directory_info)):
+                            after = checked_directory(parent, self.gate)
+                            if (after.st_dev, after.st_ino) != (before.st_dev, before.st_ino):
+                                raise CarveError('Owned output directory identity changed during leaf disappearance')
+                        self.status['transient_result_disappearances'] = (
+                            self.status.get('transient_result_disappearances', 0) + 1
+                        )
+                        self.status['last_transient_disappearance_phase'] = 'active_photorec_monitor'
+                        continue
                     reject_reparse(info)
                     if stat.S_ISDIR(info.st_mode):
                         self.gate.require_unaliased(path)
@@ -438,7 +466,7 @@ def run_child(c, rec, label, argv, stdout_limit=MIB, truncate_stdout=False):
             thread.start()
             threads.append(thread)
         while process.poll() is None:
-            rec.check()
+            rec.check(active_photorec=process if label == 'photorec' else None)
             if label == 'photorec':
                 check_log_errors(c.state_dir / 'photorec.log', partial=True)
             time.sleep(c.poll_seconds)
@@ -482,7 +510,10 @@ def bitmap_attribute(text, geo):
     return f'6-128-{int(attribute)}', length
 
 
-def check_log_errors(path, partial=False):
+ZIP_CANDIDATE_TRACE = b'zip: file_get_pos 1-size failed'
+
+
+def check_log_errors(path, partial=False, diagnostics=None):
     if not path.exists():
         if partial:
             return None
@@ -490,12 +521,41 @@ def check_log_errors(path, partial=False):
     # Tail suffices for prompt interruption; full log is examined after native exit.
     with path.open('rb') as stream:
         if partial:
-            stream.seek(max(0, path.stat().st_size - 65536))
+            start = max(0, os.fstat(stream.fileno()).st_size - 65536)
+            stream.seek(max(0, start - 1))
+            preceding = stream.read(1) if start else b'\n'
         data = stream.read(65536 if partial else GIB + 1)
-    text = data.decode('utf-8', errors='replace')
+    if partial:
+        # A tail may begin/end inside a trace still being written. Inspect only
+        # complete physical lines; the final whole-log pass has no such omission.
+        if preceding != b'\n':
+            newline = data.find(b'\n')
+            data = data[newline + 1:] if newline >= 0 else b''
+        last = data.rfind(b'\n')
+        data = data[:last + 1] if last >= 0 else b''
+    elif len(data) > GIB:
+        raise CarveError('PhotoRec log exceeds full-validation byte bound')
+    lines = data.split(b'\n')
+    complete_lines = lines[:-1]
+    # Only remove the CR of an actual CRLF terminator, never arbitrary whitespace.
+    complete_lines = [line[:-1] if line.endswith(b'\r') else line for line in complete_lines]
+    candidate_count = sum(line == ZIP_CANDIDATE_TRACE for line in complete_lines)
+    if diagnostics is not None:
+        diagnostics.update(zip_file_get_pos_1_size_failed=candidate_count,
+                           basis='Exact complete PhotoRec 7.2 candidate-local ZIP trace; not recovered ZIP proof',
+                           complete_line_scope='partial_tail' if partial else 'whole_log')
+    inspected = [line for line in complete_lines if line != ZIP_CANDIDATE_TRACE]
+    # An unterminated final fragment is never eligible for the trace exception.
+    if not partial and lines[-1]:
+        inspected.append(lines[-1])
+    if any(ZIP_CANDIDATE_TRACE in line for line in inspected):
+        raise CarveError('PhotoRec reported a modified/embedded ZIP failure trace; not an allowed complete line')
+    text = b'\n'.join(inspected).decode('utf-8', errors='replace')
     if re.search(r'(?i)\b(error|failed|cannot|damaged)\b|can.t open|couldn.t|short read|no space', text):
         raise CarveError('PhotoRec reported an error; requested free-space scope is not certified')
     if not partial:
+        if lines[-1]:
+            raise CarveError('PhotoRec log has an unterminated final line')
         if 'ntfs_remove_used_space' not in text or 'PhotoRec exited normally.' not in text:
             raise CarveError('Missing NTFS bitmap-filter trace or normal completion marker')
         totals = re.findall(r'Total: (\d+) files? found', text)
@@ -806,7 +866,11 @@ def supervise(c):
             argv = tools['photorec'] + ['/debug', '/log', '/logname', str(c.state_dir / 'photorec.log'),
                                        '/d', str(c.output_dir / 'recup'), '/cmd', str(c.image), tail]
             run_child(c, rec, 'photorec', argv, MIB, truncate_stdout=True)
-            native_count = check_log_errors(c.state_dir / 'photorec.log')
+            log_diagnostics = {}
+            try:
+                native_count = check_log_errors(c.state_dir / 'photorec.log', diagnostics=log_diagnostics)
+            finally:
+                rec.save(photorec_file_candidate_diagnostics=log_diagnostics)
             rec.save(stage='validating_outputs')
             outputs = validate_outputs(c, rec, gate, geo, bitmap, image_gate, native_count)
             rec.check(force_status=True)
@@ -820,13 +884,21 @@ def supervise(c):
     except BaseException as error:
         phase = 'incomplete' if isinstance(error, (ThresholdStop, KeyboardInterrupt)) else 'failed'
         message = str(error) or type(error).__name__
+        # Retain exact complete-line counts on a stopped run as well. This does
+        # not change the failure or certify an incomplete native log.
+        log_diagnostics = {}
+        try:
+            check_log_errors(c.state_dir / 'photorec.log', diagnostics=log_diagnostics)
+        except (CarveError, OSError) as log_error:
+            log_diagnostics['final_log_validation_error'] = str(log_error)
         try:
             partial = inventory_partial(c, rec) if output_owned else {'output_root_not_owned': True}
         except Exception as inventory_error:
             partial = {'retained_metadata_inventory_error': str(inventory_error)}
         rec.event('supervisor_stopped', phase=phase, error=message)
         rec.save(phase=phase, scan_completed=False, error=message, stopped_utc=gate.utc_now(),
-                 partial_outputs_retained=True, output_manifest_may_be_partial=True, **partial)
+                 partial_outputs_retained=True, output_manifest_may_be_partial=True,
+                 photorec_file_candidate_diagnostics=log_diagnostics, **partial)
         rec.write_json('supervisor-exit.json', {'exit_code': 2 if phase == 'incomplete' else 1,
                        'phase': phase, 'error': message, 'utc': gate.utc_now()})
         return 2 if phase == 'incomplete' else 1

@@ -140,6 +140,8 @@ The [bounded catalog recovery runner](docs/catalog-recovery.md) exports selected
 
 Use an explicit catalog-bound stream selection for focused allocated or deleted artifact exports. The [inventory timeline helper](docs/inventory-timeline.md) preserves every catalog row and timestamp field with exact source references. The Windows [supervised carver](docs/supervised-carving.md) adds a bounded PhotoRec free-space pass with geometry, bitmap and report checks. These helpers retain incomplete outcomes and require independent review before evidence use.
 
+The carver handles native result renaming during an active scan and records one narrowly identified ZIP candidate diagnostic without treating it as a filesystem failure. Missing output directories, other fatal diagnostics and all final source/allocation/output checks remain strict; interrupted attempts are retained separately.
+
 The optional [exported-MFT supplement](docs/mft-supplement.md) preserves raw SI/FN timestamps and physical record references from an approved allocated MFT export. It uses the explicitly pinned Dissect dependencies in `requirements-mft.txt`; it is separate from the standard-library helpers and never reads an image or reconstructs logical files.
 
 The Windows [recovered-media worker](docs/recovered-media.md) checks explicit hash-bound exports using bounded ExifTool metadata and ffprobe header probes. It preserves producer references and incomplete outcomes, verifies saved captures before reuse, and never reads an image. Tool packages require separate approved provisioning; a successful header probe does not establish full media recovery or authenticity.

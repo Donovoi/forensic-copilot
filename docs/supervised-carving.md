@@ -16,6 +16,10 @@ Completion requires native exit zero, empty stderr, normal completion/count mark
 
 Runtime, bytes, file count, logs and free space are **polled stop thresholds**, with possible overshoot. They are not hard quotas. A slow directory traversal stops the scan. Stops retain partial files and explicitly incomplete state; unfinished hashes or partial inventories may be deferred or truncated. Preserve the attempt before planning any continuation because PhotoRec can overwrite an existing report during resume.
 
+PhotoRec can rename a recognized result while scanning. The monitor tolerates a vanished regular result leaf only while the exact supervised PhotoRec process remains alive and the immediate `recup.N` directory and output root retain their identities. Missing/replaced directories, aliases, state/report files and other errors remain strict. A bounded status counter records observed transient disappearances. Every check after native exit and all final output/report validation remain strict.
+
+The exact complete PhotoRec 7.2 trace `zip: file_get_pos 1-size failed` is retained and counted as a candidate ZIP-file parsing diagnostic. Upstream `file_zip.c` emits it at candidate-file EOF or a failed candidate seek; it is not an image or bitmap read diagnostic and does not prove a ZIP was recovered. Only that exact LF/CRLF line receives this classification; modified/embedded occurrences and other fatal text remain errors. Partial polling checks complete tail lines, while final validation checks the entire bounded log and refuses an unterminated final line. The final status retains available diagnostic counts even on a stopped run.
+
 State includes inputs, commands, stream logs, bitmap information, status/events, output hashes and supervisor exit records. Completion requires the actual invocation exit as well as current status. Hashes and allocation checks establish retained bytes and reported source extents; they do not establish historical authenticity, successful decoding, original names or exhaustive deleted-file recovery. Slack, disk gaps, allocated files, other partitions and snapshots remain separate layers.
 
 Run synthetic tests with approved staging for temporary files:
@@ -24,6 +28,6 @@ Run synthetic tests with approved staging for temporary files:
 python -m unittest discover -s scripts -p test_supervise_photorec.py -v
 ```
 
-Tests cover binary bitmap handling, geometry, XML/provenance failures, path aliases, space/runtime stops, native-child cleanup and allocation controls. Separate native public-fixture checks recovered an exact free-cluster sentinel and excluded an allocated sentinel. A positive extraction alone is insufficient to validate free-space scope.
+Tests cover binary bitmap handling, geometry, XML/provenance failures, path aliases, active-result rename versus parent replacement, exact diagnostic classification and tail boundaries, space/runtime stops, native-child cleanup and allocation controls. Separate native public-fixture checks recovered an exact free-cluster sentinel and excluded an allocated sentinel. A positive extraction alone is insufficient to validate free-space scope.
 
 Official sources: [PhotoRec usage](https://www.cgsecurity.org/testdisk_doc/photorec.html), [scripted syntax](https://www.cgsecurity.org/testdisk_doc/scripted_run.html), [7.2 source](https://www.cgsecurity.org/testdisk-7.2.tar.bz2), [TSK icat](https://www.sleuthkit.org/sleuthkit/man/icat.html), [istat](https://www.sleuthkit.org/sleuthkit/man/istat.html) and [fsstat](https://www.sleuthkit.org/sleuthkit/man/fsstat.html).

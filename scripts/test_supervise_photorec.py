@@ -61,7 +61,10 @@ elif name=='photorec':
  if mode=='stderr':sys.stderr.write('fake failure\n')
  total=2 if mode=='extra' else 1
  trace='' if mode=='no_trace' else 'ntfs_remove_used_space\n'
- log.write_text(trace+('Error: could not read bitmap\n' if mode=='error_log' else '')+
+ candidate='zip: file_get_pos 1-size failed\n'*5 if mode in ('zip_trace','zip_and_bitmap_error','zip_and_read_error') else ''
+ fatal=('Error: could not read bitmap\n' if mode in ('error_log','zip_and_bitmap_error') else
+        'short read on image\n' if mode=='zip_and_read_error' else '')
+ log.write_text(trace+candidate+fatal+
                 f'Total: {total} file found\nPhotoRec exited normally.\n')
  if mode=='big_log':log.write_bytes(b'X'*50000)
  source=str(image) if mode!='wrong_source' else str(base/'unrelated.raw')
@@ -163,6 +166,81 @@ class SupervisorTests(unittest.TestCase):
         self.assertEqual(row['sha256'], hashlib.sha256(self.payload).hexdigest())
         self.assertEqual(row['physical_padding_bytes'], 336)
         self.assertTrue(self.status()['reported_allocation_extents_verified'])
+
+    def test_exact_zip_candidate_trace_native_fixture_completes_and_counts(self):
+        self.assertEqual(self.run_mode('zip_trace'), 0)
+        status = self.status()
+        self.assertTrue(status['scan_completed'])
+        self.assertTrue(status['reported_allocation_extents_verified'])
+        self.assertEqual(status['photorec_file_candidate_diagnostics']['zip_file_get_pos_1_size_failed'], 5)
+        self.assertEqual(status['photorec_file_candidate_diagnostics']['complete_line_scope'], 'whole_log')
+        self.assertEqual((self.c.output_dir/'recup.1/f0000032.bin').read_bytes(), self.payload)
+        self.assertEqual((self.c.state_dir/'photorec.log').read_bytes().count(s.ZIP_CANDIDATE_TRACE), 5)
+
+    def test_zip_trace_does_not_mask_native_bitmap_or_read_error(self):
+        for mode in ('zip_and_bitmap_error','zip_and_read_error'):
+            with self.subTest(mode=mode):
+                self.c.state_dir = self.root/(mode+'-state')
+                self.c.output_dir = self.root/(mode+'-outputs')
+                self.assertEqual(self.run_mode(mode), 1)
+                status = self.status()
+                self.assertFalse(status['scan_completed'])
+                self.assertEqual(status['photorec_file_candidate_diagnostics']['zip_file_get_pos_1_size_failed'], 5)
+                self.assertIn('final_log_validation_error', status['photorec_file_candidate_diagnostics'])
+
+    def test_log_exact_trace_lf_crlf_and_final_count(self):
+        log = self.root/'classification.log'
+        raw = b'ntfs_remove_used_space\r\n' + s.ZIP_CANDIDATE_TRACE+b'\r\n'+s.ZIP_CANDIDATE_TRACE+b'\nTotal: 7 files found\nPhotoRec exited normally.\n'
+        log.write_bytes(raw)
+        details = {}
+        self.assertEqual(s.check_log_errors(log, diagnostics=details), 7)
+        self.assertEqual(details['zip_file_get_pos_1_size_failed'], 2)
+        self.assertEqual(log.read_bytes(), raw)
+
+    def test_log_altered_prefixed_suffixed_embedded_traces_refused(self):
+        log = self.root/'classification.log'
+        trace = s.ZIP_CANDIDATE_TRACE
+        for line in (trace.upper(), b'prefix '+trace, trace+b' ', trace+b'X', b'X'+trace,
+                     trace.replace(b'1-size', b'2-size'), b'Error: '+trace+b'; bitmap read failed',
+                     trace+b'\rmore', b'zip: file_get_pos count-read failed'):
+            with self.subTest(line=line):
+                log.write_bytes(b'ntfs_remove_used_space\n'+line+b'\nTotal: 1 file found\nPhotoRec exited normally.\n')
+                with self.assertRaises(s.CarveError):
+                    s.check_log_errors(log)
+
+    def test_partial_tail_drops_clipped_known_trace_and_incomplete_end(self):
+        log = self.root/'classification.log'
+        trace = s.ZIP_CANDIDATE_TRACE+b'\n'
+        # Exactly 65536 trailing bytes begin inside the trace; its residual
+        # `failed` must not be mistaken for a new complete error line.
+        after = b'normal progress\n' + b'x'*65500 + b'\n'
+        raw = b'prefix\n' + trace + after
+        log.write_bytes(raw)
+        self.assertIsNone(s.check_log_errors(log, partial=True))
+        for fragment in (b'zip: file_get_pos 1-size failed', b'Error: incomplete write'):
+            log.write_bytes(b'normal\n'+fragment)
+            self.assertIsNone(s.check_log_errors(log, partial=True))
+            with self.assertRaises(s.CarveError):
+                s.check_log_errors(log)
+
+    def test_partial_tail_exact_boundary_keeps_complete_fatal_line(self):
+        log = self.root/'classification.log'
+        line = b'Error: bitmap read failed\n'
+        tail = line + b'x'*(65536-len(line)-1)+b'\n'
+        self.assertEqual(len(tail), 65536)
+        log.write_bytes(b'prefix\n'+tail)
+        with self.assertRaises(s.CarveError):
+            s.check_log_errors(log, partial=True)
+        # Even when the first line is clipped, a later complete fatal line stays.
+        log.write_bytes(b'x'*100 + b'\n' + s.ZIP_CANDIDATE_TRACE+b'\n'+b'short read\n')
+        with self.assertRaises(s.CarveError):
+            s.check_log_errors(log, partial=True)
+
+    def test_final_unterminated_nonerror_line_is_incomplete(self):
+        log = self.root/'classification.log'
+        log.write_bytes(b'ntfs_remove_used_space\nTotal: 1 file found\nPhotoRec exited normally.')
+        with self.assertRaisesRegex(s.CarveError, 'unterminated'):
+            s.check_log_errors(log)
 
     def test_pending_gate_no_image_or_state(self):
         self.exit_path.unlink()
@@ -269,6 +347,122 @@ class SupervisorTests(unittest.TestCase):
         with self.assertRaisesRegex(s.CarveError, 'hardlinked'):
             rec.check(force_status=True)
         self.assertEqual((self.root/'outside.bin').read_bytes(), b'outside untouched')
+
+    def monitor_rename_race(self, relative='recup.1/f0000001.dll', active=True,
+                            directory=False, error_type=FileNotFoundError):
+        rec, nested = self.make_monitor()
+        base = self.c.state_dir if relative.startswith('state/') else self.c.output_dir
+        relative = relative.removeprefix('state/')
+        target = base / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if directory:
+            target.mkdir()
+        else:
+            target.write_bytes(b'synthetic result')
+        original_stat = Path.stat
+        fired = []
+        def racing_stat(path, *args, **kwargs):
+            if path == target and kwargs.get('follow_symlinks') is False and not fired:
+                fired.append(True)
+                if error_type is FileNotFoundError:
+                    path.rename(path.with_name(path.name + '_renamed'))
+                raise error_type('synthetic leaf race')
+            return original_stat(path, *args, **kwargs)
+        process = None if active is None else mock.Mock()
+        if process is not None:
+            process.poll.return_value = None if active else 0
+        with mock.patch.object(Path, 'stat', racing_stat):
+            rec.check(force_status=True, active_photorec=process)
+        self.assertTrue(fired)
+        return rec
+
+    def test_live_photorec_regular_leaf_rename_is_counted(self):
+        rec = self.monitor_rename_race()
+        self.assertEqual(rec.status['transient_result_disappearances'], 1)
+        self.assertEqual(rec.status['last_transient_disappearance_phase'], 'active_photorec_monitor')
+        rec.check(force_status=True)
+        self.assertEqual(rec.status['output_files_observed'], 1)
+        self.assertEqual(rec.status['output_bytes_observed'], len(b'synthetic result'))
+
+    def test_rename_after_process_exit_is_refused(self):
+        with self.assertRaises(FileNotFoundError):
+            self.monitor_rename_race(active=False)
+
+    def parent_rename_race(self, replace=False):
+        rec, nested = self.make_monitor()
+        target = nested.parent / 'f0000001.dll'
+        target.write_bytes(b'synthetic result')
+        moved = self.root / 'moved-recups'
+        original_stat = Path.stat
+        fired = []
+        def parent_racing_stat(path, *args, **kwargs):
+            if path == target and kwargs.get('follow_symlinks') is False and not fired:
+                target.parent.rename(moved)
+                fired.append(True)
+                if replace:
+                    target.parent.mkdir()
+            return original_stat(path, *args, **kwargs)
+        process = mock.Mock()
+        process.poll.return_value = None
+        with mock.patch.object(Path, 'stat', parent_racing_stat):
+            rec.check(force_status=True, active_photorec=process)
+
+    def test_disappearing_parent_is_refused(self):
+        with self.assertRaises(FileNotFoundError):
+            self.parent_rename_race()
+
+    def test_replaced_parent_is_refused(self):
+        with self.assertRaisesRegex(s.CarveError, 'directory identity changed'):
+            self.parent_rename_race(replace=True)
+
+    def test_rename_without_photorec_scope_is_refused(self):
+        with self.assertRaises(FileNotFoundError):
+            self.monitor_rename_race(active=None)
+
+    def test_rename_permission_error_is_refused(self):
+        with self.assertRaises(PermissionError):
+            self.monitor_rename_race(error_type=PermissionError)
+
+    def test_rename_other_os_error_is_refused(self):
+        with self.assertRaises(OSError):
+            self.monitor_rename_race(error_type=OSError)
+
+    def test_rename_directory_is_refused(self):
+        with self.assertRaises(FileNotFoundError):
+            self.monitor_rename_race(directory=True)
+
+    def test_rename_state_leaf_is_refused(self):
+        with self.assertRaises(FileNotFoundError):
+            self.monitor_rename_race(relative='state/f0000001.dll')
+
+    def test_rename_report_is_refused(self):
+        with self.assertRaises(FileNotFoundError):
+            self.monitor_rename_race(relative='recup.1/report.xml')
+
+    def test_rename_nested_result_is_refused(self):
+        with self.assertRaises(FileNotFoundError):
+            self.monitor_rename_race(relative='recup.1/nested/f0000001.dll')
+
+    def test_rename_root_result_is_refused(self):
+        with self.assertRaises(FileNotFoundError):
+            self.monitor_rename_race(relative='f0000001.dll')
+
+    def test_rename_nonresult_name_is_refused(self):
+        with self.assertRaises(FileNotFoundError):
+            self.monitor_rename_race(relative='recup.1/photorec.ses')
+
+    def test_only_active_photorec_monitor_receives_process(self):
+        original_check = s.Recorder.check
+        calls = []
+        def tracking_check(rec, *args, **kwargs):
+            process = kwargs.get('active_photorec')
+            calls.append((rec.status.get('stage'), process is not None, kwargs.get('force_status', False)))
+            return original_check(rec, *args, **kwargs)
+        with mock.patch.object(s.Recorder, 'check', tracking_check):
+            self.assertEqual(self.run_mode(), 0)
+        self.assertTrue(any(stage == 'photorec' and scoped for stage, scoped, forced in calls))
+        self.assertTrue(any(stage == 'photorec' and forced and not scoped for stage, scoped, forced in calls))
+        self.assertTrue(all(stage == 'photorec' and not forced for stage, scoped, forced in calls if scoped))
 
     def test_monitor_nested_file_symlink_refused(self):
         rec, nested = self.make_monitor()
