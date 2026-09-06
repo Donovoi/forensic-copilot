@@ -50,7 +50,7 @@ elif name == 'ils':
 class InventoryTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(prefix="inventory-fixture-")
-        self.root = Path(self.temporary.name)
+        self.root = Path(self.temporary.name).resolve()
         self.image = self.root / "synthetic working image.raw"
         self.image.write_bytes(b"SYNTHETIC" + bytes(range(256)) * 32)
         self.state = self.root / "preservation"

@@ -15,7 +15,7 @@ import preserve_image as copy
 class PreservationTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="preservation-fixture-")
-        self.root = Path(self.temp.name)
+        self.root = Path(self.temp.name).resolve()
         self.source = self.root / "synthetic-source.bin"
         # Includes zeroes, non-ASCII bytes, and a tail shorter than a transfer block.
         self.data = bytes(range(256)) * 31 + bytes(9216) + b"tail"

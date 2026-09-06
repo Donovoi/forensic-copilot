@@ -155,6 +155,44 @@ class RecoveryTests(unittest.TestCase):
         self.assertEqual({row["stream_id"] for row in refs}, {1})
         self.assertEqual(self.results()[0]["details"]["alias_count"], 3)
 
+    def test_surrogate_filename_retains_exact_reference_and_recovers_on_resume(self):
+        undecodable = catalog_row(path="/bad\udcff.txt (deleted)")
+        undecodable["raw_line_sha256"] = hashlib.sha256(b"synthetic bad\xff.txt bodyfile row").hexdigest()
+        ordinary = catalog_row(identifier="15-128-1", path="/photos/caf\u00e9.jpg", source_line=2)
+        self.write_catalog([undecodable, ordinary])
+        catalog_bytes = self.catalog.read_bytes()
+        result = recovery.run(self.config)
+        self.assertEqual(result["phase"], "complete")
+        self.assertEqual(self.calls(), ["11-128-1", "15-128-1"])
+        refs = [json.loads(line) for line in (self.state / "source-references.jsonl").read_text().splitlines()]
+        self.assertEqual([row["raw_json"] for row in refs], [undecodable, ordinary])
+        streams = [json.loads(line) for line in (self.state / "recovery-manifest.jsonl").read_text().splitlines()]
+        self.assertEqual(streams[0]["first_path"], "/bad<U+DCFF>.txt (deleted)")
+        self.assertEqual(streams[1]["first_path"], ordinary["full_path"])
+        first = self.results()[0]
+        self.assertEqual(first["details"]["original_path"], streams[0]["first_path"])
+        self.assertTrue(first["relative_path"].endswith("_bad_U_DCFF_.txt"))
+        output_records = []
+        for row in self.results():
+            path = self.output / row["relative_path"]
+            self.assertEqual(path.read_bytes(), self.data)
+            info = path.stat()
+            output_records.append((path.name, info.st_ino, info.st_mtime_ns))
+        self.config.resume = True
+        self.assertEqual(recovery.run(self.config)["phase"], "complete")
+        self.assertEqual(self.calls(), ["11-128-1", "15-128-1"])
+        self.assertEqual(len(self.results()), 2)
+        self.assertEqual([(path.name, path.stat().st_ino, path.stat().st_mtime_ns)
+                          for path in sorted(self.output.iterdir())], sorted(output_records))
+        self.assertEqual(self.catalog.read_bytes(), catalog_bytes)
+
+    def test_display_path_escapes_only_surrogates_without_directory_separators(self):
+        self.assertEqual(recovery.display_path("/caf\u00e9/\U0001f642.txt"), "/caf\u00e9/\U0001f642.txt")
+        display = recovery.display_path("/bad\ud800\udcff\udfff.txt")
+        self.assertEqual(display, "/bad<U+D800><U+DCFF><U+DFFF>.txt")
+        self.assertEqual(display.encode("utf-8").decode("utf-8"), display)
+        self.assertEqual(recovery.safe_basename(display), "bad_U_D800__U_DCFF__U_DFFF_.txt")
+
     def test_unsafe_identifiers_and_path_escape_are_inventory_only(self):
         self.write_catalog([catalog_row(identifier="--help"), catalog_row(path="/safe/../../escape")])
         result = recovery.run(self.config)

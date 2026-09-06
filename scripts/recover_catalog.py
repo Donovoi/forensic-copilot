@@ -232,6 +232,11 @@ def safe_output(root, relative, gate):
     return path
 
 
+def display_path(path):
+    # SQLite TEXT requires valid Unicode; surrogateescape names stay exact in refs.
+    return re.sub(r"[\ud800-\udfff]", lambda match: f"<U+{ord(match[0]):04X}>", path)
+
+
 def safe_basename(path):
     leaf = re.split(r"[/\\]", path)[-1]
     # Only the display label is shortened; exact original names stay in refs.
@@ -361,7 +366,8 @@ def import_catalog(config, gate, db, recorder):
                     corroborated = row.get("deletion_corroborated") is True
                     cursor = db.execute("INSERT INTO streams VALUES(NULL,?,?,?,?,?,?,?,?)",
                                         (row["inode_attribute"], row["size"], row["deleted"] and corroborated,
-                                         row["reallocated"] and corroborated, row["full_path"], 1, state, reason))
+                                         row["reallocated"] and corroborated, display_path(row["full_path"]),
+                                         1, state, reason))
                     stream_id = cursor.lastrowid
                 else:
                     stream_id = found["id"]
