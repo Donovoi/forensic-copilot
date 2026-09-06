@@ -27,6 +27,7 @@ Reviewed `2026-09-07`; earlier entries retain their own review dates.
 | [dissect.ntfs 3.16](https://pypi.org/project/dissect.ntfs/3.16/), [dissect.cstruct 4.7](https://pypi.org/project/dissect.cstruct/4.7/), [dissect.util 3.25.dev9](https://pypi.org/project/dissect.util/3.25.dev9/) | Exact reviewed optional package versions, Python compatibility and reproducible CI provisioning |
 | [ffprobe](https://ffmpeg.org/ffprobe.html) and [FFmpeg formats](https://ffmpeg.org/ffmpeg-formats.html) | Forced single-file demuxers, protocol/format restrictions, MOV external-reference controls and bounded metadata output |
 | [ExifTool maintained source and command documentation](https://github.com/exiftool/exiftool/blob/master/exiftool) | Empty first configuration option, fixed read-only metadata extraction and fast-mode coverage limits |
+| [FFmpeg 8.1.1 MP3 demuxer](https://github.com/FFmpeg/FFmpeg/blob/n8.1.1/libavformat/mp3dec.c) and [ExifTool 13.59 ID3 parser](https://github.com/exiftool/exiftool/blob/13.59/lib/Image/ExifTool/ID3.pm) | Version-specific MP3/ID3 behavior underlying the reviewed bounded media policy; signature admission remains narrower than the native parsers |
 
 ## Process guidance checked directly
 

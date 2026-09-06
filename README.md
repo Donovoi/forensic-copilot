@@ -144,7 +144,7 @@ The carver handles native result renaming during an active scan and records one 
 
 The optional [exported-MFT supplement](docs/mft-supplement.md) preserves raw SI/FN timestamps and physical record references from an approved allocated MFT export. It uses the explicitly pinned Dissect dependencies in `requirements-mft.txt`; it is separate from the standard-library helpers and never reads an image or reconstructs logical files.
 
-The Windows [recovered-media worker](docs/recovered-media.md) checks explicit hash-bound exports using bounded ExifTool metadata and ffprobe header probes. It preserves producer references and incomplete outcomes, verifies saved captures before reuse, and never reads an image. Tool packages require separate approved provisioning; a successful header probe does not establish full media recovery or authenticity.
+The Windows [recovered-media worker](docs/recovered-media.md) checks explicit hash-bound exports using bounded ExifTool metadata and ffprobe header probes. Its fixed header policy covers PNG/JPEG, WAVE, selected MP4/MOV/M4A/3GP variants, MP3, MPEG, AVI, ASF and FLV. It preserves producer references and incomplete outcomes, verifies headers and saved captures before reuse, and never reads an image. Tool packages require separate approved provisioning; a successful header probe does not establish full media recovery or authenticity.
 
 Comprehensive examination preserves or inventories every relevant in-scope artifact class, including artifacts that are sensitive, hidden, encrypted, inconvenient, or likely to contain credentials. Sensitivity changes handling and disclosure; it does not make an artifact irrelevant.
 

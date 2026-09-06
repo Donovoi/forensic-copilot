@@ -27,12 +27,17 @@ import types
 MIB = 1024 ** 2
 MANIFEST_BUFFER_BYTES = 64 * 1024
 GIB = 1024 ** 3
+HEADER_BYTES = 65536
+SIGNATURE_POLICY = 'bounded-media-families-v1'
+CARVER_SHA256 = 'c42a94c53eb1b6d650be7fba14f1230a62875b5b0cdf5c1089c6f71ac8aa4676'
+DEMUXERS = ('png_pipe', 'jpeg_pipe', 'wav', 'mov', 'mp3', 'mpeg', 'mpegvideo', 'avi', 'asf', 'flv')
 GATE_SHA256 = '5b8089929c4586c68403b5d0c37b6b88d6b632b1097e1e7a7f68d1d99e348a5e'
 LIMITATIONS = [
     'Bounded metadata and stream-header probes only; no full-file decode or media authenticity finding.',
     'Metadata timestamps retain tool values; timezone, clock accuracy and historical attribution are not established.',
     'Deleted/reallocated content and unmapped thumbnail caveats remain unchanged by a successful probe.',
-    'Only signature-gated PNG, JPEG, RIFF/WAVE and recognized ftyp MP4/MOV candidates are probed.',
+    'Only bounded signature-gated PNG/JPEG/WAVE, recognized ftyp MP4/MOV/M4A/3GP, LayerIII MP3, MPEG PS/video, AVI, ASF and FLV candidates are probed.',
+    'Oversized ID3/ASF headers, free-format MP3, unsupported brands and ambiguous/truncated headers remain coverage gaps.',
     'Unknown signatures, resource limits and parser failures are coverage gaps, not proof of invalid original media.',
     'ExifTool fast2 deliberately omits MakerNotes and metadata after image/media data in some containers.',
     'Protocol/demuxer restrictions are parser controls, not an OS security sandbox against native-library vulnerabilities.',
@@ -222,7 +227,7 @@ def bind_source(c, gate, locks):
         if code not in (0, 1, 2, 130) or (status['phase'] == 'complete') != (code == 0):
             raise ProbeError('Recovery status and exit disagree')
     else:
-        if producer.get('runner_sha256') != batch['producer_sha256']:
+        if producer.get('runner_sha256') != batch['producer_sha256'] or batch['producer_sha256'] != CARVER_SHA256:
             raise ProbeError('Carver producer hash mismatch')
         configuration = producer.get('configuration', {})
         exited = strict_json(exit_bytes)
@@ -301,20 +306,101 @@ def bind_source(c, gate, locks):
                   'source_phase': status['phase'], 'export_root': str(exports)}
 
 
+def mp3_frame(header, offset):
+    if offset + 4 > len(header):
+        return None
+    h = int.from_bytes(header[offset:offset + 4], 'big')
+    version, layer, rate, sample = (h >> 19) & 3, (h >> 17) & 3, (h >> 12) & 15, (h >> 10) & 3
+    if h & 0xFFE00000 != 0xFFE00000 or version == 1 or layer != 1 or rate in (0, 15) or sample == 3 or h & 3 == 2:
+        return None
+    kbps = ((0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320)[rate] if version == 3 else
+            (0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160)[rate])
+    hz = (44100, 48000, 32000)[sample] // (1 if version == 3 else 2 if version == 2 else 4)
+    length = (144 if version == 3 else 72) * kbps * 1000 // hz + ((h >> 9) & 1)
+    return length, version, layer, hz
+
+
+def mp3_signature(header):
+    offset = 0
+    if header.startswith(b'ID3'):
+        if len(header) < 10 or header[3] not in (2, 3, 4) or header[4] == 255 or any(v & 128 for v in header[6:10]):
+            return False
+        mask = {2: 0xC0, 3: 0xE0, 4: 0xF0}[header[3]]
+        if header[5] & ~mask:
+            return False
+        tag_size = sum(v << shift for v, shift in zip(header[6:10], (21, 14, 7, 0)))
+        offset = 10 + tag_size
+        if header[3] == 4 and header[5] & 0x10:
+            if offset + 10 > len(header) or header[offset:offset + 3] != b'3DI' or header[offset + 3:offset + 10] != header[3:10]:
+                return False
+            offset += 10
+    first = mp3_frame(header, offset)
+    if first is None or offset + first[0] + 4 > len(header):
+        return False
+    second = mp3_frame(header, offset + first[0])
+    return second is not None and first[1:] == second[1:] and offset + first[0] + second[0] <= len(header)
+
+
+def asf_signature(header):
+    if len(header) < 30 or header[:16] != bytes.fromhex('3026b2758e66cf11a6d900aa0062ce6c'):
+        return False
+    end, count = int.from_bytes(header[16:24], 'little'), int.from_bytes(header[24:28], 'little')
+    if not 30 <= end <= len(header) or not 1 <= count <= 2048 or header[28:30] != b'\x01\x02':
+        return False
+    offset = 30
+    for unused in range(count):
+        if offset + 24 > end:
+            return False
+        length = int.from_bytes(header[offset + 16:offset + 24], 'little')
+        if length < 24 or offset + length > end or header[offset:offset + 16] == bytes(16):
+            return False
+        offset += length
+    return offset == end
+
+
 def signature(header):
+    if len(header) > HEADER_BYTES:
+        return None
     if header.startswith(b'\x89PNG\r\n\x1a\n'):
         return 'png_pipe'
     if header.startswith(b'\xff\xd8\xff'):
         return 'jpeg_pipe'
     if len(header) >= 12 and header[:4] == b'RIFF' and header[8:12] == b'WAVE':
         return 'wav'
-    if len(header) >= 16 and header[4:8] == b'ftyp' and 16 <= int.from_bytes(header[:4], 'big') <= 4096:
-        if header[8:12] in (b'isom', b'iso2', b'mp41', b'mp42', b'avc1', b'M4V ', b'qt  '):
+    if len(header) >= 16 and header[4:8] == b'ftyp' and 16 <= int.from_bytes(header[:4], 'big') <= min(4096, len(header)):
+        if header[8:12] in (b'isom', b'iso2', b'mp41', b'mp42', b'avc1', b'M4V ', b'M4A ', b'qt  ',
+                            b'3gp4', b'3gp5', b'3gp6', b'3gp7', b'3ge6', b'3gg6', b'3g2a', b'3g2b', b'3g2c'):
             return 'mov'
+    if mp3_signature(header):
+        return 'mp3'
+    if len(header) >= 15 and header[:4] == b'\x00\x00\x01\xba':
+        if (header[4] & 0xF1 == 0x21 and header[6] & 1 and header[8] & 1 and
+                header[9] & 0x80 and header[11] & 1 and header[12:15] == b'\x00\x00\x01'):
+            return 'mpeg'
+        if (len(header) >= 17 and header[4] & 0xC4 == 0x44 and header[6] & 4 and header[8] & 4 and
+                header[9] & 1 and header[12] & 3 == 3 and header[13] & 0xF8 == 0xF8):
+            offset = 14 + (header[13] & 7)
+            if offset + 3 <= len(header) and header[offset:offset + 3] == b'\x00\x00\x01':
+                return 'mpeg'
+    if len(header) >= 12 and header[:4] == b'\x00\x00\x01\xb3':
+        width, height = int.from_bytes(header[4:6], 'big') >> 4, int.from_bytes(header[5:7], 'big') & 4095
+        if width and height and 1 <= header[7] >> 4 <= 14 and 1 <= header[7] & 15 <= 8 and header[10] & 0x20:
+            return 'mpegvideo'
+    if (len(header) >= 24 and header[:4] == b'RIFF' and int.from_bytes(header[4:8], 'little') >= 56 and
+            header[8:16] == b'AVI LIST' and int.from_bytes(header[16:20], 'little') >= 4 and header[20:24] == b'hdrl'):
+        return 'avi'
+    if asf_signature(header):
+        return 'asf'
+    if len(header) >= 13 and header[:4] == b'FLV\x01' and header[4] in (1, 4, 5):
+        offset = int.from_bytes(header[5:9], 'big')
+        if 9 <= offset <= len(header) - 4 and header[offset:offset + 4] == bytes(4):
+            return 'flv'
     return None
 
 
 def commands(tools, path, demuxer):
+    if demuxer not in DEMUXERS:
+        raise ProbeError('Demuxer outside the explicit signature policy')
     ffprobe = [*tools['ffprobe'], '-hide_banner', '-v', 'warning', '-protocol_whitelist', 'file',
                '-format_whitelist', demuxer, '-f', demuxer, '-max_alloc', str(64 * MIB),
                '-probesize', str(MIB), '-analyzeduration', '1000000', '-max_streams', '64', '-threads', '1']
@@ -528,7 +614,7 @@ def child(c, gate, label, argv, directory, tool_dirs):
             'stderr_utf8': stderr.decode('utf-8', errors='replace')}
 
 
-def reusable_record(c, gate, record_path, index, row, full, tools):
+def reusable_record(c, gate, record_path, index, row, full, tools, header_record, demuxer):
     """Prior JSON and every retained capture must be provably intact before reuse."""
     if record_path.name not in index:
         return False
@@ -537,7 +623,8 @@ def reusable_record(c, gate, record_path, index, row, full, tools):
         return False
     prior, _ = json_file(record_path, gate, 64 * MIB)
     if (prior.get('state') != 'probe_ok' or prior.get('source') != row or prior.get('verified_file') != full or
-            prior.get('signature_candidate') not in ('png_pipe', 'jpeg_pipe', 'wav', 'mov') or
+            prior.get('signature_candidate') not in DEMUXERS or prior.get('signature_candidate') != demuxer or
+            prior.get('signature_header') != header_record or
             type(prior.get('attempt')) is not int or not 1 <= prior['attempt'] <= 99999):
         return False
     label = f"{row['source_line']:09d}_{prior['attempt']:05d}"
@@ -765,10 +852,16 @@ def run(c, _already_locked=False):
                         if full['sha256'] != row['sha256']:
                             raise ProbeError('Recovered artifact SHA256 differs from producer/batch')
                         result['verified_file'] = full
+                        artifact.seek(0)
+                        header = artifact.read(HEADER_BYTES)
+                        header_record = {'policy': SIGNATURE_POLICY, 'bytes': len(header), 'sha256': digest(header)}
+                        demuxer = signature(header)
+                        result['signature_header'] = header_record
+                        result['signature_candidate'] = demuxer
                         reuse = False
                         if old and int(old[-1].stem.split('_')[1]) == max(previous_attempts, default=0):
                             try:
-                                reuse = reusable_record(c, gate, old[-1], record_index, row, full, tools)
+                                reuse = reusable_record(c, gate, old[-1], record_index, row, full, tools, header_record, demuxer)
                             except (OSError, ProbeError, ValueError, TypeError, KeyError) as error:
                                 event('previous_record_not_reusable', source_line=number, record=str(old[-1]),
                                       error=type(error).__name__ + ': ' + str(error))
@@ -776,9 +869,6 @@ def run(c, _already_locked=False):
                             counts['probe_ok'] = counts.get('probe_ok', 0) + 1
                             event('verified_result_reused', source_line=number, record=str(old[-1]))
                             continue
-                        artifact.seek(0)
-                        demuxer = signature(artifact.read(4096))
-                        result['signature_candidate'] = demuxer
                         if demuxer is None:
                             result['state'] = 'deferred_unsupported_signature'
                         else:

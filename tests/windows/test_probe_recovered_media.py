@@ -307,6 +307,53 @@ class MediaTests(unittest.TestCase):
         self.assertEqual(self.latest()['state'], 'deferred_unsupported_signature')
         self.assertEqual(self.latest()['verified_file']['sha256'], self.output_record['sha256'])
 
+    def test_new_false_signatures_never_launch_parser(self):
+        for number,payload in enumerate((b'ID3\x04\0\0\0\0\0\0fLaC'+bytes(200),
+                b'\0\0\x01\xba'+bytes(32),b'RIFF\xff\xff\xff\xffAVI ',b'FLV\x01\x07\0\0\0\x09'+bytes(10))):
+            self.state=self.root/('false-state-'+str(number));self.c.state_dir=self.state
+            self.artifact.write_bytes(payload);self.output_record=media.file_record(self.artifact,self.gate)
+            self.row['details'].update(output_record=self.output_record,actual_size=self.output_record['size']);self.write_source()
+            with patch.object(media,'child') as child:self.assertEqual(media.run(self.c)['phase'],'complete_with_gaps')
+            child.assert_not_called();self.assertEqual(self.latest()['state'],'deferred_unsupported_signature')
+
+
+    def test_changed_header_receipt_cannot_be_reused_even_with_refreshed_index(self):
+        with patch.object(media,'child',side_effect=self.fake_child):media.run(self.c)
+        path=next((self.state/'records').glob('*.json'));record=json.loads(path.read_bytes())
+        record['signature_header']['sha256']='0'*64;path.write_text(json.dumps(record))
+        index=self.state/'records-index.json';value=json.loads(index.read_bytes())
+        value[path.name]=media.file_record(path,self.gate);index.write_text(json.dumps(value))
+        self.c.resume=True
+        with patch.object(media,'child',side_effect=self.fake_child) as child:media.run(self.c)
+        self.assertEqual(child.call_count,2)
+        self.assertTrue((self.state/'records'/'000000001_00002.json').exists())
+
+
+    def test_approved_carver_v3_closed_manifest_gate(self):
+        recup=self.exports/'recup.1';recup.mkdir();artifact=recup/'f100.png';artifact.write_bytes(self.artifact.read_bytes())
+        output=media.file_record(artifact,self.gate);output['image_sha256']='2'*64
+        producer={'runner_sha256':media.CARVER_SHA256,'configuration':{'state_dir':str(self.source),'output_dir':str(self.exports)},
+                  'image_gate':{'image':str(self.image),'sha256':'2'*64}}
+        manifest=self.source/'output-manifest.jsonl';manifest.write_text(json.dumps(output)+'\n')
+        status={'phase':'complete','scan_completed':True,'configuration':producer['configuration'],
+                'output_manifest':{'path':str(manifest),'sha256':media.digest(manifest.read_bytes()),'bytes':manifest.stat().st_size}}
+        (self.source/'inputs.json').write_text(json.dumps(producer));(self.source/'status.json').write_text(json.dumps(status))
+        self.exit.write_text(json.dumps({'phase':'complete','exit_code':0}))
+        batch={'schema_version':1,'producer_kind':'photorec','producer_sha256':media.CARVER_SHA256,
+            'source_state':str(self.source),'export_root':str(self.exports),'source_exit':str(self.exit),
+            'source_exit_sha256':media.digest(self.exit.read_bytes()),'source_files':{n:media.digest((self.source/n).read_bytes()) for n in ('inputs.json','status.json','output-manifest.jsonl')},
+            'artifacts':[{'source_line':1,'sha256':output['sha256']}]}
+        self.batch.write_text(json.dumps(batch));self.c.batch_sha256=media.digest(self.batch.read_bytes())
+        with contextlib.ExitStack() as locks:
+            rows,_=media.bind_source(self.c,self.gate,locks)
+        self.assertEqual(rows[0]['sha256'],output['sha256'])
+        producer['runner_sha256']='f'*64;(self.source/'inputs.json').write_text(json.dumps(producer))
+        batch['producer_sha256']='f'*64;batch['source_files']['inputs.json']=media.digest((self.source/'inputs.json').read_bytes())
+        self.batch.write_text(json.dumps(batch));self.c.batch_sha256=media.digest(self.batch.read_bytes())
+        with contextlib.ExitStack() as locks,self.assertRaisesRegex(media.ProbeError,'Carver producer hash mismatch'):
+            media.bind_source(self.c,self.gate,locks)
+
+
     def test_incomplete_probe_is_retried_on_resume(self):
         with patch.object(media, 'child', return_value={'state': 'probe_incomplete', 'stop_reason': 'timeout'}) as child:
             self.assertEqual(media.run(self.c)['phase'], 'complete_with_gaps')
@@ -393,7 +440,7 @@ class MediaTests(unittest.TestCase):
     def test_signature_whitelist_uses_binary_headers_not_extensions(self):
         for header, expected in [(b'\x89PNG\r\n\x1a\n', 'png_pipe'), (b'\xff\xd8\xff\xe0', 'jpeg_pipe'),
                                  (b'RIFF\0\0\0\0WAVE', 'wav'),
-                                 (b'\0\0\0\x18ftypisom\0\0\0\0', 'mov'),
+                                 (b'\0\0\0\x18ftypisom\0\0\0\0isomiso2', 'mov'),
                                  (b'RIFF\0\0\0\0AVI ', None), (b'AviSource("sentinel.avi")', None),
                                  (b'ffconcat version 1.0', None), (b'<MPD>', None), (b'MZ', None)]:
             self.assertEqual(media.signature(header), expected)

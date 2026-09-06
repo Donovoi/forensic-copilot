@@ -21,7 +21,7 @@ The recovery manifest is `export-attempts.jsonl`; the PhotoRec manifest is `outp
 
 Manifest selection uses a 64 KiB binary buffer on its original protected read handle. The wrapper detaches before that context closes the handle; deny-write/delete sharing remains in force while reading. Exact source-line bytes/hashes, CRLF, final unterminated rows, invalid selected UTF-8 and the one-MiB row cap retain their existing behavior. The manifest is streamed rather than loaded in full.
 
-Recovery can supply closed complete, partial, failed or interrupted attempts when full output hashes and metadata exist and producer exit/status agree. PhotoRec requires its completed state, successful invocation, matching configuration and status-bound output manifest. Metadata-only partial carve records are deferred. Reallocated clusters, partial exports and unmapped thumbnail parents retain their original caveats; metadata parsing does not upgrade them.
+Recovery can supply closed complete, partial, failed or interrupted attempts when full output hashes and metadata exist and producer exit/status agree. PhotoRec requires its completed state, successful invocation, matching configuration and status-bound output manifest. Its producer must also match the worker's pinned reviewed carver revision; a self-consistent batch naming another revision is refused. Metadata-only partial carve records are deferred. Reallocated clusters, partial exports and unmapped thumbnail parents retain their original caveats; metadata parsing does not upgrade them.
 
 Inputs must be canonical regular single-link files on fixed local volumes. UNC/device/alternate-stream paths, symbolic links, junctions/reparse points and redirects outside the export root are refused. Read-only Windows handles deny write/delete sharing on input records, selected files and tool dependencies. Containing directories must remain under exclusive analyst control; these checks do not defend against arbitrary hostile directory replacement.
 
@@ -35,7 +35,23 @@ Inspect `python scripts/probe_recovered_media.py --help`. Required arguments are
 
 ## Parser and resource limits
 
-Binary headers select only PNG, JPEG, RIFF/WAVE and recognized `ftyp` MP4/MOV brands. Other signatures remain hashed deferred records. ffprobe receives one forced `png_pipe`, `jpeg_pipe`, `wav` or `mov` demuxer, the matching format whitelist and a file-only protocol whitelist. There is no automatic fallback, image sequence expansion, script/playlist demuxing, network protocol or hardware decoding. MOV external references and absolute paths are explicitly disabled. Native external-track fixtures still exit zero when media is skipped; warning-level diagnostics therefore make that result incomplete.
+The first 64 KiB select a candidate using a fixed binary-header policy. This is bounded admission to a parser, not full format validation. Extensions never select a parser, and unsupported or malformed headers remain hashed deferred records.
+
+| Candidate family | Forced ffprobe demuxer | Admission and coverage limits |
+| --- | --- | --- |
+| PNG, JPEG | `png_pipe`, `jpeg_pipe` | Recognized leading signature; single-image input only |
+| RIFF/WAVE | `wav` | RIFF header and WAVE form; other wave containers are deferred |
+| MP4, MOV, M4A, 3GP/3G2 | `mov` | Leading `ftyp` with a recognized major brand and declared box size from 16 to 4,096 bytes, contained in the captured header; legacy MOV without this box and unlisted brands are deferred |
+| MP3 | `mp3` | Two complete consecutive Layer III frames with consistent version/sample rate, optionally after a bounded ID3v2.2/2.3/2.4 tag; free-format MP3, oversized tags and ID3 attached to other formats are deferred |
+| MPEG program stream | `mpeg` | Leading MPEG-1/2 pack structure, marker bits and following start-code prefix; transport streams are deferred |
+| MPEG elementary video | `mpegvideo` | Leading sequence header with bounded dimensions, aspect/frame-rate codes and marker bit |
+| AVI | `avi` | Leading RIFF/AVI header and `LIST hdrl` structure with minimum sizes |
+| ASF, including WMA/WMV containers | `asf` | Header GUID, reserved bytes, 1 to 2,048 bounded child objects and exact declared header extent; headers larger than 64 KiB are deferred |
+| FLV | `flv` | Version 1 header, valid audio/video flags, bounded data offset and zero initial previous-tag size |
+
+The `mov` major-brand allowlist is `isom`, `iso2`, `mp41`, `mp42`, `avc1`, `M4V `, `M4A `, `qt  `, `3gp4`, `3gp5`, `3gp6`, `3gp7`, `3ge6`, `3gg6`, `3g2a`, `3g2b` and `3g2c`. Trailing spaces are part of those four-byte brands. A known compatible brand alone does not admit an unlisted major brand. Admission does not guarantee that either parser supports every codec or variant inside the container.
+
+ffprobe receives exactly one forced demuxer, the same format whitelist and a file-only protocol whitelist. There is no automatic fallback, image sequence expansion, script/playlist demuxing, network protocol or hardware decoding. MOV external references and absolute paths are explicitly disabled. Native external-track fixtures still exit zero when media is skipped; warning-level diagnostics therefore make that result incomplete. An estimated-duration warning also remains incomplete, even when other metadata is readable. See the [ffprobe options](https://ffmpeg.org/ffprobe.html) and [FFmpeg demuxer options](https://ffmpeg.org/ffmpeg-formats.html) for the native controls.
 
 ExifTool receives `-config` and a genuine empty argument first, followed by fixed read-only options and tags. Implicit analyst configurations, writing options, formulas, alternate source files and embedded extraction are disabled. `-fast2` intentionally omits some metadata. Device, GPS and identifying metadata remain controlled private outputs.
 
@@ -45,10 +61,14 @@ State storage defaults to 512 MiB with a 64 GiB free-space reserve. Storage chec
 
 ## Results and verified resume
 
-Numbered per-file records preserve source references, full hashes, processing UTC times, exact commands, parsed metadata, raw bounded captures, exits and errors. `records-index.json` binds finalized record hashes and identities. Resume independently checks that index, the exact child commands, retained capture paths/hashes/metadata and parsed JSON before reuse. Missing or changed records/captures create another numbered attempt and retain earlier data. Failed, unknown and incomplete results are retried; they cannot count as previously successful analysis.
+Numbered per-file records preserve source references, full hashes, processing UTC times, exact commands, parsed metadata, raw bounded captures, exits and errors. They also bind the header policy, captured byte count, header SHA256 and selected demuxer. `records-index.json` binds finalized record hashes and identities. Resume independently checks that index, the current header receipt and candidate, the exact child commands, retained capture paths/hashes/metadata and parsed JSON before reuse. Missing or changed records/captures create another numbered attempt and retain earlier data. Failed, unknown and incomplete results are retried; they cannot count as previously successful analysis. A changed worker or input policy requires a fresh owned state directory.
 
 `probe_ok` requires both tools to return usable expected JSON, exit zero and no diagnostics, capture errors or resource stops. It establishes bounded metadata/header checks only. It does not prove full decode, media authenticity, complete recovery, historical timezone, drive ownership or contact. The batch is `complete` only when all selected files qualify; otherwise it retains explicit gaps. CLI exits are `0` for complete/dry-run, `2` for a returned incomplete batch, `1` for an operational exception and `130` for interruption.
 
-Windows synthetic tests run explicitly with `python -m unittest discover -s tests/windows -p 'test_*.py' -v`; CI runs them on Windows with Python 3.10 and 3.12. Native cross-format, disabled-config and external-reference fixtures require separately provisioned approved tools and independent local review. Synthetic CI does not claim that native tool validation occurred on each CI host.
+Pure header and command-policy fixtures in `scripts/test_media_signatures.py` run in the ordinary Ubuntu/Windows Python 3.10/3.12 matrix. Windows synthetic supervisor tests run explicitly with `python -m unittest discover -s tests/windows -p 'test_*.py' -v`. They cover deferred false signatures, changed header receipts and the closed-carver revision gate as well as the existing provenance, buffered-read, resource and resume checks. Native cross-format, disabled-config and external-reference fixtures require separately provisioned approved tools and independent local review. Synthetic CI does not claim that native tool validation occurred on each CI host.
+
+## Maintenance basis
+
+The initial four-family policy deferred common legacy audio/video containers. The expanded allowlist follows reviewed FFmpeg 8.1.1 and ExifTool 13.59 behavior and bounded synthetic/native fixtures. It retains the same tool pins, protected input handles, process limits and diagnostic rules, and adds a header receipt to prevent reuse under changed admission decisions. Review any further format or tool-build change independently with malformed headers, explicit external-reference controls and native fixtures before evidence use.
 
 Primary basis: [ffprobe options](https://ffmpeg.org/ffprobe.html), [FFmpeg demuxer options](https://ffmpeg.org/ffmpeg-formats.html), and [ExifTool maintained command documentation](https://github.com/exiftool/exiftool/blob/master/exiftool). See [catalog recovery](catalog-recovery.md) and [supervised carving](supervised-carving.md) for the producer provenance.

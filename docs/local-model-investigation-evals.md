@@ -23,8 +23,8 @@ back to an external provider. Override this only in a private local config.
 
 On a distributed setup, run the OpenAI-compatible llama.cpp HTTP server on the
 OpenCode runner, then use Tailscale/RPC behind that server for GPU workers. For
-example, `commando-1` can serve `http://127.0.0.1:8080/v1` while using
-`ubuntu-gpu:50052` as an RPC worker. If the GPU host directly serves HTTP, set
+example, `HOST-A` can serve `http://127.0.0.1:8080/v1` while using
+`GPU-WORKER:50052` as an RPC worker. If the GPU host directly serves HTTP, set
 `--base-url` and the private OpenCode provider `baseURL` to that Tailscale URL.
 
 ```powershell
