@@ -1,3 +1,4 @@
 # Keep reviewed helper bytes stable across Windows and POSIX checkouts.
 scripts/*.py text eol=lf
 scripts/photorec-7.2-tools.json text eol=lf
+tests/windows/*.py text eol=lf

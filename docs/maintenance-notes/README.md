@@ -6,6 +6,8 @@ They complement `docs/self-update-loop.md` by leaving a short, reviewable ration
 
 ## Index
 
+- [2026-09-07-derived-artifact-validation.md](2026-09-07-derived-artifact-validation.md) - exact exported-MFT observations, optional parser dependencies and derived-artifact validation gates
+
 - [2026-09-06-large-image-preservation-and-recovery.md](2026-09-06-large-image-preservation-and-recovery.md) - verified preservation, durable stages, recovery coverage, storage budgets and contextual contact evidence
 
 - `2026-05-31-secret-led-evidence-expansion.md` - route extracted secrets back into the forensic loop as classified leads for local unlocks and approval-needed remote use

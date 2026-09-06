@@ -17,6 +17,17 @@ Large-image tooling and preservation addendum reviewed: `2026-09-06`. The date a
 
 See [large-image examination](large-image-examination.md) and [image preservation](image-preservation.md) for implementation limits and the independent script-review gate.
 
+## Derived-artifact validation addendum
+
+Reviewed `2026-09-07`; earlier entries retain their own review dates.
+
+| Source | Use in this update |
+| --- | --- |
+| [Dissect NTFS parser](https://github.com/fox-it/dissect.ntfs) and [documentation](https://docs.dissect.tools/en/latest/projects/dissect.ntfs/) | Explicit physical-record parsing and SI/FN corroboration without volume construction or reference traversal |
+| [dissect.ntfs 3.16](https://pypi.org/project/dissect.ntfs/3.16/), [dissect.cstruct 4.7](https://pypi.org/project/dissect.cstruct/4.7/), [dissect.util 3.25.dev9](https://pypi.org/project/dissect.util/3.25.dev9/) | Exact reviewed optional package versions, Python compatibility and reproducible CI provisioning |
+| [ffprobe](https://ffmpeg.org/ffprobe.html) and [FFmpeg formats](https://ffmpeg.org/ffmpeg-formats.html) | Forced single-file demuxers, protocol/format restrictions, MOV external-reference controls and bounded metadata output |
+| [ExifTool maintained source and command documentation](https://github.com/exiftool/exiftool/blob/master/exiftool) | Empty first configuration option, fixed read-only metadata extraction and fast-mode coverage limits |
+
 ## Process guidance checked directly
 
 | Source                                                                                | Used for                                                                      | Why it matters here                                                                                      | Link                                                                                                                                    |

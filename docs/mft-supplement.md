@@ -1,0 +1,36 @@
+# Raw timestamps from an exported MFT
+
+`scripts/mft_export_supplement.py` supplements lossy native inventory timestamps with observations from one explicit, allocated `$MFT` export. It reads that export, its original catalog and explicit recovery provenance. It never reads an image, constructs an NTFS volume, follows parent/base/attribute-list references, decodes data runs or reconstructs logical files. Independent script review remains required before evidence use.
+
+This helper has optional Dissect dependencies; it is not a standard-library parser. The other image-workflow helpers use the Python standard library to supervise external tools or process catalogs. Install the exact reviewed parser set in a separately scoped environment:
+
+```shell
+python -m pip install --only-binary=:all: -r requirements-mft.txt
+python -m unittest discover -s scripts -p test_mft_export_supplement.py -v
+```
+
+The pins are `dissect.ntfs==3.16`, `dissect.cstruct==4.7` and `dissect.util==3.25.dev9`. The utility development release is intentional because it was part of the independently reviewed environment; replacing it requires renewed validation. All three support Python 3.10+. CI installs these requirements explicitly on Windows and Linux with Python 3.10 and 3.12. Missing dependencies fail validation instead of silently skipping parser tests. Runtime records contain package versions and parser-module hashes. The helper itself does not download or update packages; offline use requires prior approved provisioning.
+
+Pass `--mft-export`, `--catalog`, `--recovery-state`, `--recovery-exit-code`, `--recovery-sha256`, `--gate-module`, `--gate-sha256`, `--inode-attribute`, `--attempt`, `--sector-size 512`, `--record-size 1024`, `--output-dir`, `--state-dir`, `--max-output-bytes`, and `--reserve-bytes`. All paths and approval hashes are explicit. The full identifier must be canonical record-0 type-128 DATA for the unnamed `/$MFT`, with corroborated allocated directory-entry flags. Other geometry is refused.
+
+The gate requires recovery `complete`, `recovered_all_selected: true`, a zero invocation exit marker at least as new as the completed status, matching approved recovery/gate identities, matching roots and geometry, and the original catalog's hash/metadata/line count. Both all-files and explicit-selection recovery modes are accepted; selection must include the exact MFT identifier. Exactly one completed attempt must match the requested attempt, allocated icat command without `-r`, full ID, expected/actual/seen byte counts, output path, metadata and independently reread SHA256.
+
+Every selected source reference is checked against the original catalog's exact JSONL line and decoded row. Literal names, flags, identifiers and row hashes remain available. At most 16 selected references and 128 KiB of their metadata are accepted. Catalog/sidecar processing streams rows with a one-MiB line limit; control objects have a one-MiB cap. These bounds are refusals, not truncation of claimed evidence coverage.
+
+All inputs must be canonical regular single-link files. Path checks reject symbolic links and junctions. Windows handles deny write/delete sharing through hashing, parsing and the final hash/metadata recheck; POSIX locks are cooperative. The inherited image identity is provenance only and is not freshly checked against an image. Output/state roots must be fresh, separate and under existing analyst-controlled parents. There is no overwrite or resume mode.
+
+Every physical 1,024-byte slot is visited. Full zero slots are classified as empty/uninitialized; a short tail, wrong signature, broken update-sequence fixup, malformed header or invalid attribute remains explicit. The helper checks USA count, header/array separation, both sector trailer tags and bounded attribute termination, then corroborates its restored bytes using `MftRecord.from_bytes(raw, ntfs=None)`. It avoids convenience APIs that resolve references or choose a preferred filename.
+
+Resident standard-information values must be exactly 48 or at least 72 bytes. Filename values must contain all 66 fixed bytes plus their declared UTF-16 code units, with disjoint header/name/value spans. Nonresident SI/FN values are unsupported and never cause an external read. Every filename attribute, namespace and instance remains separate. Duplicate instance IDs are flagged and distinguished by physical ordinal/offset. Parent/base references remain unresolved; `slot-type-instance` is a physical display identifier, not a reconstructed logical stream ID.
+
+Canonical timestamps preserve unsigned FILETIME decimal strings and little-endian bytes, plus exact signed Unix nanoseconds: `FILETIME * 100 - 11644473600000000000`. Integer UTC rendering retains seven fractional digits when representable. Zero/all-ones candidates, high-bit values, out-of-range dates and future-reference flags are retained without filtering. Dissect's signed interpretation is a secondary cross-check modulo 2^64.
+
+Each timestamp cites the export/record hashes, physical slot/export offset, sequence number, attribute ordinal/type/instance/offset, SI/FN field and fixup replacement mapping. A field crossing a sector trailer points to the restored bytes and their replacement-array source. Raw LSN and parent/base references use exact decimal strings. Filename UTF-16 bytes and surrogate-preserving text remain JSON data and never determine output paths.
+
+Fixed outputs are `mft-records.jsonl`, `mft-attributes.jsonl`, `mft-timestamps.jsonl`, `mft-errors.jsonl` and `summary.md`. Rows retain physical record/attribute/field order. State contains `inputs.json`, `output-manifest.json` and `status.json`; final manifests bind input and output hashes. There is no global timeline sort, alias merge or logical stream assembly.
+
+The byte cap covers output and state, reserving two MiB for bounded control files. Tracked bytes are checked before unbuffered writes and free space is checked periodically. Failures retain partial outputs and a failed status; a stale running status or missing final exit is incomplete. Exit 0 is full byte coverage without parse errors; exit 3 is full coverage with explicit parser errors; exit 2 is operational failure and exit 130 is interruption. `scan_complete` is distinct from clean parsing.
+
+Raw NTFS times, filename equality and in-use flags do not prove human opens, deletion dates, device ownership, drive purpose or communications. Recovery-host file times are not source NTFS times. Synthetic tests exercise exact subsecond/pre-epoch/far-future/sentinel values, fixups, malformed attributes, reference non-traversal, provenance gates and capacity/locking failures. Native public-fixture review remains separate from synthetic CI and does not validate a case image.
+
+Primary basis: [Dissect NTFS documentation](https://docs.dissect.tools/en/latest/projects/dissect.ntfs/), [maintained NTFS parser source](https://github.com/fox-it/dissect.ntfs), and the reviewed [NTFS](https://pypi.org/project/dissect.ntfs/3.16/), [cstruct](https://pypi.org/project/dissect.cstruct/4.7/) and [utility](https://pypi.org/project/dissect.util/3.25.dev9/) releases. See also [catalog recovery](catalog-recovery.md) and [inventory timelines](inventory-timeline.md).
