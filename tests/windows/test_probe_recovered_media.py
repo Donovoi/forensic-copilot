@@ -195,6 +195,8 @@ class MediaTests(unittest.TestCase):
             result = media.run(self.c)
             self.assertEqual(result['phase'], 'complete')
             self.assertEqual(child.call_count, 2)
+            inputs = json.loads((self.state / 'inputs.json').read_bytes())
+            self.assertEqual(inputs['formats'], list(media.DEMUXERS))
             record = self.latest()
             self.assertTrue(record['source']['source_reference']['details']['reallocated'])
             self.assertEqual(record['verified_file']['sha256'], self.output_record['sha256'])

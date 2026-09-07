@@ -61,6 +61,8 @@ State storage defaults to 512 MiB with a 64 GiB free-space reserve. Storage chec
 
 ## Results and verified resume
 
+`inputs.json` records the complete admitted ffprobe demuxer list in `formats`; each per-file record identifies the candidate actually selected from its header.
+
 Numbered per-file records preserve source references, full hashes, processing UTC times, exact commands, parsed metadata, raw bounded captures, exits and errors. They also bind the header policy, captured byte count, header SHA256 and selected demuxer. `records-index.json` binds finalized record hashes and identities. Resume independently checks that index, the current header receipt and candidate, the exact child commands, retained capture paths/hashes/metadata and parsed JSON before reuse. Missing or changed records/captures create another numbered attempt and retain earlier data. Failed, unknown and incomplete results are retried; they cannot count as previously successful analysis. A changed worker or input policy requires a fresh owned state directory.
 
 `probe_ok` requires both tools to return usable expected JSON, exit zero and no diagnostics, capture errors or resource stops. It establishes bounded metadata/header checks only. It does not prove full decode, media authenticity, complete recovery, historical timezone, drive ownership or contact. The batch is `complete` only when all selected files qualify; otherwise it retains explicit gaps. CLI exits are `0` for complete/dry-run, `2` for a returned incomplete batch, `1` for an operational exception and `130` for interruption.

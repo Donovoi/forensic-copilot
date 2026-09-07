@@ -767,7 +767,7 @@ def run(c, _already_locked=False):
         tools, tool_roots, tool_provenance = locked_tools(c, gate, locks)
         inputs = {'schema_version': 1, 'script_sha256': digest(Path(__file__).read_bytes()),
                   'provenance': provenance, 'tools': tool_provenance, 'gate_sha256': GATE_SHA256,
-                  'state_dir': str(c.state_dir), 'formats': ['png_pipe', 'jpeg_pipe', 'wav', 'mov'],
+                  'state_dir': str(c.state_dir), 'formats': list(DEMUXERS),
                   'probe_limits': {key: getattr(c, key) for key in ('max_file_bytes', 'hash_seconds', 'child_seconds',
                                                                  'memory_bytes', 'stdout_bytes', 'stderr_bytes')},
                   'command_policy': commands(tools, Path('ARTIFACT'), 'mov')}
