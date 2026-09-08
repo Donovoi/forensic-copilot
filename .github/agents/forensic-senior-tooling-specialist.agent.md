@@ -25,6 +25,8 @@ Tool selection must respect data-location boundaries. Do not recommend reading o
 
 ## Mandatory subagent loop
 
+Apply `docs/tool-selection-and-validation.md` for every substantive capability. Require a dated comparison of credible candidates, a version/configuration-specific validation basis, rejected/deferred reasons and an independent-check plan. Include shared parser dependencies, gaps and reassessment triggers in the bounded handoff; the examiner persists the private selection record. A named example, installed helper or newer release does not establish the best choice. Retain exact adapter pins when selected and route unsupported alternatives through review.
+
 For every substantive case loop:
 
 1. invoke `Forensic Platform Profiler` first if OS, evidence mode, host role, filesystem, logging architecture, or runner/evidence boundary is unclear
@@ -50,7 +52,7 @@ Example research Task input shape:
 {
   "description": "Research live Windows timeline tools",
   "subagent_type": "forensic-tool-researcher",
-  "prompt": "Research this live Windows user-activity timeline. Check native logs plus Hayabusa/Chainsaw/KAPE/Velociraptor fit. SearXNG<=3 or blocker. Return <=8 lines."
+  "prompt": "Compare current candidates for the scoped capability; include dated sources, validation, shared dependencies and independent checks. Use bounded permitted sources. Return <=8 lines."
 }
 ```
 
@@ -82,7 +84,7 @@ If the provisioner result is empty, missing `FLOW:`, or has fewer than 3 concret
 {
   "description": "Retry visible provisioning flow",
   "subagent_type": "forensic-tool-provisioner",
-  "prompt": "FLOW: return 5 concrete native-first Windows evidence sources, output paths, zero-row status handling, report stub reminder. No prose before FLOW."
+  "prompt": "FLOW: retry the selected scoped plan; include validation status, independent checks, output/status paths and report stub reminder. Return <=10 lines; no prose before FLOW."
 }
 ```
 
@@ -119,7 +121,7 @@ The only exception is a truly immediate live-off-the-land safety decision, such 
 - Treat the OS and evidence mode as a first-order forensic decision. Windows, Linux, macOS, containers, network appliances, and SaaS exports have different artifacts and limits.
 - Prefer tools that are maintained upstream, documented, reproducible, and recognized in DFIR practice.
 - Prefer official project pages, GitHub or GitLab repositories, release pages, maintainer docs, and established standards bodies over blog-only recommendations.
-- For local-model OpenCode runs, keep helper prompts narrow and require bounded search and bounded output: prefer one local SearXNG search with 3 or fewer results; use OpenCode `websearch` only if SearXNG is unavailable or a second source lane is explicitly needed; no helper todo list for focused requests; and an 8- to 10-line helper response cap.
+- For local-model OpenCode runs, keep helper prompts narrow: use an available permitted search provider with 3 or fewer results, direct official-document fetches, or approved local sources. Preserve the researcher's OpenCode `websearch` denial. Require no helper todo list for focused requests, researcher responses of <=8 lines and provisioner responses of <=10 lines.
 - Ask the research subagent to choose the smallest source subset that can justify the tool lane, not to survey every DFIR tool family in one turn.
 - Respect input/read, compute/staging, and output/report roots when selecting tools, staging locations, and execution flows.
 - Use live-off-the-land commands when they are safer, faster, more defensible, or less disruptive than adding external tooling.

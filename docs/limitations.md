@@ -1,5 +1,13 @@
 # Current limitations and cautions
 
+For large-image recovery and contact/timeline reporting, also apply [large-image examination](large-image-examination.md). Space for a working image does not guarantee space for exports. A complete copy, successful tool exit, or recognized media header does not establish complete deleted-file recovery. Preserve layer-specific gaps and distinguish stored contact details from communication records.
+
+Native metadata exports may round or replace raw timestamps; exact catalog processing does not restore lost precision or range. The optional carver verifies reported extents against current allocation but excludes Dovecot signatures and does not validate unmapped thumbnail parentage. Its output/runtime limits are polled, and fresh-only runs cannot claim automatic resume. See [timeline](inventory-timeline.md) and [carving](supervised-carving.md) contracts before selecting them.
+
+The optional [MFT supplement](mft-supplement.md) covers only physical 1,024-byte records of one approved allocated export with 512-byte sectors. It preserves malformed/sentinel fields and unresolved parent/base references, without logical-file reconstruction or image access. Its Dissect dependencies require separate provisioning; raw SI/FN times still do not establish human actions or communication.
+
+The Windows [recovered-media worker](recovered-media.md) covers only explicit producer-bound exports and its fixed PNG/JPEG/WAVE, selected MP4/MOV/M4A/3GP, MP3, MPEG, AVI, ASF and FLV header policy. Admission uses at most 64 KiB; oversized ID3/ASF headers, free-format MP3, unlisted container brands and other formats remain deferred. Bounded metadata/header checks do not establish full decode, authenticity or accurate historical dates. Partial recovery, external-track or estimated-duration warnings, timeouts and resource stops remain explicit gaps. Polled storage thresholds and Windows job limits do not provide filesystem quotas or a native-parser security sandbox.
+
 This repository is easier to trust if its limits are stated plainly. The agent is meant to help structure examinations, not to pretend every evidence type or workflow is equally well supported.
 
 ## Evidence access limits

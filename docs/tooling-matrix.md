@@ -1,13 +1,13 @@
 # Tooling matrix
 
-This matrix is the starting point for the `Forensic Senior Tooling Specialist` agent and its research and provisioning subagents. It is intentionally opinionated toward **defensible, evidence-driven** workflows that can choose either expert-used external tools or native live-off-the-land commands.
+This matrix is a discovery aid for the `Forensic Senior Tooling Specialist` and its research and provisioning subagents. Entries are candidates, not a ranking or required stack. Apply [tool selection and validation](tool-selection-and-validation.md) to the current capability, evidence and environment; compare alternatives and document validation and independent checks before relying on a result.
 
 ## Selection heuristics
 
-1. choose the smallest toolchain that answers the case questions
-2. when Linux image work clearly implies a baseline stack, stage or verify that minimal stack first instead of pushing setup back to the user
+1. choose the smallest validated toolchain that supplies the required coverage and meaningful independent checks
+2. compare credible providers for the actual evidence features before staging tools; previously used helpers and example stacks must earn selection again when their validation basis no longer applies
 3. consult the newest official manual, vendor documentation, maintained upstream docs, or approved local docs/cache before deciding a program's command syntax, API, automation, update, parallelization, or fallback behavior
-4. prefer tools with strong upstream reputation and reproducible setup paths
+4. prioritize relevant validation evidence, known limitations and reproducible setup; reputation and recent releases are supporting signals
 5. avoid platform drama unless the evidence actually requires it
 6. record why each tool was selected, skipped, or deferred
 7. when direct access is blocked, verify the smallest supported recovery branch before blocker-only handoff and make a separate layer-specific decision about any remaining disk-level scanning or carving
@@ -58,6 +58,16 @@ Before selecting tools, classify the evidence platform:
 
 ## Current matrix
 
+For large-image work, apply [large-image examination](large-image-examination.md) and budget exports before recovery. The reviewed [preservation helper](image-preservation.md) is an optional logical-copy fallback when ordinary copy tooling does not supply stream hashing, independent destination verification, progress, and verified-prefix resume together. It is not a disk imager or an unreadable-sector recovery tool.
+
+The Sleuth Kit coverage must distinguish recursive directory listings from deleted/orphan metadata: `fls -r` does not traverse deleted directories. Preserve full NTFS attribute/stream identifiers, supplement with `ils` and `istat`/`ffind` as needed, and record separate filesystem-recovery and carving outcomes. `tsk_recover` defaults to unallocated files; `-e` broadens to all files. Do not use `icat -h` when preserving logical sparse-file content.
+
+Optional reviewed helpers provide [catalog timelines](inventory-timeline.md) and [supervised NTFS carving](supervised-carving.md). The timeline helper preserves source rows and exported epoch values; material dates still need raw-metadata checks. The carver is Windows-only, pins specific PhotoRec/TSK packages and verifies free-space scope against the NTFS bitmap. Its polled stops and fresh-only operation require a separate continuation plan if interrupted.
+
+When native timestamp exports lose precision or range, the optional [exported-MFT supplement](mft-supplement.md) observes exact raw SI/FN fields with physical record/attribute references. It requires a completed allocated MFT export, the original catalog and explicit approved recovery provenance. Provision its pinned optional Dissect dependencies separately; it does not replace them with an improvised standard-library parser or follow unresolved references into another stream.
+
+For explicit recovered-media outputs, the Windows [metadata/header worker](recovered-media.md) binds approved producer records and separately provisioned ExifTool/ffprobe packages. Its bounded header policy covers PNG/JPEG/WAVE, selected MP4/MOV/M4A/3GP variants, MP3, MPEG, AVI, ASF and FLV, with one forced demuxer and controlled child processes. Resume binds the header decision and retained captures. Unknown formats, diagnostics and resource stops remain gaps; this is not full decoding or an authenticity assessment.
+
 | Tool                                 | Primary role                                                             | Linux readiness | When to prefer it                                                                                                                            | Notes                                                                                                                                                                                |
 | ------------------------------------ | ------------------------------------------------------------------------ | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `libewf` / EWF tools                 | EWF/E01 verification, metadata review, and read-only access              | High            | `E01` and segmented EWF inputs that need verification or a Linux-side access path                                                            | Foundational for Linux E01 readiness. Pair it with hashing and The Sleuth Kit rather than treating it as a full examiner on its own.                                                 |
@@ -84,11 +94,13 @@ Before selecting tools, classify the evidence platform:
 | `uv`                                 | run local Python helper scripts and Python-based CLI tools               | High            | when the workflow includes local automation such as report packaging                                                                         | Good wrapper for repo scripts and Python CLIs; do not treat it as the installer for non-Python binaries such as `pandoc`.                                                            |
 | `Pandoc`                             | render reviewed Markdown into formal HTML, DOCX, or PDF-ready outputs    | Medium          | when peer review has cleared the report and a formal package is needed                                                                       | Keep Markdown as the source of truth. PDF output still depends on an available renderer or PDF backend.                                                                              |
 
-## Practical defaults on Linux
+## Linux candidate examples
 
-For `E01`, `AFF4`, and other directly inspectable image work on Linux, the senior tooling specialist should try to verify or stage this baseline automatically before declaring the case blocked.
+These examples require a fresh selection record when the question or validation basis changes. They are not a mandatory order or stack; a better-supported provider should replace an example through the normal review path.
 
-For a typical Linux-based disk-image examination, the first-pass stack should usually be:
+For `E01`, `AFF4`, and other directly inspectable image work on Linux, compare providers that support the actual container and filesystem. Verify or stage the selected supported route within existing authority before declaring the capability blocked.
+
+Possible components to evaluate for a Linux-based disk-image examination include:
 
 1. hashing utilities
 2. `libewf` / EWF tools when the image format requires them
@@ -98,16 +110,16 @@ For a typical Linux-based disk-image examination, the first-pass stack should us
 6. `Plaso` if timeline depth is needed
 7. `Timesketch` only if collaborative or large-scale timeline review is justified
 
-If BitLocker or another encrypted Windows volume is detected, extend the baseline with a read-only recovery branch: characterize the protection, test supported unlock or mount paths with in-scope material, and then decide separately whether any remaining whole-disk free-space review or carving of accessible plaintext regions is still useful.
+If BitLocker or another encrypted Windows volume is detected, assess a read-only recovery branch: characterize the protection, compare and test supported unlock or mount methods with in-scope material, and decide separately whether remaining disk-level review of accessible plaintext regions is useful.
 
-## Windows endpoint and live-host user-activity bias
+## Windows endpoint and live-host candidates
 
-For authorized Windows endpoint or live-host user-activity questions, especially narrow windows such as "what happened in the last two hours", first-pass collection should usually start with:
+For authorized Windows endpoint or live-host user-activity questions, select relevant sources and providers from candidates such as these. This list is not a fixed execution order:
 
 1. native read-only host state and time context (`Get-Date`, `Get-TimeZone`, `whoami`, `quser`, `Get-Process`, targeted `Get-WinEvent`)
 2. targeted EVTX review for logon, process creation, PowerShell, service, scheduled-task, RDP, and session artifacts
 3. `Hayabusa` for fast EVTX timelines and detection-context enrichment when event logs are accessible
-4. `Chainsaw` as a fast independent cross-check for EVTX, Shimcache, Amcache, SRUM, MFT, and Sigma-style hunting where the artifact set supports it
+4. `Chainsaw` as a possible cross-check for supported artifacts and Sigma-style hunting; inspect parser and rule dependencies before describing the check as independent
 5. `KAPE` / `KapeFiles`, `Velociraptor` offline collection, or `DFIR-ORC` only when authorized collection depth, operational model, and output handling are clear
 6. selected Zimmerman parsers for deep parsing of specific Windows artifacts after collection
 7. controlled acquisition or parsing of browser profiles, cookies, login databases, tokens, keys, password-manager stores, environment files, and other secret-bearing artifacts when those artifacts are in scope and could corroborate user activity

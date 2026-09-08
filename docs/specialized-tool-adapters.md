@@ -6,6 +6,8 @@ The examiner remains the investigator-facing coordinator. The senior tooling spe
 
 ## Adapter Pattern
 
+Select each provider under [tool selection and validation](tool-selection-and-validation.md). A convenient adapter does not establish superiority or independence. Record its parser/dependency lineage, applicable tests and output limitations; validate any replacement's contract before accepting its results. Existing execution pins remain binding.
+
 A specialized tool adapter should provide a narrow forensic boundary around one tool family or execution environment. Good adapters:
 
 - consult the current official manual, vendor documentation, maintained upstream docs, or approved local docs/cache before recommending commands, automation, APIs, parallelization, or fallback behavior

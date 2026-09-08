@@ -30,6 +30,7 @@ A bare path is enough to begin. The examiner should infer preservation-first, sc
 - preserves or inventories relevant in-scope artifacts, including sensitive ones
 - separates observation, inference, limitation, and confidence
 - picks tools through a senior tooling subagent instead of guessing
+- compares current candidates by capability and validation, with independent checks for material results under the [tool-selection policy](docs/tool-selection-and-validation.md)
 - profiles the evidence OS before OS-specific collection or tool choice
 - can use optional specialized tool adapters through a loose local contract
 - supports quick triage and deeper comprehensive examination
@@ -129,6 +130,22 @@ See [docs/specialized-tool-adapters.md](docs/specialized-tool-adapters.md).
 ## Triage vs Comprehensive Work
 
 Quick triage collects the minimum defensible source set needed to answer or prioritize the question.
+
+For large images, broad deleted-file recovery, timelines and contact analysis, use [the large-image examination workflow](docs/large-image-examination.md). It adds storage budgeting, resumable preservation, explicit recovery-layer coverage, per-file provenance, and rules for distinguishing a stored address from a recorded communication.
+
+The optional [image-preservation helper](docs/image-preservation.md) provides a read-only source copy, source-stream SHA-256, independent destination verification, atomic progress and verified-prefix resume. It uses the Python standard library and requires the normal script-review gate before evidence use.
+
+The [verified-image inventory runner](docs/image-inventory.md) waits for successful preservation, then records partition/filesystem information, allocated/deleted/orphan metadata, and a stream-aware catalog for recovery planning. It preserves raw tool output and provenance and does not treat an inventory as completed recovery.
+
+The [bounded catalog recovery runner](docs/catalog-recovery.md) exports selected NTFS DATA streams with safe filenames, source references, independent output hashes, explicit space limits and verified resume. Its default is corroborated deleted streams; carving and uncatalogued orphan recovery remain separate stages.
+
+Use an explicit catalog-bound stream selection for focused allocated or deleted artifact exports. The [inventory timeline helper](docs/inventory-timeline.md) preserves every catalog row and timestamp field with exact source references. The Windows [supervised carver](docs/supervised-carving.md) adds a bounded PhotoRec free-space pass with geometry, bitmap and report checks. These helpers retain incomplete outcomes and require independent review before evidence use.
+
+The carver handles native result renaming during an active scan and records one narrowly identified ZIP candidate diagnostic without treating it as a filesystem failure. Missing output directories, other fatal diagnostics and all final source/allocation/output checks remain strict; interrupted attempts are retained separately.
+
+The optional [exported-MFT supplement](docs/mft-supplement.md) preserves raw SI/FN timestamps and physical record references from an approved allocated MFT export. It uses the explicitly pinned Dissect dependencies in `requirements-mft.txt`; it is separate from the standard-library helpers and never reads an image or reconstructs logical files.
+
+The Windows [recovered-media worker](docs/recovered-media.md) checks explicit hash-bound exports using bounded ExifTool metadata and ffprobe header probes. Its fixed header policy covers PNG/JPEG, WAVE, selected MP4/MOV/M4A/3GP variants, MP3, MPEG, AVI, ASF and FLV. It preserves producer references and incomplete outcomes, verifies headers and saved captures before reuse, and never reads an image. Tool packages require separate approved provisioning; a successful header probe does not establish full media recovery or authenticity.
 
 Comprehensive examination preserves or inventories every relevant in-scope artifact class, including artifacts that are sensitive, hidden, encrypted, inconvenient, or likely to contain credentials. Sensitivity changes handling and disclosure; it does not make an artifact irrelevant.
 

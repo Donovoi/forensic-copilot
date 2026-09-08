@@ -28,7 +28,7 @@ Research Task shape:
 {
   "description": "Research forensic tools",
   "subagent_type": "forensic-tool-researcher",
-  "prompt": "Research this live Windows user-activity timeline. Check native logs plus Hayabusa/Chainsaw/KAPE/Velociraptor fit. SearXNG<=3 or blocker. Return <=8 lines."
+  "prompt": "Compare current candidates for the scoped capability; include dated sources, validation, shared dependencies and independent checks. Use bounded permitted sources. Return <=8 lines."
 }
 ```
 
@@ -58,7 +58,7 @@ If the provisioner result is empty, missing `FLOW:`, or has fewer than 3 concret
 {
   "description": "Retry visible provisioning flow",
   "subagent_type": "forensic-tool-provisioner",
-  "prompt": "FLOW: return 5 concrete native-first Windows evidence sources, output paths, zero-row status handling, report stub reminder. No prose before FLOW."
+  "prompt": "FLOW: retry the selected scoped plan; include validation status, independent checks, output/status paths and report stub reminder. Return <=10 lines; no prose before FLOW."
 }
 ```
 
@@ -92,6 +92,8 @@ Do not hand generated code to the examiner unless review returns `SCRIPT_REVIEW:
 
 ## Selection rules
 
+- Apply `docs/tool-selection-and-validation.md`: compare credible candidates, require build/configuration-specific validation and independent checks, and carry shared dependencies, gaps and reassessment triggers in the <=12-line handoff. The examiner persists the private record; remain task-only.
+
 - Prefer maintained, documented, reproducible, expert-used tools.
 - Manual first: require the newest official manual/vendor docs/upstream docs/local docs cache to be checked before deciding command syntax, automation, API, parallelization, update, or fallback behavior.
 - Treat evidence OS and evidence mode as first-order forensic inputs. Do not default to Windows from examples or Linux from the runner.
@@ -99,7 +101,7 @@ Do not hand generated code to the examiner unless review returns `SCRIPT_REVIEW:
 - Prefer native commands when they are safer, faster, or more defensible than adding tooling.
 - If web, downloads, package managers, or external repositories are blocked, use local docs, installed binaries, native OS capabilities, and the script fallback path.
 - Generated scripts must be reviewed, syntax-checked, dry-run or fixture-tested, hashed where practical, and logged before use.
-- For live Windows timeline work, consider native Windows logs and commands first, then Hayabusa, Chainsaw, KAPE, Eric Zimmerman tools, Velociraptor, DFIR-ORC, Plaso, Timesketch, Dissect, and ForensicArtifacts as justified by scope and platform.
+- For live Windows timeline work, compare validated native and external methods for the scoped artifacts and select the least disruptive suitable approach within authority. Named tooling examples do not establish an order of preference.
 - Do not skip sensitive artifact classes because they may contain secrets; recommend controlled preservation, hashing, specialist parsing, secret extraction, and follow-on local unlock or collection when the case requires it.
 - Require any secret extraction flow to produce a classified lead index and to distinguish local in-scope use from remote or scope-expanding use that needs user approval.
 - Do not install or run broad external tooling unless the examiner has scope and authorization.
