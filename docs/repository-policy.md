@@ -28,7 +28,8 @@ All agents, prompts, instructions, and supporting documents in this repository m
 
 ## Tooling rules
 
-- Prefer Linux-friendly, open, reproducible tooling where possible.
+- Select the best-supported method for the scoped capability under `docs/tool-selection-and-validation.md`. Compare credible alternatives, document version-specific validation, and plan independent checks for material results; no product or repository helper is mandatory for every case.
+- Prefer open, reproducible and locally suitable tooling when forensic fitness is otherwise comparable. Platform preference, installation convenience, popularity and release recency must not override demonstrated correctness or required coverage.
 - Consult the current manual or official docs before choosing a tool behavior, command syntax, parallelization mode, API path, or fallback. Do not rely on memory when the upstream documentation may already solve the problem.
 - Do not install every forensic utility by default; select only what advances the current evidence analysis.
 - Do not pretend Windows-only or proprietary tools are natively available on Linux.
@@ -36,6 +37,7 @@ All agents, prompts, instructions, and supporting documents in this repository m
 - Treat specialized tool adapters, MCP servers, APIs, plug-ins, X-Tensions, and product-specific automation as optional execution providers. Select them through the senior tooling loop only when the current manual or approved local docs show they are suitable for the evidence, scope, privacy boundary, and environment.
 - Keep adapter interfaces file-in/file-out or manifest-based when practical. Return sanitized status, structured outputs, hashes, report paths, local alias-map paths, limitations, and contemporaneous-note references instead of raw case facts.
 - Record selected tools, versions, install paths, and blockers in Markdown.
+- Persist the private tool-selection record, including rejected/deferred alternatives, shared implementation dependencies, validation gaps and reassessment triggers. Use applicable NIST CFTT reports and current primary guidance without claiming blanket certification. Investigate disagreements and limit unsupported claims rather than selecting a convenient answer.
 
 ## Scope-boundary and blocker rules
 
@@ -113,7 +115,7 @@ When changing agent behavior or tool choices, also update the relevant docs:
 - For OpenCode Task tool calls, use `description`, `subagent_type`, and `prompt` exactly. Do not use `command` as a Task description field; OpenCode rejects that schema and the helper loop stalls.
 - Require the tool researcher to use current upstream or official sources when checking expert-used forensic tools, especially GitHub or GitLab projects and maintainer documentation.
 - Require the tool researcher to check the most current official manual, vendor docs, or maintained local documentation first for any named program before recommending workarounds, scripts, automation, or alternative tools.
-- Keep OpenCode local-model web research bounded: prefer local SearXNG with 3 or fewer results and do not follow a successful SearXNG search with OpenCode `websearch`. In this repo, the tooling researcher has OpenCode `websearch` denied; if local SearXNG is unavailable, it should return a blocker or use narrowly targeted `webfetch` on known official URLs.
+- Keep OpenCode local-model web research bounded: use an available permitted search provider with 3 or fewer results, narrowly targeted `webfetch` on known official URLs, or approved local sources. The tooling researcher's OpenCode `websearch` denial remains binding. If permitted sources are unavailable, state the documentation gap and its effect on selection or execution.
 - Keep OpenCode local-model helper outputs bounded: researcher notes should be 8 lines or fewer, provisioner notes 10 lines or fewer, and senior handoffs 12 lines or fewer. The senior must call the researcher as its first emitted tool action, call the provisioner immediately after the researcher returns, and avoid todo lists or interim prose for focused helper requests.
 - Keep the examiner's first OpenCode Task prompt compact and JSON-safe: one semicolon-separated line under 30 words, no pasted full user request, and no newline in the `prompt` string. For local Gemma-style runs, emit the Task immediately, preserve the field order `description`, `subagent_type`, `prompt`, and never add a period after the final field. The local Gemma test model needs enough output budget to complete the Task JSON before it is truncated.
 - Keep OpenCode tool-output and compaction settings conservative for local-model runs; write durable case state to report and artifact files instead of relying on model context.

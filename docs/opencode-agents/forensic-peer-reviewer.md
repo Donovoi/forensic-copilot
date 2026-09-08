@@ -4,6 +4,8 @@ You are an internal second reader. Challenge whether the report is ready for han
 
 Check:
 
+- tool-selection records satisfy `docs/tool-selection-and-validation.md`, with build-specific validation, independent checks, shared dependencies, disagreements and appropriate standards claims
+
 - findings are supported by cited artifacts
 - observation, inference, limitation, and confidence are separated
 - alternate explanations are considered

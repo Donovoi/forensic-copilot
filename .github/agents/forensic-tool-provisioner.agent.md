@@ -17,6 +17,9 @@ Provision only the tools the senior specialist selected. Do not expand the tool 
 
 ## Staging rules
 
+- Apply `docs/tool-selection-and-validation.md` to the chosen capability: bind the exact build, dependencies, rules and configuration, record relevant known-answer validation and gaps, and prepare the independent-check path. Pending validation is not permission to run against evidence.
+- Keep accepted runtimes pinned for the job. A substitute tool requires renewed selection and adapter validation; never change a reviewed allowlist or relabel its producer output to make another implementation pass.
+
 - Manual first: before staging, updating, modifying, or preparing command templates for any program, verify the current official manual, vendor docs, maintained upstream docs, or approved local docs/cache for install/update behavior, command syntax, automation flags, API support, and known native solutions.
 - Use approved compute/staging roots for downloaded tools, cloned repositories, rules, release archives, generated scripts, working copies, and temporary build outputs. When no root is specified, default to ignored analyst-controlled paths such as `toolcache/`, `tooling/downloads/`, or `tooling/cache/`.
 - Do not place tools, caches, working copies, generated scripts, or extracted artifacts inside the evidence input boundary unless explicitly approved.
@@ -36,7 +39,7 @@ Provision only the tools the senior specialist selected. Do not expand the tool 
 
 - Prepare the commands the examiner or next collection subagent should run, including input paths, output paths, timeframe filters, timezone assumptions, and expected output formats.
 - Prefer one bounded command per step.
-- For local-model OpenCode runs, your first visible token must be `FLOW:`. Return visible text every time; if no download or install is needed, still return `FLOW:` plus native-first execution steps. Never return an empty task result.
+- For local-model OpenCode runs, your first visible token must be `FLOW:`. Return visible text every time; if no download or install is needed, still return the selected, validated execution steps. Never return an empty task result.
 - In local-model OpenCode runs, do not use a todo list for a focused provisioning request unless the senior specialist asked for multiple downloads or a multi-step build. Return the compact execution flow directly; do not add prose before the heading or after the blocker line.
 - For WSL-to-Windows PowerShell command templates, do not use raw `$` variables or `$_` inside double-quoted `powershell.exe -NoProfile -Command` strings. Prefer fixed literal local timestamps and simplified filters such as `Where-Object StartTime -GE [datetime]'YYYY-MM-DDTHH:MM:SS'`; escape `$` only when a variable is unavoidable.
 - Do not prepare command templates containing scriptblock filters such as `Where-Object { ... }`, `ForEach-Object { ... }`, or shell-mangled `+.` property access; use `Get-WinEvent -FilterHashtable`, property-form filters on known properties, or bounded snapshots saved to CSV/JSON.
@@ -49,7 +52,7 @@ Provision only the tools the senior specialist selected. Do not expand the tool 
 - Remind the examiner to write the report stub after setup/time capture and before broad evidence collection.
 - Commands that may return more than about 50 rows should save full output as CSV or JSON under `artifacts/` or `acquisitions/`, then print only path, row count, and a small preview.
 - Avoid interactive installers, watchers, daemons, or service deployments unless the senior specialist explicitly selected that operational model.
-- For live Windows hosts, prefer native read-only collection first; external tools should be run only after authorization and with explicit output paths outside evidence. If the selected lane is native-first, document the execution flow and mark heavier downloads or clones deferred rather than trying to stage them during the first local-model pass.
+- For live Windows hosts, select the least disruptive supported collection method, considering native and external tools by demonstrated fit. External tools require authorization and output paths outside evidence. When native collection is selected, document the reason and any deferred downloads; do not stage a larger toolchain merely because it appears in an example.
 - For event-log tools, include both detection-oriented outputs and timeline-oriented outputs when the case question needs user activity reconstruction.
 - For KAPE, Velociraptor, DFIR-ORC, or other collectors, distinguish collection from analysis and document expected artifacts.
 - For rule-based tools, record the rule source and update method.

@@ -4,7 +4,18 @@ This file records the external material that currently informs the repo. It is n
 
 Last reviewed: `2026-06-02`
 
-Large-image tooling and preservation addendum reviewed: `2026-09-06`. The date above remains the review date for earlier entries; this addendum does not imply they were all rechecked.
+## Tool-selection guidance addendum
+
+Reviewed `2026-09-08`; earlier entries keep their own dates. The [tool-selection policy](tool-selection-and-validation.md) maps these sources to project rules and records their limits.
+
+- [NIST CFTT program](https://www.nist.gov/itl/csd/secure-systems-and-applications/computer-forensics-tool-testing-program-cftt) and [methodology overview](https://www.nist.gov/itl/csd/secure-systems-and-applications/computer-forensics-tool-testing-program-cftt/cftt-general-0): directly reviewed the function-based test process, documentation review, relevant test cases and reporting. Check actual reports for the chosen function/version; this review does not validate any listed tool.
+- [NIST SP 800-86](https://csrc.nist.gov/pubs/sp/800/86/final): confirmed its August 2006 publication and IT incident-response scope. It is a foundational process reference, not a complete current procedure for every artifact.
+- [NIST IR 8354](https://nvlpubs.nist.gov/nistpubs/ir/2022/NIST.IR.8354.pdf), November 2022, sections 4.8-4.10: method suitability, implementation correctness, relevant testing and reassessment when tools or related technology change. This is a scientific foundation review, not certification of a workflow or product.
+- [NIST tools and techniques catalog](https://toolcatalog.nist.gov/): directly reviewed its discovery purpose and explicit distinction between developer-provided listings and testing.
+
+Candidate comparison and independent-check gates are project requirements informed by these sources, not a claimed universal NIST two-tool rule. No current tool ranking was established by reviewing this guidance.
+
+Large-image tooling and preservation addendum reviewed: `2026-09-06`. Earlier baseline entries retain their `2026-06-02` review date; this addendum does not imply they were all rechecked.
 
 ## Large-image preservation and recovery addendum
 
@@ -48,7 +59,7 @@ These are part of the repo's reference baseline, but this file only pins them at
 
 - `SWGDE` report-writing guidance
 - `NIJ` digital evidence guidance
-- `NIST CFTT` tool-testing materials
+- Additional `NIST CFTT` function/version-specific reports beyond the directly reviewed methodology above
 
 That is deliberate. This file should not imply a document was checked if it was only remembered or mentioned indirectly.
 
@@ -56,8 +67,8 @@ That is deliberate. This file should not imply a document was checked if it was 
 
 | Tool or project          | Why it is tracked                                                | Current repo position                                                                                               | Link                                               |
 | ------------------------ | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| `The Sleuth Kit`         | core filesystem and image analysis tooling                       | still a primary Linux-friendly examiner tool                                                                        | <https://github.com/sleuthkit/sleuthkit>           |
-| `libewf`                 | EWF/E01 verification, metadata inspection, and Linux-side access | tracked as the baseline Linux-friendly access layer for E01 handling before filesystem analysis                     | <https://github.com/libyal/libewf>                 |
+| `The Sleuth Kit`         | core filesystem and image analysis tooling                       | candidate for supported image/filesystem functions after validation                                                                        | <https://github.com/sleuthkit/sleuthkit>           |
+| `libewf`                 | EWF/E01 verification, metadata inspection, and Linux-side access | candidate EWF access layer; compare supported features and validated alternatives                     | <https://github.com/libyal/libewf>                 |
 | `bulk_extractor`         | feature extraction, scanning, and supporting carving workflows   | useful companion tool, not a substitute for filesystem analysis                                                     | <https://github.com/simsong/bulk_extractor>        |
 | `Velociraptor`           | endpoint collection, VQL artifacts, and offline collectors       | candidate for authorized live/offline endpoint collection when native commands are insufficient                      | <https://docs.velociraptor.app/>                   |
 | `Velociraptor Artifacts` | reusable endpoint collection logic and tool wrapping             | tracked for artifact-based collection, dead-disk remapping possibilities, and external-tool management              | <https://docs.velociraptor.app/docs/artifacts/>    |
@@ -109,13 +120,13 @@ That is deliberate. This file should not imply a document was checked if it was 
 
 ## Current working observations
 
-- `libewf` remains the baseline Linux-friendly access and verification layer for `E01` / EWF inputs and pairs naturally with The Sleuth Kit for filesystem work.
+- `libewf` is an E01/EWF access and verification candidate. Compare its relevant version and format coverage with other suitable providers before selection.
 - For Windows last-hours user-activity questions, `Hayabusa`, `Chainsaw`, KAPE/KapeFiles, Zimmerman tools, and Velociraptor are now tracked as first-class candidates, but the workflow must still choose the smallest safe subset for the case.
 - `Velociraptor` is powerful for endpoint artifacts and offline collectors, but its operational model should be documented before use.
 - `DFIR-ORC` is tracked as a Windows collection framework, not a general parser or default live-host first step.
 - `Dissect` is tracked as a broad forensic framework that may reduce extraction friction in mixed image/container cases.
 - `Timesketch` remains more service-oriented than lightweight local tooling.
-- `The Sleuth Kit` remains a sensible default for Linux-based image and filesystem work.
+- `The Sleuth Kit` is an image/filesystem candidate, subject to the same capability comparison and validation requirements as other providers.
 - `Binwalk` is treated as a specialist tool, not a general-purpose substitute for host forensics.
 - `uv run` fits local script orchestration well, and `uvx` / `uv tool run` fits Python-based CLI helpers. Non-Python binaries such as `pandoc` still need their own install path.
 - Windows-first tools such as `FTK Imager`, `KAPE`, and many `Zimmerman` utilities are tracked as platform-specific dependencies rather than presumed native on Linux.

@@ -147,6 +147,8 @@ Also ask, when relevant:
 
 ## Non-negotiable practice
 
+- Enforce `docs/tool-selection-and-validation.md`: obtain the candidate comparison, applicable validation and independent-check plan before a substantive stage; persist the private record from the bounded helper handoff. For material findings, record actual corroboration, shared dependencies and disagreement disposition. If verification is unavailable, limit the claim and continue unrelated supported work.
+
 Always:
 
 - preserve originals and analyze verified working copies only

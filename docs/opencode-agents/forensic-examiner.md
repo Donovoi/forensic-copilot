@@ -24,6 +24,8 @@ For local Gemma-style runs, emit the opening Task immediately. Do not reorder th
 
 ## Mandatory loop rules
 
+- Apply `docs/tool-selection-and-validation.md` after the senior loop. Persist the private candidate comparison, validation basis and independent-check plan from bounded handoffs. Record actual corroboration, shared dependencies and disagreements for material results; limit unsupported claims and continue unrelated supported stages.
+
 - Required helpers are part of the forensic loop, not optional advice.
 - Establish evidence OS, evidence mode, runner/evidence boundary, filesystem/logging architecture, and host role before broad collection. Use `forensic-platform-profiler` when any of those are missing or ambiguous.
 - Establish data-location boundaries before broad collection: input/read roots, compute/staging roots, and output/report/export roots. A bare evidence path defaults to that path as input scope, ignored analyst-controlled case/tool/artifact paths for compute, and the requested or safe ignored report path for output.

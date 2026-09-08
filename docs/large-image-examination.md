@@ -2,6 +2,8 @@
 
 Use this workflow for broad recovery, deleted media, historical timelines, or contact analysis from a disk image. It supplements the senior tooling and review loop. A lengthy copy or scan is a running stage, not a completed examination.
 
+Select and validate providers separately for each stage under [tool selection and validation](tool-selection-and-validation.md). The helpers linked here are optional implementations; compare current alternatives and cross-check material results. Preserve their exact tool/provenance contracts when selected. A failed parser or carver is not proof that another supported method cannot recover the artifact.
+
 ## Preservation and storage
 
 1. Record logical size, compression/sparse attributes, hosting device, source metadata, destination device, free space, and output boundaries. Hosting-file timestamps are container metadata, not evidence of activity inside the image.

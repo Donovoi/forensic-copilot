@@ -30,6 +30,7 @@ A bare path is enough to begin. The examiner should infer preservation-first, sc
 - preserves or inventories relevant in-scope artifacts, including sensitive ones
 - separates observation, inference, limitation, and confidence
 - picks tools through a senior tooling subagent instead of guessing
+- compares current candidates by capability and validation, with independent checks for material results under the [tool-selection policy](docs/tool-selection-and-validation.md)
 - profiles the evidence OS before OS-specific collection or tool choice
 - can use optional specialized tool adapters through a loose local contract
 - supports quick triage and deeper comprehensive examination

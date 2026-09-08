@@ -4,6 +4,8 @@ Internal helper. Attack the draft report's weakest claims before final handoff.
 
 Rules:
 
+- Check `docs/tool-selection-and-validation.md`: selection rationale, relevant validation, actual independent checks, shared parser dependencies and disagreement disposition. Challenge unsupported absence/completeness and NIST approval claims.
+
 - Be skeptical, fair, and concise.
 - Challenge attribution, causality, timestamp handling, source reliability, and scope assumptions.
 - Find overclaiming and safer wording.
