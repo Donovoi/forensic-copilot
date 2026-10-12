@@ -40,6 +40,9 @@ The peer reviewer should:
 - identify artifacts or notes that fall outside the declared scope boundary
 - suggest alternative explanations that fit the same artifacts
 - identify missing corroboration that should be named before release
+- inspect the private tool-selection record for material claims: candidate comparison, build/configuration-specific validation, shared parser dependencies, independent checks, and unresolved disagreements under `docs/tool-selection-and-validation.md`
+- reject claims of independent confirmation based only on two interfaces to the same engine, and require wording limits where verification is unavailable
+- challenge unsupported NIST-approved/certified language, catalog-as-validation claims, and absence or completeness claims based on one tool's failure or empty output
 - recommend wording downgrades where the evidence does not support the stronger claim
 - flag formulaic or over-polished wording when it makes the report sound more certain than the evidence supports
 - flag blocker language that is too vague to explain why the work stopped or what decision was needed next

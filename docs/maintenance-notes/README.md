@@ -6,6 +6,12 @@ They complement `docs/self-update-loop.md` by leaving a short, reviewable ration
 
 ## Index
 
+- [2026-09-08-tool-selection-and-validation.md](2026-09-08-tool-selection-and-validation.md) - capability-based selection, NIST source limits, version-specific validation and independent result checks
+
+- [2026-09-07-derived-artifact-validation.md](2026-09-07-derived-artifact-validation.md) - exact exported-MFT observations, optional parser dependencies and derived-artifact validation gates
+
+- [2026-09-06-large-image-preservation-and-recovery.md](2026-09-06-large-image-preservation-and-recovery.md) - verified preservation, durable stages, recovery coverage, storage budgets and contextual contact evidence
+
 - `2026-07-23-hash-bound-peer-review-contract.md` - align reviewer outputs and formal-export examples with the structured JSON lifecycle gate
 - `2026-07-23-completion-repair-carving-attribution.md` - prevent premature final reports and add derivative repair, whole-disk carving, complete evidence lanes, and bounded attribution research
 - `2026-07-22-robin-research-backend.md` - route online tooling research through a constrained, revision-pinned Donovoi/robin adapter

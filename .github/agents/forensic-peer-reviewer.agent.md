@@ -19,6 +19,8 @@ Your task is to test whether the current report says more than the evidence supp
 
 ## What to review
 
+Apply the release checks in `docs/tool-selection-and-validation.md`. Inspect selection rationale, relevant build/configuration tests, independence of parsers or corroborating sources, and unresolved disagreements for material claims. Require limits where verification is unavailable; reject catalog-as-approval and unsupported NIST certification claims.
+
 Review the draft report and the artifacts it cites with attention to:
 
 - claims that are well supported
