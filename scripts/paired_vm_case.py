@@ -759,6 +759,11 @@ def verify_case(args: argparse.Namespace) -> int:
         "algorithm": "SHA-256",
         "sources": [],
     }
+    # A failed or interrupted retry must never retain an older verified gate.
+    # Invalidate before manifest reads, capacity checks, or evidence processing.
+    atomic_write_json(
+        case_root / "integrity.json", {**output, "status": "in_progress"}
+    )
     for source in selected:
         expected: dict[str, str] = {}
         manifest_records: list[dict[str, Any]] = []

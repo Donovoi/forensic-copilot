@@ -6,6 +6,8 @@ They complement `docs/self-update-loop.md` by leaving a short, reviewable ration
 
 ## Index
 
+- [2026-10-13-offline-image-integration.md](2026-10-13-offline-image-integration.md) - integrate both image workflows, invalidate stale integrity gates and add bounded gzip intake
+
 - [2026-09-08-tool-selection-and-validation.md](2026-09-08-tool-selection-and-validation.md) - capability-based selection, NIST source limits, version-specific validation and independent result checks
 
 - [2026-09-07-derived-artifact-validation.md](2026-09-07-derived-artifact-validation.md) - exact exported-MFT observations, optional parser dependencies and derived-artifact validation gates

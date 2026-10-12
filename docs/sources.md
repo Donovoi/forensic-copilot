@@ -150,6 +150,8 @@ That is deliberate. This file should not imply a document was checked if it was 
 
 Additional maintained sources reviewed for bounded historical-image work:
 
+- [Python gzip](https://docs.python.org/3/library/gzip.html), [Python file operations](https://docs.python.org/3/library/os.html), and [Windows CreateFileW](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew), reviewed 2026-10-13: gzip CRC/concatenation behavior, exclusive file creation, flushing and Windows sharing flags used by the bounded intake helper. These API descriptions are not forensic tool certification.
+
 - [TSK 4.14.0 bodyfile timestamps](https://github.com/sleuthkit/sleuthkit/blob/sleuthkit-4.14.0/tsk/fs/fs_name.c#L650) and [FILE_NAME selection](https://github.com/sleuthkit/sleuthkit/blob/sleuthkit-4.14.0/tsk/fs/fls_lib.c#L159): attribute provenance and exported precision/range require explicit verification.
 - [PhotoRec scripted operation](https://www.cgsecurity.org/testdisk_doc/scripted_run.html) and [PhotoRec 7.2 source archive](https://www.cgsecurity.org/testdisk-7.2.tar.bz2): exact command behavior, NTFS bitmap filtering, report structure and controlled signature selection.
 - [Microsoft file times](https://learn.microsoft.com/en-us/windows/win32/sysinfo/file-times): UTC storage and timestamp-update limits; metadata alone does not establish human activity.

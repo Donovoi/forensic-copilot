@@ -5,6 +5,7 @@ import importlib.util
 import json
 import tempfile
 import unittest
+from unittest.mock import patch
 from argparse import Namespace
 from hashlib import sha256
 from pathlib import Path
@@ -256,6 +257,26 @@ class PairedVmCaseTests(unittest.TestCase):
             raw_path = case / "sources" / "HOST-A" / "disk" / "working" / "disk.raw"
             self.assertEqual(raw_path.read_bytes(), b"disk-content" * 1024)
             self.assertFalse(raw_path.with_name("disk.raw.partial").exists())
+
+    def test_failed_reverification_invalidates_previous_success(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            evidence, case, state = self.initialize_fixture(root)
+            verify_args = Namespace(
+                case_root=str(case), source=None, skip_gzip_test=False
+            )
+            self.assertEqual(paired_vm_case.verify_case(verify_args), 0)
+            with patch.object(
+                paired_vm_case, "parse_hash_manifest",
+                side_effect=paired_vm_case.CaseError("Unreadable manifest"),
+            ):
+                with self.assertRaisesRegex(paired_vm_case.CaseError, "Unreadable"):
+                    paired_vm_case.verify_case(verify_args)
+            with self.assertRaisesRegex(paired_vm_case.CaseError, "not verified"):
+                paired_vm_case.require_verified_integrity(case, state["sources"])
+            hashes, errors = paired_vm_case.integrity_hashes(case)
+            self.assertFalse(hashes)
+            self.assertTrue(errors)
 
     def test_integrity_gate_blocks_preparation(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

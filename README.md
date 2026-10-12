@@ -35,6 +35,19 @@ python scripts/robin_research.py verify
 
 ## Paired VM disk and memory cases
 
+For bounded gzip expansion with an explicit capacity budget, source sharing
+protection, and an independent reread of the raw output, use
+[verified gzip intake](docs/gzip-intake.md). This separate tool does not mark the
+paired-case completion ledger or establish the image's acquisition history.
+The paired runner's legacy `--prepare-working-disks` and `prepare-disks` paths
+hash raw bytes while writing but do not independently reread them, cap expansion,
+or maintain a free-space reserve. Their metadata is not the intake tool's
+verification record; review these limits before using the example below.
+
+The paired workflow invalidates an earlier integrity success when a new
+verification attempt starts; interrupted retries cannot authorize preparation
+or final review. See [the integrity gate](docs/paired-vm-workflow.md#integrity-gate).
+
 `scripts/paired_vm_case.py` provides a deterministic first-pass runner when each
 source has a compressed raw disk image, a QEMU/ELF-style memory dump, and an
 optional SHA-256 manifest. It refuses overlapping evidence and output roots,

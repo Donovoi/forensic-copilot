@@ -4,6 +4,11 @@ This matrix is a discovery aid for the `Forensic Senior Tooling Specialist` and 
 
 ## Selection heuristics
 
+For compressed raw images, evaluate [bounded gzip intake](gzip-intake.md) when
+explicit expansion limits, continuous capacity checks and an independent output
+reread are required. Its fixture-tested transformation is separate from the
+legacy paired runner's working-image metadata and completion ledger.
+
 1. choose the smallest validated toolchain that supplies the required coverage and meaningful independent checks
 2. compare credible providers for the actual evidence features before staging tools; previously used helpers and example stacks must earn selection again when their validation basis no longer applies
 3. consult the newest official manual, vendor documentation, maintained upstream docs, or approved local docs/cache before deciding a program's command syntax, API, automation, update, parallelization, or fallback behavior

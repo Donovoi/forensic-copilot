@@ -39,15 +39,28 @@ decompresses each gzip stream to a discard sink so CRC and truncation errors are
 detected. The disk SHA-256 and gzip validation share one compressed-byte pass to
 avoid doubling I/O on large evidence.
 
-Add `--prepare-working-disks` to write the separately hashed raw working image
+The legacy `--prepare-working-disks` option hashes raw bytes while writing them
 during that same pass. The `.partial` file is promoted atomically only after the
 gzip stream succeeds and the compressed hash does not mismatch the supplied
-manifest. This avoids a second full decompression without weakening the gate.
+manifest. This path does not independently reread the output, cap decompression,
+or maintain a continuous free-space reserve; its upfront `--minimum-free-gib`
+threshold is not an expansion budget. It also does not hold a Windows source
+handle that denies other writers. These limits also apply to `prepare-disks`.
+
+For a working-copy route with explicit budgets, Windows sharing protection and
+independent output hashing, use [verified gzip intake](gzip-intake.md).
+Its status format is separate: it does not create `disk.raw.json` or fulfill the
+paired runner's integrity and completion ledger. Do not substitute its status
+for those records or claim that legacy preparation has the same guarantees.
 
 Long runs update `integrity.progress.json` atomically after every completed
 evidence item. That checkpoint is an interruption ledger only: downstream
 commands accept only a completed, verified `integrity.json`. The progress file is
 removed after the final result is written.
+
+Each verification attempt replaces any previous integrity gate with
+`in_progress` before reading manifests or evidence. A failed or interrupted retry
+therefore blocks preparation and final review until verification succeeds again.
 
 An unlisted hash is reported as `unlisted`; a supplied hash mismatch or invalid
 gzip stream fails the gate. Do not reinterpret a mismatch as a filename-format
@@ -125,8 +138,9 @@ Baseline, extended, information-only, and custom invocations retain distinct
 fsyncs it, and renames it atomically only after successful completion. It refuses
 to overwrite completed or partial outputs unless the examiner supplies the
 specific restart/force flag. The command refuses to run until `integrity.json`
-reports a verified result. Prefer `verify --prepare-working-disks` when avoiding a
-second decompression is operationally important.
+reports a verified result. Both legacy preparation paths require the additional
+output verification and capacity controls described in the integrity-gate
+limitations above; atomic rename and a streamed hash do not supply those checks.
 
 `disk-layout` runs `mmls -B -i raw` with the working-image directory bind-mounted
 read-only into a read-only, network-disabled container. Review the resulting
