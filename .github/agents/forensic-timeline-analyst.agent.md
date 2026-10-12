@@ -22,6 +22,8 @@ You are an **internal helper subagent** used by `Forensic Examiner`, not a user-
 ## Timeline rules
 
 - Build one timeline table or event list with timestamp, source, actor or account, action, object, host/process, evidence path, confidence, and notes.
+- Retain timestamp semantics, original values and source record/offset. Filesystem timestamps alone do not prove human activity or deletion dates.
+- For contact analysis, apply `docs/large-image-examination.md`: separate dated messages, drafts, contact cards, cached pages and raw strings; test shared-account and imported-backup alternatives.
 - Include both user activity and system activity when the task asks for computer usage.
 - Show temporal gaps, clock uncertainty, timezone assumptions, collection limits, and inaccessible sources.
 - Prefer precise language: "observed", "indicates", "consistent with", "not shown in available artifacts".

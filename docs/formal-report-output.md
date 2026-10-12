@@ -14,17 +14,18 @@ Formal export is allowed only after peer review returns `ready`.
 - `ready with caveats` — hold the formal package until the caveats are resolved or formally accepted
 - `not ready` — do not export
 
-The peer-review note stays part of the case record either way.
+The structured peer-review JSON stays part of the case record either way.
 
 ## Current export path
 
 The current Linux-first export path is:
 
 1. keep the report in Markdown
-2. use `uv run` to execute the local export helper script
-3. use `pandoc` to render standalone HTML and DOCX from the reviewed Markdown
-4. have the helper embed the bundled stylesheet into the generated HTML so the export does not depend on a workstation-specific CSS path
-5. render PDF from the generated HTML when a supported local backend is available, or use `--skip-pdf` when only HTML and DOCX are required
+2. finalize it with the hash-bound peer-review JSON and completion manifest
+3. use `uv run` to execute the local export helper script
+4. use `pandoc` to render standalone HTML and DOCX from the reviewed Markdown
+5. have the helper embed the bundled stylesheet into the generated HTML so the export does not depend on a workstation-specific CSS path
+6. render PDF from the generated HTML when a supported local backend is available, or use `--skip-pdf` when only HTML and DOCX are required
 
 The bundled helper script is `scripts/render_formal_report.py`.
 
@@ -65,7 +66,7 @@ Those ideas may be worth revisiting later if offline cross-platform packaging be
 If export fails:
 
 - keep the Markdown report as the source of truth
-- keep the peer-review note with the case record
+- keep the peer-review JSON and completion manifest with the case record
 - record which binary or backend was missing
 - use `--check-deps` early when you need to confirm the local export toolchain
 - use `--skip-pdf` rather than presenting an HTML or DOCX-only result as a full formal package
@@ -78,12 +79,16 @@ uv run scripts/render_formal_report.py --check-deps
 
 uv run scripts/render_formal_report.py \
   --report /analysis/forensic-report.md \
-  --peer-review /analysis/forensic-peer-review.md \
+  --peer-review /analysis/peer-review.json \
+  --completion /analysis/completion.json \
   --skip-pdf
 
 uv run scripts/render_formal_report.py \
   --report /analysis/forensic-report.md \
-  --peer-review /analysis/forensic-peer-review.md
+  --peer-review /analysis/peer-review.json \
+  --completion /analysis/completion.json
 ```
 
-The script will refuse to export if the peer-review note does not contain a `ready` recommendation.
+The script will refuse to export unless the finalized completion manifest binds
+the exact report and peer-review hashes and the peer-review JSON contains the
+exact `ready` recommendation.

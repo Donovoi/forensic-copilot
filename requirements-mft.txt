@@ -1,0 +1,6 @@
+# Optional exported-MFT supplement only; the other Python helpers use stdlib.
+# Exact versions from the independently reviewed parser environment.
+# dissect.util's development release is intentional; do not silently replace it.
+dissect.ntfs==3.16
+dissect.cstruct==4.7
+dissect.util==3.25.dev9

@@ -24,12 +24,15 @@ For local Gemma-style runs, emit the opening Task immediately. Do not reorder th
 
 ## Mandatory loop rules
 
+- Apply `docs/tool-selection-and-validation.md` after the senior loop. Persist the private candidate comparison, validation basis and independent-check plan from bounded handoffs. Record actual corroboration, shared dependencies and disagreements for material results; limit unsupported claims and continue unrelated supported stages.
+
 - Required helpers are part of the forensic loop, not optional advice.
 - Establish evidence OS, evidence mode, runner/evidence boundary, filesystem/logging architecture, and host role before broad collection. Use `forensic-platform-profiler` when any of those are missing or ambiguous.
 - Establish data-location boundaries before broad collection: input/read roots, compute/staging roots, and output/report/export roots. A bare evidence path defaults to that path as input scope, ignored analyst-controlled case/tool/artifact paths for compute, and the requested or safe ignored report path for output.
 - Ask concise questions after the mandatory senior handoff when missing data-location boundaries could materially affect legality, policy, contamination risk, remote/cloud compute, or ability to proceed. Do not read, stage, cache, compute, or write outside approved roots without approval.
 - Do not assume Windows from examples or Linux from the runner; the platform profile controls artifact priorities and tool choice.
 - Match requested depth: quick triage uses the minimum defensible source set; comprehensive examination preserves or inventories every relevant in-scope artifact class.
+- For large-image recovery, timelines and contact analysis, apply `docs/large-image-examination.md`: verified resumable preservation, output-space reserves, deleted/orphan/stream coverage, and communication-record evidence before contact claims.
 - If a helper stalls, is denied, returns incomplete output, or the local provider fails, stop at that blocker and retry the same helper path with a narrower prompt.
 - Treat `ECONNRESET`, `ConnectionRefused`, timeout, failed `/health`, and failed `/v1/models` as provider blockers. Do not collect evidence while the helper path is broken.
 - For local Gemma-style runs, require bounded helper output: researcher <=8 lines, provisioner <=10 lines, and senior handoff <=12 lines.
@@ -38,10 +41,12 @@ For local Gemma-style runs, emit the opening Task immediately. Do not reorder th
 - Use `forensic-evidence-collector` after the senior handoff when collection work is needed.
 - Use `forensic-artifact-router` when artifact inventory needs parser or specialist-lane selection.
 - Use `forensic-timeline-analyst` when the task asks for user/system activity, timeline, or correlation.
+- Use `forensic-attribution-analyst` when the task asks who used, owned, or had custody of a device, or when public-source identity corroboration is needed. Supply evidence-item keys, scoped artifact paths, fragment/query-log paths, online authority, allowed identifier classes, privacy limits, and query budget.
 - Use `forensic-report-challenger` before final handoff for substantial attribution-sensitive reports.
 - Use `forensic-publication-redactor` before publication, export, commit, or push.
 - Use `forensic-peer-reviewer` before final handoff on substantial reports.
 - Use `forensic-maintainer` only after case closure or repeated reusable workflow friction.
+- Attribution helpers write scoped fragments under the approved case output and never edit or finalize the canonical report. The examiner must review and reconcile those fragments before report challenge and peer review.
 
 ## After the senior handoff
 

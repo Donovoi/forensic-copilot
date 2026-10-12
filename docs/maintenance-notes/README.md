@@ -6,6 +6,17 @@ They complement `docs/self-update-loop.md` by leaving a short, reviewable ration
 
 ## Index
 
+- [2026-10-13-offline-image-integration.md](2026-10-13-offline-image-integration.md) - integrate both image workflows, invalidate stale integrity gates and add bounded gzip intake
+
+- [2026-09-08-tool-selection-and-validation.md](2026-09-08-tool-selection-and-validation.md) - capability-based selection, NIST source limits, version-specific validation and independent result checks
+
+- [2026-09-07-derived-artifact-validation.md](2026-09-07-derived-artifact-validation.md) - exact exported-MFT observations, optional parser dependencies and derived-artifact validation gates
+
+- [2026-09-06-large-image-preservation-and-recovery.md](2026-09-06-large-image-preservation-and-recovery.md) - verified preservation, durable stages, recovery coverage, storage budgets and contextual contact evidence
+
+- `2026-07-23-hash-bound-peer-review-contract.md` - align reviewer outputs and formal-export examples with the structured JSON lifecycle gate
+- `2026-07-23-completion-repair-carving-attribution.md` - prevent premature final reports and add derivative repair, whole-disk carving, complete evidence lanes, and bounded attribution research
+- `2026-07-22-robin-research-backend.md` - route online tooling research through a constrained, revision-pinned Donovoi/robin adapter
 - `2026-05-31-secret-led-evidence-expansion.md` - route extracted secrets back into the forensic loop as classified leads for local unlocks and approval-needed remote use
 - `2026-05-31-controlled-secret-extraction.md` - allow scoped secret dumping as controlled evidence and route plaintext lanes to local/offline models when required
 - `2026-05-31-manual-first-tooling.md` - check current manuals or official docs before program, API, automation, update, parallelization, or fallback decisions
