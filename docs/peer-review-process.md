@@ -55,28 +55,39 @@ The peer reviewer should:
 
 The peer reviewer is not responsible for editing prompts, docs, or repo architecture.
 
-## Minimum output
+## Required structured output
 
-Return or create a Markdown note containing:
+After `paired_vm_case.py prepare-review` freezes the working report and
+coverage, give the reviewer the generated `review-bundle.json`. The reviewer
+must return a JSON object that can be saved inside the case root as
+`peer-review.json`:
 
-- `# Forensic Peer Review Note`
-- `## Report reviewed`
-- `## Supported findings`
-- `## Challenged findings`
-- `## Missing corroboration`
-- `## Alternative explanations`
-- `## Required wording changes`
-- `## Release recommendation`
+```json
+{
+  "schema_version": 1,
+  "reviewed_utc": "YYYY-MM-DDTHH:MM:SSZ",
+  "reviewer": "forensic-peer-reviewer",
+  "recommendation": "ready",
+  "report_sha256": "exact review-bundle report_sha256",
+  "coverage_sha256": "exact review-bundle coverage_sha256",
+  "supported_findings": [],
+  "challenged_findings": [],
+  "missing_corroboration": [],
+  "alternative_explanations": [],
+  "required_wording_changes": [],
+  "residual_caveats": []
+}
+```
 
-Release recommendations should be one of:
-
-- **ready**
-- **ready with caveats**
-- **not ready**
+The reviewer must copy the report and coverage hashes exactly from the review
+bundle. Release recommendations are `ready`, `ready with caveats`, or `not
+ready`; `paired_vm_case.py finalize-report` accepts only the exact value
+`ready`. A Markdown peer-review note is optional supplemental case material,
+not a substitute for this hash-bound JSON record.
 
 ## Release gating
 
-- `ready` means the examiner may hand off the Markdown report and, if requested, generate the formal export package described in `docs/formal-report-output.md`.
+- `ready` means the examiner may pass the hash-bound JSON to the finalization gate, then hand off the finalized Markdown report and, if requested, generate the formal export package described in `docs/formal-report-output.md`.
 - `ready with caveats` means the Markdown report may still circulate internally with the caveats attached, but the formal export should wait until the caveats are resolved or formally accepted.
 - `not ready` means do not release the report and do not generate the formal export.
 

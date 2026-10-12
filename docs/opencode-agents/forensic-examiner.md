@@ -38,10 +38,12 @@ For local Gemma-style runs, emit the opening Task immediately. Do not reorder th
 - Use `forensic-evidence-collector` after the senior handoff when collection work is needed.
 - Use `forensic-artifact-router` when artifact inventory needs parser or specialist-lane selection.
 - Use `forensic-timeline-analyst` when the task asks for user/system activity, timeline, or correlation.
+- Use `forensic-attribution-analyst` when the task asks who used, owned, or had custody of a device, or when public-source identity corroboration is needed. Supply evidence-item keys, scoped artifact paths, fragment/query-log paths, online authority, allowed identifier classes, privacy limits, and query budget.
 - Use `forensic-report-challenger` before final handoff for substantial attribution-sensitive reports.
 - Use `forensic-publication-redactor` before publication, export, commit, or push.
 - Use `forensic-peer-reviewer` before final handoff on substantial reports.
 - Use `forensic-maintainer` only after case closure or repeated reusable workflow friction.
+- Attribution helpers write scoped fragments under the approved case output and never edit or finalize the canonical report. The examiner must review and reconcile those fragments before report challenge and peer review.
 
 ## After the senior handoff
 

@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 import re
 import shutil
 import subprocess
@@ -22,10 +24,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--report", help="Path to the Markdown report")
     parser.add_argument("--peer-review", help="Path to the peer-review note")
     parser.add_argument(
+        "--completion",
+        help="Path to the finalized completion manifest binding report and peer-review hashes",
+    )
+    parser.add_argument(
         "--output-prefix",
         help="Optional output prefix. Defaults to <report-stem>.formal beside the report.",
     )
-    parser.add_argument("--title", help="Optional document title for HTML and DOCX output")
+    parser.add_argument(
+        "--title", help="Optional document title for HTML and DOCX output"
+    )
     parser.add_argument(
         "--check-deps",
         action="store_true",
@@ -38,14 +46,30 @@ def parse_args() -> argparse.Namespace:
     )
 
     args = parser.parse_args()
-    if not args.check_deps and (not args.report or not args.peer_review):
-        parser.error("--report and --peer-review are required unless --check-deps is used")
+    if not args.check_deps and (
+        not args.report or not args.peer_review or not args.completion
+    ):
+        parser.error(
+            "--report, --peer-review, and --completion are required unless --check-deps is used"
+        )
     return args
 
 
 def read_release_recommendation(peer_review_path: Path) -> str:
+    text = peer_review_path.read_text(encoding="utf-8")
+    try:
+        value = json.loads(text)
+    except json.JSONDecodeError:
+        value = None
+    if isinstance(value, dict) and "recommendation" in value:
+        recommendation = value["recommendation"]
+        if not isinstance(recommendation, str):
+            raise ValueError(
+                f"Peer-review recommendation must be text: {peer_review_path}"
+            )
+        return recommendation
     section = None
-    for raw_line in peer_review_path.read_text(encoding="utf-8").splitlines():
+    for raw_line in text.splitlines():
         line = raw_line.strip()
         if line.startswith("## "):
             section = line[3:].strip().lower()
@@ -57,6 +81,40 @@ def read_release_recommendation(peer_review_path: Path) -> str:
     raise ValueError(
         f"Could not find a release recommendation in peer-review note: {peer_review_path}"
     )
+
+
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def validate_completion_binding(
+    report_path: Path, peer_review_path: Path, completion_path: Path
+) -> dict[str, object]:
+    try:
+        completion = json.loads(completion_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(
+            f"Completion manifest is not valid JSON: {completion_path}: {exc}"
+        ) from exc
+    if not isinstance(completion, dict) or completion.get("status") != "finalized":
+        raise ValueError(f"Completion manifest is not finalized: {completion_path}")
+    if Path(str(completion.get("report_path", ""))).resolve() != report_path:
+        raise ValueError("Completion manifest names a different report")
+    if completion.get("report_sha256") != file_sha256(report_path):
+        raise ValueError("Report hash does not match the completion manifest")
+    if Path(str(completion.get("peer_review_path", ""))).resolve() != peer_review_path:
+        raise ValueError("Completion manifest names a different peer-review note")
+    if completion.get("peer_review_sha256") != file_sha256(peer_review_path):
+        raise ValueError("Peer-review hash does not match the completion manifest")
+    if completion.get("peer_review_recommendation") != "ready":
+        raise ValueError(
+            "Completion manifest is not bound to an exact ready recommendation"
+        )
+    return completion
 
 
 def ensure_binary(name: str) -> str:
@@ -74,7 +132,9 @@ def find_pdf_backend() -> tuple[str, str] | None:
     return None
 
 
-def build_output_paths(report_path: Path, output_prefix: str | None) -> tuple[Path, Path, Path]:
+def build_output_paths(
+    report_path: Path, output_prefix: str | None
+) -> tuple[Path, Path, Path]:
     if output_prefix:
         prefix = Path(output_prefix)
     else:
@@ -95,10 +155,14 @@ def inline_css(html_path: Path, css_path: Path) -> None:
     css = css_path.read_text(encoding="utf-8")
     marker = "</head>"
     if marker not in html:
-        raise ValueError(f"Generated HTML does not contain a </head> element: {html_path}")
+        raise ValueError(
+            f"Generated HTML does not contain a </head> element: {html_path}"
+        )
 
     style_block = f"<style>\n{css}\n</style>\n"
-    html_path.write_text(html.replace(marker, f"{style_block}{marker}", 1), encoding="utf-8")
+    html_path.write_text(
+        html.replace(marker, f"{style_block}{marker}", 1), encoding="utf-8"
+    )
 
 
 def print_dependency_status() -> int:
@@ -110,7 +174,9 @@ def print_dependency_status() -> int:
         backend_name, backend_path = pdf_backend
         print(f"PDF backend:    {backend_name} ({backend_path})")
     else:
-        print("PDF backend:    missing (install weasyprint or wkhtmltopdf, or use --skip-pdf)")
+        print(
+            "PDF backend:    missing (install weasyprint or wkhtmltopdf, or use --skip-pdf)"
+        )
 
     return 0 if pandoc else 1
 
@@ -161,7 +227,14 @@ def render_pdf_from_html(html_path: Path, pdf_path: Path) -> str:
         run_command([pdf_backend[1], str(html_path), str(pdf_path)])
         return pdf_backend[0]
     if pdf_backend and pdf_backend[0] == "wkhtmltopdf":
-        run_command([pdf_backend[1], "--enable-local-file-access", str(html_path), str(pdf_path)])
+        run_command(
+            [
+                pdf_backend[1],
+                "--enable-local-file-access",
+                str(html_path),
+                str(pdf_path),
+            ]
+        )
         return pdf_backend[0]
     raise FileNotFoundError(
         "No supported PDF backend found. Install 'weasyprint' or 'wkhtmltopdf', then re-run the export."
@@ -175,6 +248,7 @@ def main() -> int:
 
     report_path = Path(args.report).expanduser().resolve()
     peer_review_path = Path(args.peer_review).expanduser().resolve()
+    completion_path = Path(args.completion).expanduser().resolve()
     repo_root = Path(__file__).resolve().parent.parent
     css_path = repo_root / "tooling" / "report" / "formal-report.css"
 
@@ -182,9 +256,12 @@ def main() -> int:
         raise FileNotFoundError(f"Report not found: {report_path}")
     if not peer_review_path.is_file():
         raise FileNotFoundError(f"Peer-review note not found: {peer_review_path}")
+    if not completion_path.is_file():
+        raise FileNotFoundError(f"Completion manifest not found: {completion_path}")
     if not css_path.is_file():
         raise FileNotFoundError(f"CSS asset not found: {css_path}")
 
+    validate_completion_binding(report_path, peer_review_path, completion_path)
     recommendation = read_release_recommendation(peer_review_path)
     if recommendation != "ready":
         print(

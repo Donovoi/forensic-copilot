@@ -69,6 +69,7 @@
           "forensic-evidence-collector": "allow",
           "forensic-artifact-router": "allow",
           "forensic-timeline-analyst": "allow",
+          "forensic-attribution-analyst": "allow",
           "forensic-report-challenger": "allow",
           "forensic-publication-redactor": "allow",
           "forensic-script-author": "allow",
@@ -191,20 +192,25 @@
       }
     },
     "forensic-tool-researcher": {
-      "description": "Internal research-only subagent for current DFIR tool candidates, upstream repositories, official docs, releases, and caveats.",
+      "description": "Internal Robin-backed research-only subagent for current DFIR tool candidates, upstream repositories, official docs, releases, and caveats.",
       "mode": "subagent",
-      "steps": 3,
+      "steps": 4,
       "prompt": "{file:docs/opencode-agents/forensic-tool-researcher.md}",
       "permission": {
         "read": "allow",
         "list": "allow",
         "glob": "allow",
         "grep": "allow",
-        "webfetch": "allow",
+        "webfetch": "deny",
         "websearch": "deny",
         "todowrite": "deny",
         "task": "deny",
-        "bash": "deny",
+        "bash": {
+          "*": "deny",
+          "python scripts/robin_research.py run *": "ask",
+          "python3 scripts/robin_research.py run *": "ask",
+          "py scripts\\robin_research.py run *": "ask"
+        },
         "edit": "deny",
         "write": "deny"
       }
@@ -325,6 +331,30 @@
         "todowrite": "deny",
         "task": "deny",
         "bash": "deny",
+        "edit": "allow",
+        "write": "allow"
+      }
+    },
+    "forensic-attribution-analyst": {
+      "description": "Internal attribution-analysis subagent for local accounts, observed users, possible owner or custodian, contradictions, confidence, and approved public-source corroboration.",
+      "mode": "subagent",
+      "steps": 8,
+      "prompt": "{file:docs/opencode-agents/forensic-attribution-analyst.md}",
+      "permission": {
+        "read": "allow",
+        "list": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "todowrite": "deny",
+        "task": "deny",
+        "bash": {
+          "*": "deny",
+          "python scripts/robin_research.py run *": "ask",
+          "python3 scripts/robin_research.py run *": "ask",
+          "py scripts\\robin_research.py run *": "ask"
+        },
         "edit": "allow",
         "write": "allow"
       }

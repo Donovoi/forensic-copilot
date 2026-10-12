@@ -22,4 +22,11 @@ jobs:
         run: python scripts/validate_repo_hygiene.py
 
       - name: Compile helper scripts
-        run: python -m py_compile scripts/render_formal_report.py scripts/validate_repo_hygiene.py
+        run: >-
+          python -m py_compile
+          scripts/paired_vm_case.py
+          scripts/render_formal_report.py
+          scripts/validate_repo_hygiene.py
+
+      - name: Run standard-library tests
+        run: python -m unittest discover -s tests -v
